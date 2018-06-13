@@ -3,8 +3,8 @@
  * @author Rafael Kallis <rk@rafaelkallis.com>
  */
 
-#ifndef ART_HPP
-#define ART_HPP
+#ifndef ART_ART_HPP
+#define ART_ART_HPP
 
 #include "node_0.hpp"
 #include <algorithm>
@@ -18,6 +18,12 @@ using std::min;
 template <class T> class art {
 public:
   art() = default;
+  ~art() = default;
+  art(const art<T> &other) = default;
+  art(art<T> &&other) noexcept = default;
+
+  art<T> &operator=(const art<T> &other) = default;
+  art<T> &operator=(art<T> &&other) noexcept = default;
 
   T *search(const key_type &key) const;
   void set(const key_type &key, T *value);

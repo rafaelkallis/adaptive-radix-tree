@@ -9,13 +9,16 @@
 #include "node.hpp"
 #include "node_16.hpp"
 
-// TODO(rafaelkallis): rule of five
-
 template <class T> class node_4 : public node<T> {
 public:
   node_4();
   node_4(key_type prefix, T *value);
+  node_4(const node_4<T> &other) = default;
+  node_4(node_4<T> &&other) noexcept = default;
   ~node_4() override = default;
+
+  node_4<T> &operator=(const node_4<T> &other) = default;
+  node_4<T> &operator=(node_4<T> &&other) noexcept = default;
 
   node<T> *find_child(const partial_key_type &partial_key) const override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;

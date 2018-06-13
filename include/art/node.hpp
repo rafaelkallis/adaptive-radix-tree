@@ -23,12 +23,12 @@ template <class T> class node {
 public:
   node() = default;
   node(key_type prefix, T *value);
-  node(const node &other) = default;
-  node(node &&other) noexcept= default;
+  node(const node<T> &other) = default;
+  node(node<T> &&other) noexcept= default;
   virtual ~node() = default;
 
-  node<T> &operator=(const node &other) = default;
-  node<T> &operator=(node &&other) noexcept = default;
+  node<T> &operator=(const node<T> &other) = default;
+  node<T> &operator=(node<T> &&other) noexcept = default;
 
   /**
    * Finds and returns the child node identified by the given partial key.

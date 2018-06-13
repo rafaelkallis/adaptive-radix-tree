@@ -13,12 +13,12 @@ template <class T> class node_0 : public node<T> {
 public:
   node_0() = default;
   node_0(key_type prefix, T *value);
-  node_0(const node_0 &other) = default;
-  node_0(node_0 &&other) noexcept = default;
+  node_0(const node_0<T> &other) = default;
+  node_0(node_0<T> &&other) noexcept = default;
   ~node_0() = default;
 
-  node_0 &operator=(const node_0 &other) = default;
-  node_0 &operator=(node_0 &&other) noexcept = default;
+  node_0<T> &operator=(const node_0<T> &other) = default;
+  node_0<T> &operator=(node_0<T> &&other) noexcept = default;
 
   node<T> *find_child(const partial_key_type &partial_key) const override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
