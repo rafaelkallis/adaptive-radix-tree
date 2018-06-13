@@ -1,5 +1,5 @@
 /**
- * @file node_4 tests
+ * @file node_48 tests
  * @author Rafael Kallis <rk@rafaelkallis.com>
  */
 
@@ -17,7 +17,7 @@ using std::mt19937;
 using std::random_device;
 using std::shuffle;
 
-TEST_CASE("node_4") {
+TEST_CASE("node_48") {
   /* set up */
   array<partial_key_type, 256> partial_keys;
   array<node_0<void> *, 256> children;
@@ -36,11 +36,12 @@ TEST_CASE("node_4") {
 
   for (int experiment = 0; experiment < 10000; experiment += 1) {
     /* test subject */
-    node_4<void> node;
+    node_48<void> node;
 
     /* shuffle in order to make a seemingly random insertion order */
     shuffle(partial_keys.begin(), partial_keys.end(), g);
-    for (int i = 0; i < 4; i += 1) {
+
+    for (int i = 0; i < 48; i += 1) {
       REQUIRE_FALSE(node.is_full());
 
       auto partial_key = partial_keys[i];
