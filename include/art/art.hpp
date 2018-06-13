@@ -37,15 +37,22 @@ template <class T> T *art<T>::search(const key_type &key) const {
   node<T> *node = this->root;
   int depth = 0;
   for (;;) {
-    if (node == nullptr || !node->prefix_match(key, depth)) {
+    if (node == nullptr) {
       return nullptr;
     }
-    if (node->get_prefix().size() == key.size() - depth) {
-      /* exact match */
-      return node->value;
+    const key_type prefix = node->get_prefix();
+    const int prefix_len = prefix.size();
+    const int prefix_match_len = node->check_prefix(key, depth);
+    const bool prefix_match = prefix_len == prefix_match_len;
+    if (!prefix_match) {
+      return nullptr;
     }
-    depth += node->get_prefix().size();
-    node = node->findChild(key[depth]);
+    if (prefix_len == key.size() - depth) {
+      /* exact match */
+      return node->get_value();
+    }
+    depth += prefix_len;
+    node = node->find_child(key[depth]);
     depth += 1;
   }
 }
@@ -96,8 +103,11 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
     /* length of the prefix of the current node */
     const int prefix_len = prefix.size();
 
+    /* number of bytes of the current node's prefix that match the key */
+    const int prefix_match_len = cur->check_prefix(key, depth);
+
     /* true if the current node's prefix matches with a part of the key */
-    const bool prefix_match = cur->prefix_match(key, depth);
+    const bool prefix_match = prefix_len == prefix_match_len;
 
     if (prefix_match && prefix_len == key_len - depth) {
       /* exact match:
@@ -137,7 +147,7 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
         }
         key_type new_node_prefix =
             key_type(key.begin() + depth + prefix_len + 1, key.end());
-        node_0<T> new_node = new node_0<T>(new_node_prefix, value);
+        node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
         cur->set_child(key[depth + prefix_len], new_node);
         return;
       }
@@ -160,7 +170,7 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
         node<T> *new_node = new node_4<T>(new_node_prefix, value);
         cur->set_prefix(
             key_type(key.begin() + depth + prefix_len + 1, key.end()));
-        new_node->add_child(key[depth + prefix_len], cur);
+        new_node->set_child(key[depth + prefix_len], cur);
 
         replace_cur(new_node);
         return;
@@ -180,20 +190,18 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
        *                            ()->v1 +()->v3
        */
 
-      int prefix_match_len = cur->prefix_match_len(key, depth);
-
       key_type new_parent_prefix =
           key_type(prefix.begin(), prefix.begin() + prefix_match_len);
       node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr);
 
       cur->set_prefix(
           key_type(prefix.begin() + prefix_match_len + 1, prefix.end()));
-      new_parent->add_child(prefix[prefix_match_len + 1], cur);
+      new_parent->set_child(prefix[prefix_match_len + 1], cur);
 
       key_type new_node_prefix =
           key_type(key.begin() + depth + prefix_match_len + 1, key.end());
       node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
-      new_parent->add_child(key[depth + prefix_match_len], new_node);
+      new_parent->set_child(key[depth + prefix_match_len], new_node);
 
       replace_cur(new_parent);
       return;
@@ -214,27 +222,25 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
        *                        (aa)->v1 ()->v2
        */
 
-      int prefix_match_len = cur->prefix_match_len(key, depth);
-
       key_type new_parent_prefix =
           key_type(prefix.begin(), prefix.begin() + prefix_match_len);
       node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr);
 
       cur->set_prefix(
           key_type(prefix.begin() + prefix_match_len + 1, prefix.end()));
-      new_parent->add_child(prefix[prefix_match_len + 1], cur);
+      new_parent->set_child(prefix[prefix_match_len + 1], cur);
 
       key_type new_node_prefix =
           key_type(key.begin() + depth + prefix_match_len + 1, key.end());
-      node_0<T> new_node = new node_0<T>(new_node_prefix, value);
-      new_parent->add_child(key[depth + prefix_match_len]);
+      node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
+      new_parent->set_child(key[depth + prefix_match_len], new_node);
 
       replace_cur(new_parent);
       return;
     }
 
     const partial_key_type next_partial_key = key[depth + prefix_len];
-    const node<T> *next = cur->find_child(next_partial_key);
+    node<T> *next = cur->find_child(next_partial_key);
 
     if (next == nullptr) {
       /*
