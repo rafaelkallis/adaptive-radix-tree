@@ -10,10 +10,10 @@
 #include <algorithm>
 #include <cstring>
 
+namespace art {
+
 using std::memcmp;
 using std::min;
-
-/* namespace art { */
 
 template <class T> class art {
 public:
@@ -33,8 +33,7 @@ private:
 };
 
 // TODO(rafaelkallis): test
-template <class T>
-T *art<T>::search(const key_type &key) const {
+template <class T> T *art<T>::search(const key_type &key) const {
   node<T> *node = this->root;
   int depth = 0;
   for (;;) {
@@ -52,8 +51,7 @@ T *art<T>::search(const key_type &key) const {
 }
 
 // TODO(rafaelkallis): test
-template <class T>
-void art<T>::set(const key_type &key, T *value) {
+template <class T> void art<T>::set(const key_type &key, T *value) {
   if (this->root == nullptr) {
     /* root is empty */
     this->root = new node_0<T>(key, value);
@@ -159,9 +157,7 @@ void art<T>::set(const key_type &key, T *value) {
 
         key_type new_node_prefix =
             key_type(key.begin() + depth, key.end() - (prefix_len + 1));
-        // TODO(rafaelkallis): fix
-        /* node<T> *new_node = new node_4<T>(new_node_prefix, value); */
-        node<T> *new_node = nullptr;
+        node<T> *new_node = new node_4<T>(new_node_prefix, value);
         cur->set_prefix(
             key_type(key.begin() + depth + prefix_len + 1, key.end()));
         new_node->add_child(key[depth + prefix_len], cur);
@@ -188,9 +184,7 @@ void art<T>::set(const key_type &key, T *value) {
 
       key_type new_parent_prefix =
           key_type(prefix.begin(), prefix.begin() + prefix_match_len);
-      // TODO(rafaelkallis): fix
-      /* node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr); */
-      node<T> *new_parent = nullptr;
+      node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr);
 
       cur->set_prefix(
           key_type(prefix.begin() + prefix_match_len + 1, prefix.end()));
@@ -224,9 +218,7 @@ void art<T>::set(const key_type &key, T *value) {
 
       key_type new_parent_prefix =
           key_type(prefix.begin(), prefix.begin() + prefix_match_len);
-      // TODO(rafaelkallis): fix
-      /* node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr); */
-      node<T> *new_parent = nullptr;
+      node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr);
 
       cur->set_prefix(
           key_type(prefix.begin() + prefix_match_len + 1, prefix.end()));
@@ -279,5 +271,6 @@ void art<T>::set(const key_type &key, T *value) {
   }
 }
 
-/* } // namespace art */
+} // namespace art
+
 #endif

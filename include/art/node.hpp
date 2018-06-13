@@ -11,12 +11,11 @@
 #include <cstring>
 #include <vector>
 
-using std::array;
+namespace art {
+
 using std::vector;
 
-/* namespace art { */
-
-using partial_key_type = unsigned char;
+using partial_key_type = uint8_t;
 using key_type = vector<partial_key_type>;
 
 template <class T> class node {
@@ -24,7 +23,7 @@ public:
   node() = default;
   node(key_type prefix, T *value);
   node(const node<T> &other) = default;
-  node(node<T> &&other) noexcept= default;
+  node(node<T> &&other) noexcept = default;
   virtual ~node() = default;
 
   node<T> &operator=(const node<T> &other) = default;
@@ -121,6 +120,6 @@ template <class T> void node<T>::set_prefix(const key_type &prefix) {
   this->prefix_ = prefix;
 }
 
-/* } // namespace art */
+} // namespace art
 
 #endif

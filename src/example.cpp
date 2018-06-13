@@ -28,6 +28,6 @@ int main() {
   /* cout << (sizeof(node_256<int>)) << endl; */
 
   /* auto n0 = new node_0<int>(); */
-  node_0<int> n0;
-  n0.check_prefix(key_type(), 0);
+  art::node_0<int> n0;
+  n0.check_prefix(art::key_type(), 0);
 }

@@ -9,6 +9,8 @@
 #include "node.hpp"
 #include "node_16.hpp"
 
+namespace art {
+
 template <class T> class node_4 : public node<T> {
 public:
   node_4();
@@ -27,7 +29,7 @@ public:
   bool is_leaf() const override;
 
 private:
-  unsigned char n_children_;
+  uint8_t n_children_;
   array<partial_key_type, 4> keys_;
   array<node<T> *, 4> children_;
 };
@@ -36,7 +38,7 @@ template <class T> node_4<T>::node_4() : node_4<T>(key_type(0), nullptr) {}
 
 template <class T>
 node_4<T>::node_4(key_type prefix, T *value)
-    : node<T>(prefix, value), n_children_(0), keys_() {}
+    : node<T>(prefix, value), n_children_(0), keys_(), children_() {}
 
 template <class T>
 node<T> *node_4<T>::find_child(const partial_key_type &partial_key) const {
@@ -84,5 +86,7 @@ template <class T> bool node_4<T>::is_full() const {
 template <class T> bool node_4<T>::is_leaf() const {
   return this->n_children_ == 0;
 }
+
+} // namespace art
 
 #endif

@@ -11,6 +11,8 @@
 #include <random>
 #include <vector>
 
+using namespace::art;
+
 using std::array;
 using std::make_shared;
 using std::mt19937;

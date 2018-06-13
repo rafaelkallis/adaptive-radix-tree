@@ -8,6 +8,11 @@
 
 #include "node.hpp"
 #include "node_256.hpp"
+#include <array>
+
+namespace art {
+
+using std::array;
 
 template <class T> class node_48 : public node<T> {
 public:
@@ -29,7 +34,7 @@ public:
 private:
   static const partial_key_type EMPTY;
 
-  unsigned char n_children_;
+  uint8_t n_children_;
   array<partial_key_type, 256> indexes_;
   array<node<T> *, 48> children_;
 };
@@ -38,7 +43,7 @@ template <class T> node_48<T>::node_48() : node_48<T>(key_type(0), nullptr) {}
 
 template <class T>
 node_48<T>::node_48(key_type prefix, T *value)
-    : node<T>(prefix, value), n_children_(0), indexes_() {
+    : node<T>(prefix, value), n_children_(0), indexes_(), children_() {
   for (int i = 0; i < 256; i += 1) {
     this->indexes_[i] = node_48::EMPTY;
     if (i < 48) {
@@ -93,5 +98,7 @@ template <class T> bool node_48<T>::is_leaf() const {
 }
 
 template <class T> const unsigned char node_48<T>::EMPTY = 48;
+
+} // namespace art
 
 #endif

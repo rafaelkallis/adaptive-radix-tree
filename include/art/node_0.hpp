@@ -9,6 +9,8 @@
 #include "node.hpp"
 #include "node_4.hpp"
 
+namespace art {
+
 template <class T> class node_0 : public node<T> {
 public:
   node_0() = default;
@@ -49,5 +51,7 @@ template <class T> node<T> *node_0<T>::grow() {
 template <class T> bool node_0<T>::is_full() const { return true; }
 
 template <class T> bool node_0<T>::is_leaf() const { return true; }
+
+} // namespace art
 
 #endif

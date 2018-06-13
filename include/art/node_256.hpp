@@ -8,6 +8,11 @@
 
 #include "node.hpp"
 #include "node_48.hpp"
+#include <array>
+
+namespace art {
+
+using std::array;
 
 template <class T> class node_256 : public node<T> {
 public:
@@ -63,4 +68,7 @@ template <class T> bool node_256<T>::is_full() const {
 template <class T> bool node_256<T>::is_leaf() const {
   return this->n_children_ == 0;
 }
+
+} // namespace art
+
 #endif

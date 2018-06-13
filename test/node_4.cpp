@@ -10,6 +10,8 @@
 #include <random>
 #include <vector>
 
+using namespace art;
+
 using std::array;
 using std::mt19937;
 using std::random_device;
