@@ -22,7 +22,7 @@ public:
   node_0<T> &operator=(const node_0<T> &other) = default;
   node_0<T> &operator=(node_0<T> &&other) noexcept = default;
 
-  node<T> *find_child(const partial_key_type &partial_key) const override;
+  node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
   node<T> *grow() override;
   bool is_full() const override;
@@ -33,8 +33,8 @@ template <class T>
 node_0<T>::node_0(key_type prefix, T *value) : node<T>(prefix, value) {}
 
 template <class T>
-node<T> *
-node_0<T>::find_child(const partial_key_type & /* partial_key */) const {
+node<T> **
+node_0<T>::find_child(const partial_key_type & /* partial_key */) {
   return nullptr;
 }
 

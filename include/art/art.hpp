@@ -8,6 +8,7 @@
 
 #include "node.hpp"
 #include "node_0.hpp"
+#include "node_4.hpp"
 #include <algorithm>
 
 namespace art {
@@ -33,45 +34,34 @@ private:
 
 // TODO(rafaelkallis): test
 template <class T> T *art<T>::search(const key_type &key) const {
-  node<T> *node = this->root;
+  node<T> *cur = this->root;
   int depth = 0;
   for (;;) {
-    if (node == nullptr) {
+    if (cur == nullptr) {
       return nullptr;
     }
-    const key_type prefix = node->get_prefix();
-    const int prefix_len = prefix.size();
-    const int prefix_match_len = node->check_prefix(key, depth);
-    const bool prefix_match = prefix_len == prefix_match_len;
+    const int prefix_len = cur->get_prefix().size();
+    const bool prefix_match = cur->check_prefix(key, depth) == prefix_len;
     if (!prefix_match) {
       return nullptr;
     }
     if (prefix_len == key.size() - depth) {
       /* exact match */
-      return node->get_value();
+      return cur->get_value();
     }
     depth += prefix_len;
-    node = node->find_child(key[depth]);
+    node<T> **next = cur->find_child(key[depth]);
+    if (next != nullptr) {
+      cur = *next;
+    }
     depth += 1;
   }
 }
 
 // TODO(rafaelkallis): test
 template <class T> T *art<T>::set(const key_type &key, T *value) {
-  if (this->root == nullptr) {
-    /* root is empty */
-    this->root = new node_0<T>(key, value);
-    return nullptr;
-  }
-
   /* pointer to current node */
-  node<T> *cur = this->root;
-
-  /* pointer to previous node, i.e. current node's parent */
-  node<T> *prev = nullptr;
-
-  /* the partial key used to advande from the previous to the current node */
-  partial_key_type cur_partial_key = 0;
+  node<T> **cur = &this->root;
 
   /* current key depth */
   int depth = 0;
@@ -80,14 +70,19 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
   const int key_len = key.size();
 
   for (;;) {
+    if (*cur == nullptr) {
+      *cur = new node_0<T>(key, value);
+      return nullptr;
+    }
+
     /* prefix of the current node */
-    const key_type prefix = cur->get_prefix();
+    const key_type prefix = (*cur)->get_prefix();
 
     /* length of the prefix of the current node */
     const int prefix_len = prefix.size();
 
     /* number of bytes of the current node's prefix that match the key */
-    const int prefix_match_len = cur->check_prefix(key, depth);
+    const int prefix_match_len = (*cur)->check_prefix(key, depth);
 
     /* true if the current node's prefix matches with a part of the key */
     const bool prefix_match =
@@ -107,8 +102,8 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
        *  /|\       /|\                 /|\       /|\
        */
 
-      T *old_value = cur->get_value();
-      cur->set_value(value);
+      T *old_value = (*cur)->get_value();
+      (*cur)->set_value(value);
       return old_value;
     }
 
@@ -132,15 +127,10 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
       const key_type new_node_prefix =
           key_type(prefix.cbegin(), prefix.cbegin() + prefix_match_len);
       node<T> *new_node = new node_4<T>(new_node_prefix, value);
-      cur->set_prefix(
+      (*cur)->set_prefix(
           key_type(prefix.cbegin() + prefix_match_len + 1, prefix.cend()));
-      new_node->set_child(prefix[prefix_match_len], cur);
-
-      if (prev == nullptr) {
-        this->root = new_node;
-      } else {
-        prev->set_child(cur_partial_key, new_node);
-      }
+      new_node->set_child(prefix[prefix_match_len], *cur);
+      *cur = new_node;
       return nullptr;
     }
 
@@ -165,25 +155,21 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
           key_type(prefix.cbegin(), prefix.cbegin() + prefix_match_len);
       node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr);
 
-      cur->set_prefix(
+      (*cur)->set_prefix(
           key_type(prefix.cbegin() + prefix_match_len + 1, prefix.cend()));
-      new_parent->set_child(prefix[prefix_match_len], cur);
+      new_parent->set_child(prefix[prefix_match_len], *cur);
 
       const key_type new_node_prefix =
           key_type(key.cbegin() + depth + prefix_match_len + 1, key.cend());
-      node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
+      node<T> *new_node = new node_0<T>(new_node_prefix, value);
       new_parent->set_child(key[depth + prefix_match_len], new_node);
 
-      if (prev == nullptr) {
-        this->root = new_parent;
-      } else {
-        prev->set_child(cur_partial_key, new_parent);
-      }
+      *cur = new_parent;
       return nullptr;
     }
 
     const partial_key_type next_partial_key = key[depth + prefix_len];
-    node<T> *next = cur->find_child(next_partial_key);
+    node<T> **next = (*cur)->find_child(next_partial_key);
 
     if (next == nullptr) {
       /*
@@ -197,18 +183,13 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
        *   (a)->v1               (a)->v1 +()->v2
        */
 
-      if (cur->is_full()) {
-        cur = cur->grow();
-        if (prev == nullptr) {
-          this->root = cur;
-        } else {
-          prev->set_child(cur_partial_key, cur);
-        }
+      if ((*cur)->is_full()) {
+        *cur = (*cur)->grow();
       }
       const key_type new_node_prefix =
           key_type(key.cbegin() + depth + prefix_len + 1, key.cend());
       node<T> *new_node = new node_0<T>(new_node_prefix, value);
-      cur->set_child(next_partial_key, new_node);
+      (*cur)->set_child(next_partial_key, new_node);
       return nullptr;
     }
 
@@ -220,8 +201,6 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
      *  (a)->v1  ()->v2           (a)->v1 *()->v2
      */
 
-    prev = cur;
-    cur_partial_key = next_partial_key;
     cur = next;
     depth += prefix_len + 1;
   }

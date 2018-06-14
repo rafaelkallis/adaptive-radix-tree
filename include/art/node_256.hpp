@@ -25,7 +25,7 @@ public:
   node_256<T> &operator=(const node_256<T> &other) = default;
   node_256<T> &operator=(node_256<T> &&other) noexcept = default;
 
-  node<T> *find_child(const partial_key_type &partial_key) const override;
+  node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
   node<T> *grow() override;
   bool is_full() const override;
@@ -33,7 +33,7 @@ public:
 
 private:
   uint16_t n_children_;
-  array<node<T> *, 256> children_;
+  node<T> *children_[256];
 };
 
 template <class T>
@@ -48,8 +48,9 @@ node_256<T>::node_256(key_type prefix, T *value)
 }
 
 template <class T>
-node<T> *node_256<T>::find_child(const partial_key_type &partial_key) const {
-  return this->children_[partial_key];
+node<T> **node_256<T>::find_child(const partial_key_type &partial_key) {
+  return this->children_[partial_key] != nullptr ? &this->children_[partial_key]
+                                                 : nullptr;
 }
 
 template <class T>

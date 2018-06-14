@@ -11,7 +11,7 @@
 #include <random>
 #include <vector>
 
-using namespace::art;
+using namespace ::art;
 
 using std::array;
 using std::make_shared;
@@ -22,8 +22,7 @@ using std::shuffle;
 
 class node_concrete : public node<int> {
 public:
-  node<int> *
-  find_child(const partial_key_type & /* partial_key */) const override {
+  node<int> **find_child(const partial_key_type & /* partial_key */) override {
     return nullptr;
   }
   void set_child(const partial_key_type & /* partial_key */,

@@ -33,10 +33,10 @@ public:
    * Finds and returns the child node identified by the given partial key.
    *
    * @param partial_key - The partial key associated with the child.
-   * @return The child node identified by the given partial key or
+   * @return Child node identified by the given partial key or
    * a null pointer of no child node is associated with the partial key.
    */
-  virtual node<T> *find_child(const partial_key_type &partial_key) const = 0;
+  virtual node<T> **find_child(const partial_key_type &partial_key) = 0;
 
   /**
    * Adds the given node to the node's children.

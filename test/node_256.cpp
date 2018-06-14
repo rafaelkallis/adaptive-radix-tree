@@ -49,8 +49,11 @@ TEST_CASE("node_256") {
 
       for (int j = 0; j <= i; j += 1) {
         auto p_k = partial_keys[j];
-        auto c = children[p_k];
-        REQUIRE_EQ(c, node.find_child(p_k));
+        auto expected_child = children[p_k];
+        auto actual_child_ptr = node.find_child(p_k);
+        REQUIRE(actual_child_ptr != nullptr);
+        auto actual_child = *actual_child_ptr;
+        REQUIRE_EQ(expected_child, actual_child);
       }
     }
     REQUIRE(node.is_full());
