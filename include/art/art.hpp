@@ -41,8 +41,8 @@ template <class T> T *art<T>::search(const key_type &key) const {
       return nullptr;
     }
     const int prefix_len = cur->get_prefix().size();
-    const bool prefix_match = cur->check_prefix(key, depth) == prefix_len;
-    if (!prefix_match) {
+    const bool is_prefix_match = cur->check_prefix(key, depth) == prefix_len;
+    if (!is_prefix_match) {
       return nullptr;
     }
     if (prefix_len == key.size() - depth) {
@@ -71,7 +71,8 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
 
   for (;;) {
     if (*cur == nullptr) {
-      *cur = new node_0<T>(key, value);
+      const key_type new_node_prefix = key_type(key.cbegin() + depth, key.cend());
+      *cur = new node_0<T>(new_node_prefix, value);
       return nullptr;
     }
 
@@ -85,10 +86,10 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
     const int prefix_match_len = (*cur)->check_prefix(key, depth);
 
     /* true if the current node's prefix matches with a part of the key */
-    const bool prefix_match =
+    const bool is_prefix_match =
         min(prefix_len, key_len - depth) == prefix_match_len;
 
-    if (prefix_match && prefix_len == key_len - depth) {
+    if (is_prefix_match && prefix_len == key_len - depth) {
       /* exact match:
        * => "replace"
        * => replace value of current node.
@@ -107,7 +108,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
       return old_value;
     }
 
-    if (prefix_match && prefix_len > key_len - depth) {
+    if (is_prefix_match && prefix_len > key_len - depth) {
       /* new key is a prefix of the current node's key:
        * => "expand"
        * => create new node with value to insert.
@@ -134,7 +135,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
       return nullptr;
     }
 
-    if (!prefix_match) {
+    if (!is_prefix_match) {
       /* prefix mismatch:
        * => new parent node with common prefix and no associated value.
        * => new node with value to insert.
