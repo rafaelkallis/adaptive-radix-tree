@@ -95,14 +95,16 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
 
     if (prefix_match && prefix_len == key_len - depth) {
       /* exact match:
+       * => "replace"
        * => replace value of current node.
-       *
+       * => return old value for caller to handle.
+       *        _                             _
        *        |                             |
        *       (aa)->Ø                       (aa)->Ø
        *    a /    \ b     +[aaaaa,v3]    a /    \ b
        *     /      \      ==========>     /      \
        * *(aa)->v1  ()->v2             *(aa)->v3  ()->v2
-       *  /|\      /|\                  /|\      /|\
+       *  /|\       /|\                 /|\       /|\
        */
 
       T *old_value = cur->get_value();
@@ -112,8 +114,10 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
 
     if (prefix_match && prefix_len > key_len - depth) {
       /* new key is a prefix of the current node's key:
-       * => new value becomes parent of leaf node.
-       *
+       * => "expand"
+       * => create new node with value to insert.
+       * => new node becomes parent of current node.
+       *        _                           _
        *        |                           |
        *       (aa)->Ø                     (aa)->Ø
        *    a /    \ b     +[aaaa,v3]   a /    \ b
@@ -125,7 +129,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
        *                            /|\
        */
 
-      key_type new_node_prefix =
+      const key_type new_node_prefix =
           key_type(prefix.cbegin(), prefix.cbegin() + prefix_match_len);
       node<T> *new_node = new node_4<T>(new_node_prefix, value);
       cur->set_prefix(
@@ -140,97 +144,33 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
       return nullptr;
     }
 
-    if (cur->is_leaf()) {
-      /* lazy expansion */
-
-      if (prefix_match && prefix_len < key_len - depth) {
-        /* current node's key is a prefix of the new node's key:
-         * => new node with new value becomes child of current node.
-         *
-         *       (aa)->Ø                        (aa)->Ø
-         *    a /    \ b     +[aaaaaa,v3]    a /    \ b
-         *     /      \      ===========>     /      \
-         * *(aa)->v1  ()->v2              *(aa)->v1  ()->v2
-         *                              a /
-         *                               /
-         *                             +()->v3
-         */
-
-        if (cur->is_full()) {
-          cur = cur->grow();
-          if (prev == nullptr) {
-            this->root = cur;
-          } else {
-            prev->set_child(cur_partial_key, cur);
-          }
-        }
-        key_type new_node_prefix =
-            key_type(key.begin() + depth + prefix_len + 1, key.end());
-        node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
-        cur->set_child(key[depth + prefix_len], new_node);
-        return nullptr;
-      }
-
-      /* leaf node prefix mismatch:
-       * => new parent node in place of old leaf node.
-       * => old leaf and new node with value become children of new parent
-       *    node.
-       *
-       *       (aa)->Ø                      (aa)->Ø
-       *    a /    \ b     +[aaaab,v3]   a /    \ b
-       *     /      \      ==========>    /      \
-       *  (aa)->v1  ()->v2             +(a)->Ø   ()->v2
-       *                             a /   \ b
-       *                              /     \
-       *                            ()->v1 +()->v3
-       */
-
-      key_type new_parent_prefix =
-          key_type(prefix.begin(), prefix.begin() + prefix_match_len);
-      node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr);
-
-      cur->set_prefix(
-          key_type(prefix.begin() + prefix_match_len + 1, prefix.end()));
-      new_parent->set_child(prefix[prefix_match_len + 1], cur);
-
-      key_type new_node_prefix =
-          key_type(key.begin() + depth + prefix_match_len + 1, key.end());
-      node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
-      new_parent->set_child(key[depth + prefix_match_len], new_node);
-
-      if (prev == nullptr) {
-        this->root = new_parent;
-      } else {
-        prev->set_child(cur_partial_key, new_parent);
-      }
-      return nullptr;
-    }
-
     if (!prefix_match) {
-      /* path compression:
-       * => 1 new parent node in place of old internal node.
-       * => old internal node and new node with inserted value become children
-       *    of new parent node.
+      /* prefix mismatch:
+       * => new parent node with common prefix and no associated value.
+       * => new node with value to insert.
+       * => current and new node become children of new parent node.
        *
+       *        |                        |
        *      *(aa)->Ø                 +(a)->Ø
        *    a /    \ b     +[ab,v3]  a /   \ b
        *     /      \      =======>   /     \
        *  (aa)->v1  ()->v2          *()->Ø +()->v3
-       *                          a /   \ b
+       *  /|\       /|\           a /   \ b
        *                           /     \
        *                        (aa)->v1 ()->v2
+       *                        /|\      /|\
        */
 
-      key_type new_parent_prefix =
-          key_type(prefix.begin(), prefix.begin() + prefix_match_len);
+      const key_type new_parent_prefix =
+          key_type(prefix.cbegin(), prefix.cbegin() + prefix_match_len);
       node<T> *new_parent = new node_4<T>(new_parent_prefix, nullptr);
 
       cur->set_prefix(
-          key_type(prefix.begin() + prefix_match_len + 1, prefix.end()));
-      new_parent->set_child(prefix[prefix_match_len + 1], cur);
+          key_type(prefix.cbegin() + prefix_match_len + 1, prefix.cend()));
+      new_parent->set_child(prefix[prefix_match_len], cur);
 
-      key_type new_node_prefix =
-          key_type(key.begin() + depth + prefix_match_len + 1, key.end());
+      const key_type new_node_prefix =
+          key_type(key.cbegin() + depth + prefix_match_len + 1, key.cend());
       node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
       new_parent->set_child(key[depth + prefix_match_len], new_node);
 
@@ -247,8 +187,9 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
 
     if (next == nullptr) {
       /*
-       * No child associated with the next partial key.
-       * => new node with the value becomes current node's child.
+       * no child associated with the next partial key.
+       * => create new node with value to insert.
+       * => new node becomes current node's child.
        *
        *      *(aa)->Ø              *(aa)->Ø
        *    a /        +[aab,v2]  a /    \ b
@@ -264,13 +205,14 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
           prev->set_child(cur_partial_key, cur);
         }
       }
-      key_type new_node_prefix = key_type(key.begin() + depth + 1, key.end());
+      const key_type new_node_prefix =
+          key_type(key.cbegin() + depth + prefix_len + 1, key.cend());
       node<T> *new_node = new node_0<T>(new_node_prefix, value);
       cur->set_child(next_partial_key, new_node);
       return nullptr;
     }
 
-    /* propagate down:
+    /* propagate down and repeat:
      *
      *     *(aa)->Ø                   (aa)->Ø
      *   a /    \ b    +[aaba,v3]  a /    \ b     repeat
