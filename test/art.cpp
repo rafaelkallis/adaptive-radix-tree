@@ -21,15 +21,41 @@ TEST_CASE("art") {
 
   art<int> trie;
 
-  key_type key = {'a', 'b', 'c'};
+  int *dummy_value_1 = new int();
+  int *dummy_value_2 = new int();
 
-  REQUIRE_EQ(nullptr, trie.search(key));
-
-  int dummy_value = 1;
-  int *dummy_value_ptr = &dummy_value;
-
-  SUBCASE("insert into empty tree") { 
-    trie.set(key, dummy_value_ptr); 
-    REQUIRE_EQ(dummy_value_ptr, trie.search(key));
+  SUBCASE("insert into empty tree") {
+    key_type key = {'a', 'b', 'c'};
+    REQUIRE_EQ(nullptr, trie.search(key));
+    trie.set(key, dummy_value_1);
+    REQUIRE_EQ(dummy_value_1, trie.search(key));
   }
+
+  SUBCASE("insert into empty tree & replace") {
+    key_type key = {'a', 'b', 'c'};
+    trie.set(key, dummy_value_1);
+    trie.set(key, dummy_value_2);
+    REQUIRE_EQ(dummy_value_2, trie.search(key));
+  }
+
+  SUBCASE("insert value s.t. existing value is a prefix") {
+    key_type prefix_key = {'a', 'b', 'c'};
+    key_type key = {'a', 'b', 'c', 'd', 'e'};
+    trie.set(prefix_key, dummy_value_1);
+    trie.set(key, dummy_value_2);
+    REQUIRE_EQ(dummy_value_1, trie.search(prefix_key));
+    REQUIRE_EQ(dummy_value_2, trie.search(key));
+  }
+  
+  SUBCASE("insert value s.t. new value is a prefix") {
+    key_type prefix_key = {'a', 'b', 'c'};
+    key_type key = {'a', 'b', 'c', 'd', 'e'};
+    trie.set(key, dummy_value_1);
+    trie.set(prefix_key, dummy_value_2);
+    REQUIRE_EQ(dummy_value_1, trie.search(key));
+    REQUIRE_EQ(dummy_value_2, trie.search(prefix_key));
+  }
+
+  delete dummy_value_1;
+  delete dummy_value_2;
 }

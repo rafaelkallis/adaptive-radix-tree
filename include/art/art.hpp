@@ -6,13 +6,12 @@
 #ifndef ART_ART_HPP
 #define ART_ART_HPP
 
+#include "node.hpp"
 #include "node_0.hpp"
 #include <algorithm>
-#include <cstring>
 
 namespace art {
 
-using std::memcmp;
 using std::min;
 
 template <class T> class art {
@@ -26,7 +25,7 @@ public:
   art<T> &operator=(art<T> &&other) noexcept = default;
 
   T *search(const key_type &key) const;
-  void set(const key_type &key, T *value);
+  T *set(const key_type &key, T *value);
 
 private:
   node<T> *root = nullptr;
@@ -58,11 +57,11 @@ template <class T> T *art<T>::search(const key_type &key) const {
 }
 
 // TODO(rafaelkallis): test
-template <class T> void art<T>::set(const key_type &key, T *value) {
+template <class T> T *art<T>::set(const key_type &key, T *value) {
   if (this->root == nullptr) {
     /* root is empty */
     this->root = new node_0<T>(key, value);
-    return;
+    return nullptr;
   }
 
   /* pointer to current node */
@@ -80,22 +79,6 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
   /* length of the key */
   const int key_len = key.size();
 
-  /**
-   * Replaces the current node with the given node. Also changes the previous
-   * node's reference of the current node and therefore makes the current node
-   * unrecoverable if no other references exist.
-   *
-   * @param node - The node to set the current node pointer to.
-   */
-  auto replace_cur = [this, &prev, &cur_partial_key, &cur](node<T> *node) {
-    cur = node;
-    if (prev == nullptr) {
-      this->root = node;
-    } else {
-      prev->set_child(cur_partial_key, node);
-    }
-  };
-
   for (;;) {
     /* prefix of the current node */
     const key_type prefix = cur->get_prefix();
@@ -107,31 +90,62 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
     const int prefix_match_len = cur->check_prefix(key, depth);
 
     /* true if the current node's prefix matches with a part of the key */
-    const bool prefix_match = prefix_len == prefix_match_len;
+    const bool prefix_match =
+        min(prefix_len, key_len - depth) == prefix_match_len;
 
     if (prefix_match && prefix_len == key_len - depth) {
       /* exact match:
        * => replace value of current node.
        *
+       *        |                             |
        *       (aa)->Ø                       (aa)->Ø
        *    a /    \ b     +[aaaaa,v3]    a /    \ b
        *     /      \      ==========>     /      \
        * *(aa)->v1  ()->v2             *(aa)->v3  ()->v2
-       *
+       *  /|\      /|\                  /|\      /|\
        */
 
       T *old_value = cur->get_value();
-      delete old_value;
       cur->set_value(value);
-      return;
+      return old_value;
+    }
+
+    if (prefix_match && prefix_len > key_len - depth) {
+      /* new key is a prefix of the current node's key:
+       * => new value becomes parent of leaf node.
+       *
+       *        |                           |
+       *       (aa)->Ø                     (aa)->Ø
+       *    a /    \ b     +[aaaa,v3]   a /    \ b
+       *     /      \      =========>    /      \
+       * *(aa)->v1  ()->v2            +(a)->v3  ()->v2
+       *  /|\       /|\             a /         /|\
+       *                             /
+       *                           *()->v1
+       *                            /|\
+       */
+
+      key_type new_node_prefix =
+          key_type(prefix.cbegin(), prefix.cbegin() + prefix_match_len);
+      node<T> *new_node = new node_4<T>(new_node_prefix, value);
+      cur->set_prefix(
+          key_type(prefix.cbegin() + prefix_match_len + 1, prefix.cend()));
+      new_node->set_child(prefix[prefix_match_len], cur);
+
+      if (prev == nullptr) {
+        this->root = new_node;
+      } else {
+        prev->set_child(cur_partial_key, new_node);
+      }
+      return nullptr;
     }
 
     if (cur->is_leaf()) {
       /* lazy expansion */
 
       if (prefix_match && prefix_len < key_len - depth) {
-        /* current node's value is a prefix of the new value:
-         * => current node becomes parent of new value.
+        /* current node's key is a prefix of the new node's key:
+         * => new node with new value becomes child of current node.
          *
          *       (aa)->Ø                        (aa)->Ø
          *    a /    \ b     +[aaaaaa,v3]    a /    \ b
@@ -143,37 +157,18 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
          */
 
         if (cur->is_full()) {
-          replace_cur(cur->grow());
+          cur = cur->grow();
+          if (prev == nullptr) {
+            this->root = cur;
+          } else {
+            prev->set_child(cur_partial_key, cur);
+          }
         }
         key_type new_node_prefix =
             key_type(key.begin() + depth + prefix_len + 1, key.end());
         node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
         cur->set_child(key[depth + prefix_len], new_node);
-        return;
-      }
-
-      if (prefix_match && prefix_len > key_len - depth) {
-        /* new value is a prefix of the leaf node's value:
-         * => new value becomes parent of leaf node.
-         *
-         *       (aa)->Ø                     (aa)->Ø
-         *    a /    \ b     +[aaaa,v3]   a /    \ b
-         *     /      \      =========>    /      \
-         * *(aa)->v1  ()->v2            +(a)->v3  ()->v2
-         *                            a /
-         *                             /
-         *                           *()->v1
-         */
-
-        key_type new_node_prefix =
-            key_type(key.begin() + depth, key.end() - (prefix_len + 1));
-        node<T> *new_node = new node_4<T>(new_node_prefix, value);
-        cur->set_prefix(
-            key_type(key.begin() + depth + prefix_len + 1, key.end()));
-        new_node->set_child(key[depth + prefix_len], cur);
-
-        replace_cur(new_node);
-        return;
+        return nullptr;
       }
 
       /* leaf node prefix mismatch:
@@ -203,8 +198,12 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
       node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
       new_parent->set_child(key[depth + prefix_match_len], new_node);
 
-      replace_cur(new_parent);
-      return;
+      if (prev == nullptr) {
+        this->root = new_parent;
+      } else {
+        prev->set_child(cur_partial_key, new_parent);
+      }
+      return nullptr;
     }
 
     if (!prefix_match) {
@@ -235,8 +234,12 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
       node_0<T> *new_node = new node_0<T>(new_node_prefix, value);
       new_parent->set_child(key[depth + prefix_match_len], new_node);
 
-      replace_cur(new_parent);
-      return;
+      if (prev == nullptr) {
+        this->root = new_parent;
+      } else {
+        prev->set_child(cur_partial_key, new_parent);
+      }
+      return nullptr;
     }
 
     const partial_key_type next_partial_key = key[depth + prefix_len];
@@ -254,12 +257,17 @@ template <class T> void art<T>::set(const key_type &key, T *value) {
        */
 
       if (cur->is_full()) {
-        replace_cur(cur->grow());
+        cur = cur->grow();
+        if (prev == nullptr) {
+          this->root = cur;
+        } else {
+          prev->set_child(cur_partial_key, cur);
+        }
       }
       key_type new_node_prefix = key_type(key.begin() + depth + 1, key.end());
       node<T> *new_node = new node_0<T>(new_node_prefix, value);
       cur->set_child(next_partial_key, new_node);
-      return;
+      return nullptr;
     }
 
     /* propagate down:
