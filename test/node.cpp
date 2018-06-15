@@ -9,32 +9,44 @@
 #include <array>
 #include <memory>
 #include <random>
+#include <utility>
 #include <vector>
 
 using namespace ::art;
 
 using std::array;
+using std::make_pair;
 using std::make_shared;
 using std::mt19937;
+using std::pair;
 using std::random_device;
 using std::shared_ptr;
 using std::shuffle;
 
-class node_concrete : public node<int> {
+template <class T> class node_concrete : public node<T> {
 public:
-  node<int> **find_child(const partial_key_type & /* partial_key */) override {
+  node<T> **find_child(const partial_key_type & /* partial_key */) override {
     return nullptr;
   }
   void set_child(const partial_key_type & /* partial_key */,
-                 node<int> * /* child */) override {}
-  node<int> *grow() override { return nullptr; }
+                 node<T> * /* child */) override {}
+  node<T> *grow() override { return nullptr; }
   bool is_full() const override { return true; }
   bool is_leaf() const override { return true; }
+
+  typename node<T>::iterator begin() override {
+    return node_concrete<T>::iterator();
+  };
+  typename node<T>::iterator end() override {
+    return node_concrete<T>::iterator();
+  };
+
+  class iterator : public node<T>::iterator {};
 };
 
 TEST_CASE("node") {
 
-  node_concrete node;
+  node_concrete<int> node;
 
   SUBCASE("check_prefix") {
     key_type key = {0, 0, 0, 1, 0, 0, 0, 0, 1};

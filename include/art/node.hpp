@@ -9,10 +9,12 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <iterator>
 #include <vector>
 
 namespace art {
 
+using std::pair;
 using std::vector;
 
 using partial_key_type = uint8_t;
@@ -87,6 +89,12 @@ public:
   void set_value(T *value);
   key_type get_prefix() const;
   void set_prefix(const key_type &prefix);
+
+  using iterator = std::iterator<std::forward_iterator_tag,
+                                 pair<partial_key_type, node<T> *>, int64_t>;
+
+  virtual iterator begin() = 0;
+  virtual iterator end() = 0;
 
 private:
   key_type prefix_ = key_type(0);

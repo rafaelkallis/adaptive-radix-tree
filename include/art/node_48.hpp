@@ -9,10 +9,13 @@
 #include "node.hpp"
 #include "node_256.hpp"
 #include <array>
+#include <utility>
 
 namespace art {
 
 using std::array;
+using std::make_pair;
+using std::pair;
 
 template <class T> class node_48 : public node<T> {
 public:
@@ -30,6 +33,24 @@ public:
   node<T> *grow() override;
   bool is_full() const override;
   bool is_leaf() const override;
+
+  typename node<T>::iterator begin() override;
+  typename node<T>::iterator end() override;
+
+  class iterator : public node<T>::iterator {
+  public:
+    iterator(node_48<T> *node, uint8_t index, bool is_out_of_bounds);
+
+    pair<partial_key_type, node<T> *> operator*();
+    iterator &operator++();
+    bool operator==(const node_48<T>::iterator &rhs);
+    bool operator!=(const node_48<T>::iterator &rhs);
+
+  private:
+    node_48<T> *node_;
+    uint8_t index_;
+    bool is_out_of_bounds_;
+  };
 
 private:
   static const partial_key_type EMPTY;
@@ -98,6 +119,55 @@ template <class T> bool node_48<T>::is_leaf() const {
 }
 
 template <class T> const unsigned char node_48<T>::EMPTY = 48;
+
+template <class T> typename node<T>::iterator node_48<T>::begin() {
+  return node_48<T>::iterator(this, 0, false);
+}
+
+template <class T> typename node<T>::iterator node_48<T>::end() {
+  return node_48<T>::iterator(this, 0, true);
+}
+
+template <class T>
+node_48<T>::iterator::iterator(node_48<T> *node, uint8_t index, bool is_out_of_bounds)
+    : node_(node), index_(index), is_out_of_bounds_(is_out_of_bounds) {}
+
+template <class T>
+pair<partial_key_type, node<T> *> node_48<T>::iterator::operator*() {
+  if (this->is_out_of_bounds_) {
+    return make_pair(0, nullptr);
+  }
+  return make_pair(this->index_,
+                   this->node_->children_[this->node_->indexes_[this->index_]]);
+}
+
+template <class T>
+typename node_48<T>::iterator &node_48<T>::iterator::operator++() {
+  if (!this->is_out_of_bounds_) {
+    /* advance iterator index until non-empty child index is found */
+    do {
+      if (this->index_ == 255) {
+        this->is_out_of_bounds_ = true;
+        break;
+      }
+      this->index_ += 1;
+    } while (this->node_->indexes_[this->index_] == node_48<T>::EMPTY);
+  }
+  return *this;
+}
+
+template <class T>
+bool node_48<T>::iterator::operator==(const node_48<T>::iterator &rhs) {
+  return this->node_ == rhs.node_ &&
+         ((this->is_out_of_bounds_ && rhs.is_out_of_bounds_) ||
+          (!this->is_out_of_bounds_ && !rhs.is_out_of_bounds_ &&
+           this->index_ == rhs.index_));
+}
+
+template <class T>
+bool node_48<T>::iterator::operator!=(const node_48<T>::iterator &rhs) {
+  return !((*this) == rhs);
+}
 
 } // namespace art
 

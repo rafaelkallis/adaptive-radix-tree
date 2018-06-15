@@ -25,7 +25,14 @@ public:
   art<T> &operator=(const art<T> &other) = default;
   art<T> &operator=(art<T> &&other) noexcept = default;
 
-  T *search(const key_type &key) const;
+  /**
+   * Finds the value associated with the given key.
+   *
+   * @param key - The key to find.
+   * @return the value associated with the key or a nullptr.
+   */
+  T *get(const key_type &key) const;
+
   T *set(const key_type &key, T *value);
 
 private:
@@ -33,7 +40,7 @@ private:
 };
 
 // TODO(rafaelkallis): test
-template <class T> T *art<T>::search(const key_type &key) const {
+template <class T> T *art<T>::get(const key_type &key) const {
   node<T> *cur = this->root;
   int depth = 0;
   for (;;) {
@@ -71,7 +78,8 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
 
   for (;;) {
     if (*cur == nullptr) {
-      const key_type new_node_prefix = key_type(key.cbegin() + depth, key.cend());
+      const key_type new_node_prefix =
+          key_type(key.cbegin() + depth, key.cend());
       *cur = new node_0<T>(new_node_prefix, value);
       return nullptr;
     }
@@ -93,7 +101,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
       /* exact match:
        * => "replace"
        * => replace value of current node.
-       * => return old value for caller to handle.
+       * => return old value to caller to handle.
        *        _                             _
        *        |                             |
        *       (aa)->Ø                       (aa)->Ø

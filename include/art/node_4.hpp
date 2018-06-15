@@ -8,8 +8,12 @@
 
 #include "node.hpp"
 #include "node_16.hpp"
+#include <utility>
 
 namespace art {
+
+using std::make_pair;
+using std::pair;
 
 template <class T> class node_4 : public node<T> {
 public:
@@ -27,7 +31,24 @@ public:
   node<T> *grow() override;
   bool is_full() const override;
   bool is_leaf() const override;
+  
+  typename node<T>::iterator begin() override;
+  typename node<T>::iterator end() override;
 
+  class iterator : public node<T>::iterator {
+  public:
+    iterator(node_4<T> *node, uint8_t index);
+
+    pair<partial_key_type, node<T> *> operator*();
+    iterator &operator++();
+    bool operator==(const node_4<T>::iterator &rhs);
+    bool operator!=(const node_4<T>::iterator &rhs);
+
+  private:
+    node_4<T> *node_;
+    uint8_t index_;
+  };
+  
 private:
   uint8_t n_children_;
   array<partial_key_type, 4> keys_;
@@ -85,6 +106,46 @@ template <class T> bool node_4<T>::is_full() const {
 
 template <class T> bool node_4<T>::is_leaf() const {
   return this->n_children_ == 0;
+}
+
+template <class T> typename node<T>::iterator node_4<T>::begin() {
+  return node_4<T>::iterator(this, 0);
+}
+
+template <class T> typename node<T>::iterator node_4<T>::end() {
+  return node_4<T>::iterator(this, this->n_children_);
+}
+
+template <class T>
+node_4<T>::iterator::iterator(node_4<T> *node, uint8_t index)
+    : node_(node), index_(index) {}
+
+template <class T>
+pair<partial_key_type, node<T> *> node_4<T>::iterator::operator*() {
+  if (this->index_ >= this->node_->n_children_) {
+    /* out of bounds */
+    return make_pair(0, nullptr);
+  }
+  return make_pair(this->node_->keys_[this->index_],
+                   this->node_->children_[this->index_]);
+}
+
+template <class T>
+typename node_4<T>::iterator &node_4<T>::iterator::operator++() {
+  if (this->index_ < this->n_children_) {
+    this->index_++;
+  }
+  return *this;
+}
+
+template <class T>
+bool node_4<T>::iterator::operator==(const node_4<T>::iterator &rhs) {
+  return this->node_ == rhs.node_ && this->index_ == rhs.index_;
+}
+
+template <class T>
+bool node_4<T>::iterator::operator!=(const node_4<T>::iterator &rhs) {
+  return !((*this) == rhs);
 }
 
 } // namespace art

@@ -34,7 +34,7 @@ TEST_CASE("node_16") {
   random_device rd;
   mt19937 g(rd());
 
-  for (int experiment = 0; experiment < 10000; experiment += 1) {
+  for (int experiment = 0; experiment < 1000; experiment += 1) {
     /* test subject */
     node_16<void> node;
 
