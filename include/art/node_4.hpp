@@ -8,47 +8,28 @@
 
 #include "node.hpp"
 #include "node_16.hpp"
+#include <iostream>
+#include <stdexcept>
 #include <utility>
 
 namespace art {
 
-using std::make_pair;
-using std::pair;
+using std::out_of_range;
 
 template <class T> class node_4 : public node<T> {
 public:
   node_4();
   node_4(key_type prefix, T *value);
-  node_4(const node_4<T> &other) = default;
-  node_4(node_4<T> &&other) noexcept = default;
-  ~node_4() override = default;
-
-  node_4<T> &operator=(const node_4<T> &other) = default;
-  node_4<T> &operator=(node_4<T> &&other) noexcept = default;
 
   node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
   node<T> *grow() override;
   bool is_full() const override;
   bool is_leaf() const override;
-  
-  typename node<T>::iterator begin() override;
-  typename node<T>::iterator end() override;
 
-  class iterator : public node<T>::iterator {
-  public:
-    iterator(node_4<T> *node, uint8_t index);
+  partial_key_type next_partial_key(
+      const partial_key_type &partial_key) noexcept(false) override;
 
-    pair<partial_key_type, node<T> *> operator*();
-    iterator &operator++();
-    bool operator==(const node_4<T>::iterator &rhs);
-    bool operator!=(const node_4<T>::iterator &rhs);
-
-  private:
-    node_4<T> *node_;
-    uint8_t index_;
-  };
-  
 private:
   uint8_t n_children_;
   array<partial_key_type, 4> keys_;
@@ -75,7 +56,7 @@ template <class T>
 void node_4<T>::set_child(const partial_key_type &partial_key, node<T> *child) {
   /* determine index for child */
   int child_i;
-  for (int i = this->n_children_ - 1;; i -= 1) {
+  for (int i = this->n_children_ - 1;; --i) {
     if (i >= 0 && partial_key < this->keys_[i]) {
       /* move existing sibling to the right */
       this->keys_[i + 1] = this->keys_[i];
@@ -108,44 +89,15 @@ template <class T> bool node_4<T>::is_leaf() const {
   return this->n_children_ == 0;
 }
 
-template <class T> typename node<T>::iterator node_4<T>::begin() {
-  return node_4<T>::iterator(this, 0);
-}
-
-template <class T> typename node<T>::iterator node_4<T>::end() {
-  return node_4<T>::iterator(this, this->n_children_);
-}
-
 template <class T>
-node_4<T>::iterator::iterator(node_4<T> *node, uint8_t index)
-    : node_(node), index_(index) {}
-
-template <class T>
-pair<partial_key_type, node<T> *> node_4<T>::iterator::operator*() {
-  if (this->index_ >= this->node_->n_children_) {
-    /* out of bounds */
-    return make_pair(0, nullptr);
+partial_key_type node_4<T>::next_partial_key(
+    const partial_key_type &partial_key) noexcept(false) {
+  for (int i = 0; i < this->n_children_; ++i) {
+    if (this->keys_[i] >= partial_key) {
+      return this->keys_[i];
+    }
   }
-  return make_pair(this->node_->keys_[this->index_],
-                   this->node_->children_[this->index_]);
-}
-
-template <class T>
-typename node_4<T>::iterator &node_4<T>::iterator::operator++() {
-  if (this->index_ < this->n_children_) {
-    this->index_++;
-  }
-  return *this;
-}
-
-template <class T>
-bool node_4<T>::iterator::operator==(const node_4<T>::iterator &rhs) {
-  return this->node_ == rhs.node_ && this->index_ == rhs.index_;
-}
-
-template <class T>
-bool node_4<T>::iterator::operator!=(const node_4<T>::iterator &rhs) {
-  return !((*this) == rhs);
+  throw out_of_range("provided partial key does not have a successor");
 }
 
 } // namespace art

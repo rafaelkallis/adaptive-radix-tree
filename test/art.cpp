@@ -68,7 +68,7 @@ TEST_CASE("art") {
   }
 
   SUBCASE("monte carlo") {
-    const int n = 3000;
+    const int n = 1000;
     array<key_type, n> keys;
     array<int *, n> values;
     /* rng */

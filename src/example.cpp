@@ -31,12 +31,23 @@ int main() {
   art::node_0<int> n0;
   n0.check_prefix(art::key_type(), 0);
 
-  int i = 1;
-  int j = 2;
+  /* int i = 1; */
+  /* int j = 2; */
 
-  art::art<int> trie;
-  art::key_type prefix_key = {'a', 'b', 'c'};
-  art::key_type key = {'a', 'b', 'c', 'd', 'e'};
-  trie.set(key, &i);
-  trie.set(prefix_key, &j);
+  /* art::art<int> trie; */
+  /* art::key_type prefix_key = {'a', 'b', 'c'}; */
+  /* art::key_type key = {'a', 'b', 'c', 'd', 'e'}; */
+  /* trie.set(key, &i); */
+  /* trie.set(prefix_key, &j); */
+
+  art::node_4<void> n4;
+
+  art::node_0<void> child_0;
+  art::node_0<void> child_1;
+  art::node_0<void> child_2;
+  n4.set_child(0, &child_0);
+  n4.set_child(3, &child_1);
+  n4.set_child(5, &child_2);
+
+
 }

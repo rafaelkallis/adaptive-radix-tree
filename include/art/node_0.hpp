@@ -8,23 +8,17 @@
 
 #include "node.hpp"
 #include "node_4.hpp"
+#include <stdexcept>
 #include <utility>
 
 namespace art {
 
-using std::make_pair;
-using std::pair;
+using std::out_of_range;
 
 template <class T> class node_0 : public node<T> {
 public:
   node_0() = default;
   node_0(key_type prefix, T *value);
-  node_0(const node_0<T> &other) = default;
-  node_0(node_0<T> &&other) noexcept = default;
-  ~node_0() = default;
-
-  node_0<T> &operator=(const node_0<T> &other) = default;
-  node_0<T> &operator=(node_0<T> &&other) noexcept = default;
 
   node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
@@ -32,21 +26,8 @@ public:
   bool is_full() const override;
   bool is_leaf() const override;
 
-  typename node<T>::iterator begin() override;
-  typename node<T>::iterator end() override;
-
-  class iterator : public node<T>::iterator {
-  public:
-    explicit iterator(node_0<T> *node);
-
-    pair<partial_key_type, node<T> *> operator*();
-    iterator &operator++();
-    bool operator==(const node_0<T>::iterator &rhs);
-    bool operator!=(const node_0<T>::iterator &rhs);
-
-  private:
-    node_0<T> *node_;
-  };
+  partial_key_type next_partial_key(
+      const partial_key_type &partial_key) noexcept(false) override;
 };
 
 template <class T>
@@ -71,37 +52,10 @@ template <class T> bool node_0<T>::is_full() const { return true; }
 
 template <class T> bool node_0<T>::is_leaf() const { return true; }
 
-template <class T> typename node<T>::iterator node_0<T>::begin() {
-  return node_0<T>::iterator(this);
-}
-
-template <class T> typename node<T>::iterator node_0<T>::end() {
-  return node_0<T>::iterator(this);
-}
-
 template <class T>
-node_0<T>::iterator::iterator(node_0<T> *node)
-    : node_(node) {}
-
-
-template <class T>
-pair<partial_key_type, node<T> *> node_0<T>::iterator::operator*() {
-  return make_pair(0, nullptr);
-}
-
-template <class T>
-typename node_0<T>::iterator &node_0<T>::iterator::operator++() {
-  return *this;
-}
-
-template <class T>
-bool node_0<T>::iterator::operator==(const node_0<T>::iterator &rhs) {
-  return this->node_ == rhs.node_;
-}
-
-template <class T>
-bool node_0<T>::iterator::operator!=(const node_0<T>::iterator &rhs) {
-  return !((*this) == rhs);
+partial_key_type node_0<T>::next_partial_key(
+    const partial_key_type &partial_key) noexcept(false) {
+  throw out_of_range("provided partial key does not have a successor");
 }
 
 } // namespace art

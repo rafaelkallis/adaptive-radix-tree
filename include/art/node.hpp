@@ -10,10 +10,13 @@
 #include <array>
 #include <cstring>
 #include <iterator>
+#include <stdexcept>
 #include <vector>
 
 namespace art {
 
+using std::make_pair;
+using std::out_of_range;
 using std::pair;
 using std::vector;
 
@@ -90,11 +93,29 @@ public:
   key_type get_prefix() const;
   void set_prefix(const key_type &prefix);
 
-  using iterator = std::iterator<std::forward_iterator_tag,
-                                 pair<partial_key_type, node<T> *>, int64_t>;
+  virtual partial_key_type
+  next_partial_key(const partial_key_type &partial_key) noexcept(false) = 0;
 
-  virtual iterator begin() = 0;
-  virtual iterator end() = 0;
+  class iterator
+      : public std::iterator<std::forward_iterator_tag,
+                             pair<partial_key_type, node<T> *>, int64_t> {
+  public:
+    iterator(node<T> *n, uint8_t index, bool is_out_of_bounds);
+
+    pair<partial_key_type, node<T> *> operator*();
+    node<T>::iterator &operator++();
+    node<T>::iterator operator++(int);
+    bool operator==(const node<T>::iterator &rhs);
+    bool operator!=(const node<T>::iterator &rhs);
+
+  private:
+    node<T> *n_;
+    uint8_t index_;
+    bool is_out_of_bounds_;
+  };
+
+  iterator begin();
+  iterator end();
 
 private:
   key_type prefix_ = key_type(0);
@@ -126,6 +147,62 @@ template <class T> key_type node<T>::get_prefix() const {
 
 template <class T> void node<T>::set_prefix(const key_type &prefix) {
   this->prefix_ = prefix;
+}
+
+template <class T> typename node<T>::iterator node<T>::begin() {
+  return node<T>::iterator(this, 0, false);
+}
+
+template <class T> typename node<T>::iterator node<T>::end() {
+  return node<T>::iterator(this, 0, true);
+}
+
+template <class T>
+node<T>::iterator::iterator(node<T> *n, uint8_t index, bool is_out_of_bounds)
+    : n_(n), index_(index), is_out_of_bounds_(is_out_of_bounds) {
+  if (!this->is_out_of_bounds_) {
+    try {
+      this->index_ = this->n_->next_partial_key(this->index_);
+    } catch (out_of_range &) {
+      this->is_out_of_bounds_ = true;
+    }
+  }
+}
+
+template <class T>
+pair<partial_key_type, node<T> *> node<T>::iterator::operator*() {
+  return this->is_out_of_bounds_
+             ? make_pair(0, nullptr)
+             : make_pair(this->index_, *this->n_->find_child(this->index_));
+}
+
+template <class T> typename node<T>::iterator &node<T>::iterator::operator++() {
+  try {
+    this->index_ = this->n_->next_partial_key(this->index_ + 1);
+  } catch (out_of_range &) {
+    this->is_out_of_bounds_ = true;
+  }
+  return *this;
+}
+
+template <class T>
+typename node<T>::iterator node<T>::iterator::operator++(int) {
+  auto old_this = *this;
+  ++(*this);
+  return old_this;
+}
+
+template <class T>
+bool node<T>::iterator::operator==(const node<T>::iterator &rhs) {
+  return this->n_ == rhs.n_ &&
+         ((this->is_out_of_bounds_ && rhs.is_out_of_bounds_) ||
+          (!this->is_out_of_bounds_ && !rhs.is_out_of_bounds_ &&
+           this->index_ == rhs.index_));
+}
+
+template <class T>
+bool node<T>::iterator::operator!=(const node<T>::iterator &rhs) {
+  return !((*this) == rhs);
 }
 
 } // namespace art
