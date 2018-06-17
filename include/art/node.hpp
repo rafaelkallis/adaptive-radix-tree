@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstring>
 #include <iterator>
 #include <stdexcept>
@@ -102,11 +103,18 @@ public:
   public:
     iterator(node<T> *n, uint8_t index, bool is_out_of_bounds);
 
-    pair<partial_key_type, node<T> *> operator*();
+    partial_key_type get_partial_key() const;
+    node<T> *get_node() const;
+
+    node<T> *operator*() const;
     node<T>::iterator &operator++();
-    node<T>::iterator operator++(int);
-    bool operator==(const node<T>::iterator &rhs);
-    bool operator!=(const node<T>::iterator &rhs);
+    node<T>::iterator operator++(int) const;
+    bool operator==(const node<T>::iterator &rhs) const;
+    bool operator!=(const node<T>::iterator &rhs) const;
+    bool operator<(const node<T>::iterator &rhs) const;
+    bool operator>(const node<T>::iterator &rhs) const;
+    bool operator<=(const node<T>::iterator &rhs) const;
+    bool operator>=(const node<T>::iterator &rhs) const;
 
   private:
     node<T> *n_;
@@ -115,6 +123,7 @@ public:
   };
 
   iterator begin();
+  iterator at(partial_key_type partial_key);
   iterator end();
 
 private:
@@ -153,6 +162,10 @@ template <class T> typename node<T>::iterator node<T>::begin() {
   return node<T>::iterator(this, 0, false);
 }
 
+template <class T> typename node<T>::iterator node<T>::at(partial_key_type partial_key) {
+  return node<T>::iterator(this, partial_key, false);
+}
+
 template <class T> typename node<T>::iterator node<T>::end() {
   return node<T>::iterator(this, 0, true);
 }
@@ -170,13 +183,24 @@ node<T>::iterator::iterator(node<T> *n, uint8_t index, bool is_out_of_bounds)
 }
 
 template <class T>
-pair<partial_key_type, node<T> *> node<T>::iterator::operator*() {
-  return this->is_out_of_bounds_
-             ? make_pair(0, nullptr)
-             : make_pair(this->index_, *this->n_->find_child(this->index_));
+partial_key_type node<T>::iterator::get_partial_key() const {
+  return this->is_out_of_bounds_ ? 0 : this->index_;
+}
+
+template <class T> node<T> *node<T>::iterator::get_node() const {
+  return this->is_out_of_bounds_ ? nullptr
+                                 : *(this->n_->find_child(this->index_));
+}
+
+template <class T> node<T> *node<T>::iterator::operator*() const {
+  return this->get_node();
 }
 
 template <class T> typename node<T>::iterator &node<T>::iterator::operator++() {
+  if (this->index_ == 255) {
+    this->is_out_of_bounds_ = true;
+    return *this;
+  }
   try {
     this->index_ = this->n_->next_partial_key(this->index_ + 1);
   } catch (out_of_range &) {
@@ -186,23 +210,52 @@ template <class T> typename node<T>::iterator &node<T>::iterator::operator++() {
 }
 
 template <class T>
-typename node<T>::iterator node<T>::iterator::operator++(int) {
-  auto old_this = *this;
+typename node<T>::iterator node<T>::iterator::operator++(int) const {
+  typename node<T>::iterator old(*this);
   ++(*this);
-  return old_this;
+  return old;
 }
 
 template <class T>
-bool node<T>::iterator::operator==(const node<T>::iterator &rhs) {
-  return this->n_ == rhs.n_ &&
-         ((this->is_out_of_bounds_ && rhs.is_out_of_bounds_) ||
-          (!this->is_out_of_bounds_ && !rhs.is_out_of_bounds_ &&
-           this->index_ == rhs.index_));
+bool node<T>::iterator::
+operator==(const typename node<T>::iterator &rhs) const {
+  /* should be from same node */
+  assert((*this).n_ == rhs.n_);
+  return ((*this).is_out_of_bounds_ && rhs.is_out_of_bounds_) ||
+         (!(*this).is_out_of_bounds_ && !rhs.is_out_of_bounds_ &&
+          (*this).index_ == rhs.index_);
 }
 
 template <class T>
-bool node<T>::iterator::operator!=(const node<T>::iterator &rhs) {
+bool node<T>::iterator::operator<(const typename node<T>::iterator &rhs) const {
+  /* should be from same node */
+  assert((*this).n_ == rhs.n_);
+  return (!(*this).is_out_of_bounds_ && rhs.is_out_of_bounds_) ||
+         (!(*this).is_out_of_bounds_ && !rhs.is_out_of_bounds_ &&
+          (*this).index_ < rhs.index_);
+}
+
+template <class T>
+bool node<T>::iterator::
+operator!=(const typename node<T>::iterator &rhs) const {
   return !((*this) == rhs);
+}
+
+template <class T>
+bool node<T>::iterator::
+operator>=(const typename node<T>::iterator &rhs) const {
+  return !((*this) < rhs);
+}
+
+template <class T>
+bool node<T>::iterator::
+operator<=(const typename node<T>::iterator &rhs) const {
+  return (rhs >= (*this));
+}
+
+template <class T>
+bool node<T>::iterator::operator>(const typename node<T>::iterator &rhs) const {
+  return (rhs < (*this));
 }
 
 } // namespace art

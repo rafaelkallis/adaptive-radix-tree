@@ -23,11 +23,10 @@ using std::random_device;
 using std::shared_ptr;
 using std::shuffle;
 
-TEST_CASE("node") {
+TEST_SUITE("node") {
 
-  node_0<int> node;
-
-  SUBCASE("check_prefix") {
+  TEST_CASE("check_prefix") {
+    node_0<int> node;
     key_type key = {0, 0, 0, 1, 0, 0, 0, 0, 1};
 
     node.set_prefix(key_type{0, 0, 0, 0});
@@ -41,5 +40,61 @@ TEST_CASE("node") {
     CHECK_EQ(2, node.check_prefix(key, 6));
     CHECK_EQ(1, node.check_prefix(key, 7));
     CHECK_EQ(0, node.check_prefix(key, 8));
+  }
+
+  TEST_CASE("iteration") {
+    node_256<void> subject;
+
+    node_0<void> n0;
+    node_0<void> n1;
+    node_0<void> n2;
+    node_0<void> n3;
+
+    subject.set_child(0, &n0);
+    subject.set_child(5, &n1);
+    subject.set_child(6, &n2);
+    subject.set_child(255, &n3);
+
+    auto it = subject.begin();
+    auto it_end = subject.end();
+    REQUIRE_EQ(nullptr, *it_end);
+
+    REQUIRE(it < it_end);
+    REQUIRE(it <= it_end);
+    REQUIRE(it_end > it);
+    REQUIRE(it_end >= it);
+    REQUIRE(it != it_end);
+    REQUIRE_EQ(0, it.get_partial_key());
+    REQUIRE_EQ(&n0, *it);
+    REQUIRE_EQ(&n0, it.get_node());
+
+    ++it;
+
+    REQUIRE(it < it_end);
+    REQUIRE_EQ(5, it.get_partial_key());
+    REQUIRE_EQ(&n1, *it);
+    REQUIRE_EQ(&n1, it.get_node());
+
+    ++it;
+
+    REQUIRE(it < it_end);
+    REQUIRE_EQ(6, it.get_partial_key());
+    REQUIRE_EQ(&n2, *it);
+    REQUIRE_EQ(&n2, it.get_node());
+
+    ++it;
+
+    REQUIRE(it < it_end);
+    REQUIRE_EQ(255, it.get_partial_key());
+    REQUIRE_EQ(&n3, *it);
+    REQUIRE_EQ(&n3, it.get_node());
+
+    ++it;
+
+    REQUIRE(it == it_end);
+    REQUIRE(it <= it_end);
+    REQUIRE(it >= it_end);
+    REQUIRE_EQ(nullptr, *it);
+    REQUIRE_EQ(nullptr, it.get_node());
   }
 }
