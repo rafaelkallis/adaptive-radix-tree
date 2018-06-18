@@ -10,6 +10,7 @@
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <iostream>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -94,14 +95,20 @@ public:
   key_type get_prefix() const;
   void set_prefix(const key_type &prefix);
 
+  virtual int get_n_children() const = 0;
+
   virtual partial_key_type
   next_partial_key(const partial_key_type &partial_key) noexcept(false) = 0;
 
-  class iterator
-      : public std::iterator<std::forward_iterator_tag,
-                             pair<partial_key_type, node<T> *>, int64_t> {
+  class iterator {
   public:
-    iterator(node<T> *n, uint8_t index, bool is_out_of_bounds);
+    iterator(node<T> *node, int relative_index);
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = node<T> *;
+    using difference_type = int16_t;
+    using pointer = node<T> **;
+    using reference = node<T> *&;
 
     partial_key_type get_partial_key() const;
     node<T> *get_node() const;
@@ -117,13 +124,17 @@ public:
     bool operator>=(const node<T>::iterator &rhs) const;
 
   private:
-    node<T> *n_;
-    uint8_t index_;
-    bool is_out_of_bounds_;
+    node<T> *node_;
+    uint8_t cur_partial_key_;
+    int relative_index_;
   };
 
+  /**
+   * Iterator on the first child node.
+   *
+   * @return Iterator on the first child node.
+   */
   iterator begin();
-  iterator at(partial_key_type partial_key);
   iterator end();
 
 private:
@@ -159,37 +170,43 @@ template <class T> void node<T>::set_prefix(const key_type &prefix) {
 }
 
 template <class T> typename node<T>::iterator node<T>::begin() {
-  return node<T>::iterator(this, 0, false);
-}
-
-template <class T> typename node<T>::iterator node<T>::at(partial_key_type partial_key) {
-  return node<T>::iterator(this, partial_key, false);
+  return node<T>::iterator(this, 0);
 }
 
 template <class T> typename node<T>::iterator node<T>::end() {
-  return node<T>::iterator(this, 0, true);
+  return node<T>::iterator(this, this->get_n_children());
 }
 
 template <class T>
-node<T>::iterator::iterator(node<T> *n, uint8_t index, bool is_out_of_bounds)
-    : n_(n), index_(index), is_out_of_bounds_(is_out_of_bounds) {
-  if (!this->is_out_of_bounds_) {
-    try {
-      this->index_ = this->n_->next_partial_key(this->index_);
-    } catch (out_of_range &) {
-      this->is_out_of_bounds_ = true;
-    }
+node<T>::iterator::iterator(node<T> *n, int relative_index)
+    : node_(n), cur_partial_key_(0), relative_index_(relative_index) {
+  if (relative_index < 0) {
+    /* relative_index is out of bounds, no seek */
+    this->cur_partial_key_ = 0;
+    return;
+  }
+  if (relative_index >= n->get_n_children()) {
+    /* relative_index is out of bounds, no seek */
+    this->cur_partial_key_ = 255;
+    return;
+  }
+
+  /* relative_index is in bounds, (forward) seek next partial key */
+  for (int i = 0; i < relative_index; ++i) {
+    this->cur_partial_key_ =
+        this->node_->next_partial_key(this->cur_partial_key_);
   }
 }
 
-template <class T>
-partial_key_type node<T>::iterator::get_partial_key() const {
-  return this->is_out_of_bounds_ ? 0 : this->index_;
+template <class T> partial_key_type node<T>::iterator::get_partial_key() const {
+  return this->cur_partial_key_;
 }
 
 template <class T> node<T> *node<T>::iterator::get_node() const {
-  return this->is_out_of_bounds_ ? nullptr
-                                 : *(this->n_->find_child(this->index_));
+  return this->relative_index_ < 0 ||
+                 this->relative_index_ >= this->node_->get_n_children()
+             ? nullptr
+             : *(this->node_->find_child(this->cur_partial_key_));
 }
 
 template <class T> node<T> *node<T>::iterator::operator*() const {
@@ -197,21 +214,17 @@ template <class T> node<T> *node<T>::iterator::operator*() const {
 }
 
 template <class T> typename node<T>::iterator &node<T>::iterator::operator++() {
-  if (this->index_ == 255) {
-    this->is_out_of_bounds_ = true;
-    return *this;
-  }
-  try {
-    this->index_ = this->n_->next_partial_key(this->index_ + 1);
-  } catch (out_of_range &) {
-    this->is_out_of_bounds_ = true;
-  }
+  ++this->relative_index_;
+  this->cur_partial_key_ =
+      this->relative_index_ < this->node_->get_n_children()
+          ? this->node_->next_partial_key(this->cur_partial_key_ + 1)
+          : 255;
   return *this;
 }
 
 template <class T>
 typename node<T>::iterator node<T>::iterator::operator++(int) const {
-  typename node<T>::iterator old(*this);
+  auto old = *this;
   ++(*this);
   return old;
 }
@@ -220,19 +233,15 @@ template <class T>
 bool node<T>::iterator::
 operator==(const typename node<T>::iterator &rhs) const {
   /* should be from same node */
-  assert((*this).n_ == rhs.n_);
-  return ((*this).is_out_of_bounds_ && rhs.is_out_of_bounds_) ||
-         (!(*this).is_out_of_bounds_ && !rhs.is_out_of_bounds_ &&
-          (*this).index_ == rhs.index_);
+  assert((*this).node_ == rhs.node_);
+  return (*this).relative_index_ == rhs.relative_index_;
 }
 
 template <class T>
 bool node<T>::iterator::operator<(const typename node<T>::iterator &rhs) const {
   /* should be from same node */
-  assert((*this).n_ == rhs.n_);
-  return (!(*this).is_out_of_bounds_ && rhs.is_out_of_bounds_) ||
-         (!(*this).is_out_of_bounds_ && !rhs.is_out_of_bounds_ &&
-          (*this).index_ < rhs.index_);
+  assert((*this).node_ == rhs.node_);
+  return (*this).relative_index_ < rhs.relative_index_;
 }
 
 template <class T>

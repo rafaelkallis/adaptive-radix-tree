@@ -37,6 +37,8 @@ public:
 
 private:
   node<T> *root = nullptr;
+
+
 };
 
 // TODO(rafaelkallis): test

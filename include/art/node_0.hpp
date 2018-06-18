@@ -26,6 +26,8 @@ public:
   bool is_full() const override;
   bool is_leaf() const override;
 
+  int get_n_children() const override;
+
   partial_key_type next_partial_key(
       const partial_key_type &partial_key) noexcept(false) override;
 };
@@ -51,6 +53,8 @@ template <class T> node<T> *node_0<T>::grow() {
 template <class T> bool node_0<T>::is_full() const { return true; }
 
 template <class T> bool node_0<T>::is_leaf() const { return true; }
+
+template <class T> int node_0<T>::get_n_children() const { return 0; }
 
 template <class T>
 partial_key_type node_0<T>::next_partial_key(

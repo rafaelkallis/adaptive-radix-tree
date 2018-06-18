@@ -19,7 +19,7 @@ template <class T> class node_16 : public node<T> {
 public:
   node_16();
   node_16(key_type prefix, T *value);
-  
+
   node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
   node<T> *grow() override;
@@ -28,6 +28,8 @@ public:
 
   partial_key_type next_partial_key(
       const partial_key_type &partial_key) noexcept(false) override;
+
+  int get_n_children() const override;
 
 private:
   uint8_t n_children_;
@@ -98,6 +100,10 @@ partial_key_type node_16<T>::next_partial_key(
     }
   }
   throw out_of_range("provided partial key does not have a successor");
+}
+
+template <class T> int node_16<T>::get_n_children() const {
+  return this->n_children_;
 }
 
 } // namespace art

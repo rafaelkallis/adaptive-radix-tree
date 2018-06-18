@@ -33,6 +33,8 @@ public:
   partial_key_type next_partial_key(
       const partial_key_type &partial_key) noexcept(false) override;
 
+  int get_n_children() const override;
+
 private:
   static const partial_key_type EMPTY;
 
@@ -112,6 +114,10 @@ partial_key_type node_48<T>::next_partial_key(
       throw out_of_range("provided partial key does not have a successor");
     }
   }
+}
+
+template <class T> int node_48<T>::get_n_children() const {
+  return this->n_children_;
 }
 
 } // namespace art

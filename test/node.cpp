@@ -11,6 +11,7 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 using namespace ::art;
 
@@ -43,7 +44,7 @@ TEST_SUITE("node") {
   }
 
   TEST_CASE("iteration") {
-    node_256<void> subject;
+    node_4<void> subject;
 
     node_0<void> n0;
     node_0<void> n1;
