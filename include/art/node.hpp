@@ -195,7 +195,6 @@ reverse_iterator<typename node<T>::iterator> node<T>::rend() {
 template <class T>
 node<T>::iterator::iterator(node<T> *n, int relative_index)
     : node_(n), cur_partial_key_(0), relative_index_(relative_index) {
-  std::cout << relative_index << std::endl;
   if (relative_index_ < 0) {
     /* relative_index is out of bounds, no seek */
     return;

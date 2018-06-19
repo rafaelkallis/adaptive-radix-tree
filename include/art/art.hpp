@@ -10,6 +10,7 @@
 #include "node_0.hpp"
 #include "node_4.hpp"
 #include <algorithm>
+#include <stack>
 
 namespace art {
 
@@ -17,14 +18,6 @@ using std::min;
 
 template <class T> class art {
 public:
-  art() = default;
-  ~art() = default;
-  art(const art<T> &other) = default;
-  art(art<T> &&other) noexcept = default;
-
-  art<T> &operator=(const art<T> &other) = default;
-  art<T> &operator=(art<T> &&other) noexcept = default;
-
   /**
    * Finds the value associated with the given key.
    *
@@ -35,15 +28,36 @@ public:
 
   T *set(const key_type &key, T *value);
 
+  class preorder_traversal_iterator {
+  public:
+    preorder_traversal_iterator(node<T> *root);
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = node<T> *;
+    using difference_type = int;
+    using pointer = value_type *;
+    using reference = value_type &;
+
+    reference operator*();
+    pointer operator->();
+    art<T>::preorder_traversal_iterator &operator++();
+    art<T>::preorder_traversal_iterator operator++(int);
+    bool operator==(const art<T>::preorder_traversal_iterator &rhs) const;
+    bool operator!=(const art<T>::preorder_traversal_iterator &rhs) const;
+
+  private:
+    std::stack<node<T> *> stack_;
+  };
+
+  preorder_traversal_iterator preorder_traversal_begin();
+  preorder_traversal_iterator preorder_traversal_end();
+
 private:
-  node<T> *root = nullptr;
-
-
+  node<T> *root_ = nullptr;
 };
 
-// TODO(rafaelkallis): test
 template <class T> T *art<T>::get(const key_type &key) const {
-  node<T> *cur = this->root;
+  node<T> *cur = root_;
   int depth = 0;
   for (;;) {
     if (cur == nullptr) {
@@ -67,10 +81,9 @@ template <class T> T *art<T>::get(const key_type &key) const {
   }
 }
 
-// TODO(rafaelkallis): test
 template <class T> T *art<T>::set(const key_type &key, T *value) {
   /* pointer to current node */
-  node<T> **cur = &this->root;
+  node<T> **cur = &root_;
 
   /* current key depth */
   int depth = 0;
@@ -215,6 +228,71 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
     cur = next;
     depth += prefix_len + 1;
   }
+}
+
+template <class T>
+typename art<T>::preorder_traversal_iterator
+art<T>::preorder_traversal_begin() {
+  return art<T>::preorder_traversal_iterator(root_);
+}
+
+template <class T>
+typename art<T>::preorder_traversal_iterator art<T>::preorder_traversal_end() {
+  return art<T>::preorder_traversal_iterator(nullptr);
+}
+
+template <class T>
+art<T>::preorder_traversal_iterator::preorder_traversal_iterator(node<T> *root)
+    : stack_() {
+  if (root != nullptr) {
+    stack_.push(root);
+  }
+}
+
+template <class T>
+typename art<T>::preorder_traversal_iterator::reference
+    art<T>::preorder_traversal_iterator::operator*() {
+  return stack_.top();
+}
+
+template <class T>
+typename art<T>::preorder_traversal_iterator::pointer
+    art<T>::preorder_traversal_iterator::operator->() {
+  return &stack_.top();
+}
+
+template <class T>
+typename art<T>::preorder_traversal_iterator &
+art<T>::preorder_traversal_iterator::operator++() {
+  node<T> *prev = stack_.top();
+  stack_.pop();
+  for (auto it = prev->rbegin(), it_end = prev->rend(); it != it_end; ++it) {
+    partial_key_type child_partial_key = *it;
+    stack_.push(*prev->find_child(child_partial_key));
+  }
+  return *this;
+}
+
+template <class T>
+typename art<T>::preorder_traversal_iterator
+art<T>::preorder_traversal_iterator::operator++(int) {
+  auto old = *this;
+  operator++();
+  return old;
+}
+
+template <class T>
+bool art<T>::preorder_traversal_iterator::
+operator==(const typename art<T>::preorder_traversal_iterator &rhs) const {
+  return (stack_.empty() && rhs.stack_.empty()) ||
+         (!stack_.empty() && !rhs.stack_.empty() &&
+          stack_.top() == rhs.stack_.top());
+}
+
+template <class T>
+bool art<T>::preorder_traversal_iterator::
+operator!=(const typename art<T>::preorder_traversal_iterator &rhs) const {
+  return !(*this == rhs);
 }
 
 } // namespace art
