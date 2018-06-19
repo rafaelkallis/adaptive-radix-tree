@@ -27,7 +27,10 @@ public:
   bool is_leaf() const override;
 
   partial_key_type next_partial_key(
-      const partial_key_type &partial_key) noexcept(false) override;
+      partial_key_type partial_key) const noexcept(false) override;
+  
+  partial_key_type prev_partial_key(
+      partial_key_type partial_key) const noexcept(false) override;
 
   int get_n_children() const override;
 
@@ -72,13 +75,26 @@ template <class T> bool node_256<T>::is_leaf() const {
 
 template <class T>
 partial_key_type node_256<T>::next_partial_key(
-    const partial_key_type &partial_key) noexcept(false) {
+    partial_key_type partial_key) const noexcept(false) {
   for (partial_key_type i = partial_key;; ++i) {
     if (this->children_[i] != nullptr) {
       return i;
     }
     if (i == 255) {
       throw out_of_range("provided partial key does not have a successor");
+    }
+  }
+}
+
+template <class T>
+partial_key_type node_256<T>::prev_partial_key(
+    partial_key_type partial_key) const noexcept(false) {
+  for (partial_key_type i = partial_key;; --i) {
+    if (this->children_[i] != nullptr) {
+      return i;
+    }
+    if (i == 0) {
+      throw out_of_range("provided partial key does not have a predecessor");
     }
   }
 }

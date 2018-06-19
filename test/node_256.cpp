@@ -120,4 +120,60 @@ TEST_SUITE("node 256") {
       REQUIRE_THROWS_AS(n.next_partial_key(101), std::out_of_range);
     }
   }
+  
+  TEST_CASE("previous partial key") {
+    node_256<void> n;
+
+    SUBCASE("completely empty node") {
+      REQUIRE_THROWS_AS(n.prev_partial_key(255), std::out_of_range);
+    }
+
+    SUBCASE("child at 0") {
+      node_0<void> n0;
+      n.set_child(0, &n0);
+      REQUIRE_EQ(0, n.prev_partial_key(0));
+      REQUIRE_EQ(0, n.prev_partial_key(255));
+    }
+
+
+    SUBCASE("child at 255") {
+      node_0<void> n0;
+      n.set_child(255, &n0);
+      REQUIRE_EQ(255, n.prev_partial_key(255));
+      REQUIRE_THROWS_AS(n.prev_partial_key(254), std::out_of_range);
+    }
+
+    SUBCASE("dense children") {
+      node_0<void> n0;
+      node_0<void> n1;
+      node_0<void> n2;
+      node_0<void> n3;
+      n.set_child(1, &n0);
+      n.set_child(2, &n1);
+      n.set_child(3, &n2);
+      n.set_child(4, &n3);
+      REQUIRE_EQ(1, n.prev_partial_key(1));
+      REQUIRE_EQ(2, n.prev_partial_key(2));
+      REQUIRE_EQ(3, n.prev_partial_key(3));
+      REQUIRE_EQ(4, n.prev_partial_key(4));
+      REQUIRE_EQ(4, n.prev_partial_key(255));
+      REQUIRE_THROWS_AS(n.prev_partial_key(0), std::out_of_range);
+    }
+    
+    SUBCASE("sparse children") {
+      node_0<void> n0;
+      node_0<void> n1;
+      node_0<void> n2;
+      node_0<void> n3;
+      n.set_child(1, &n0);
+      n.set_child(5, &n1);
+      n.set_child(10, &n2);
+      n.set_child(100, &n3);
+      REQUIRE_EQ(1, n.prev_partial_key(4));
+      REQUIRE_EQ(5, n.prev_partial_key(9));
+      REQUIRE_EQ(10, n.prev_partial_key(99));
+      REQUIRE_EQ(100, n.prev_partial_key(255));
+      REQUIRE_THROWS_AS(n.prev_partial_key(0), std::out_of_range);
+    }
+  }
 }

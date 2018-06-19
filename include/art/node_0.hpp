@@ -28,8 +28,11 @@ public:
 
   int get_n_children() const override;
 
-  partial_key_type next_partial_key(
-      const partial_key_type &partial_key) noexcept(false) override;
+  partial_key_type next_partial_key(partial_key_type partial_key) const
+      noexcept(false) override;
+
+  partial_key_type prev_partial_key(partial_key_type partial_key) const
+      noexcept(false) override;
 };
 
 template <class T>
@@ -57,9 +60,15 @@ template <class T> bool node_0<T>::is_leaf() const { return true; }
 template <class T> int node_0<T>::get_n_children() const { return 0; }
 
 template <class T>
-partial_key_type node_0<T>::next_partial_key(
-    const partial_key_type &partial_key) noexcept(false) {
+partial_key_type node_0<T>::next_partial_key(partial_key_type partial_key) const
+    noexcept(false) {
   throw out_of_range("provided partial key does not have a successor");
+}
+
+template <class T>
+partial_key_type node_0<T>::prev_partial_key(partial_key_type partial_key) const
+    noexcept(false) {
+  throw out_of_range("provided partial key does not have a predecessor");
 }
 
 } // namespace art

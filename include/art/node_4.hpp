@@ -27,8 +27,11 @@ public:
   bool is_full() const override;
   bool is_leaf() const override;
 
-  partial_key_type next_partial_key(
-      const partial_key_type &partial_key) noexcept(false) override;
+  partial_key_type next_partial_key(partial_key_type partial_key) const
+      noexcept(false) override;
+
+  partial_key_type prev_partial_key(partial_key_type partial_key) const
+      noexcept(false) override;
 
   int get_n_children() const override;
 
@@ -92,14 +95,25 @@ template <class T> bool node_4<T>::is_leaf() const {
 }
 
 template <class T>
-partial_key_type node_4<T>::next_partial_key(
-    const partial_key_type &partial_key) noexcept(false) {
+partial_key_type node_4<T>::next_partial_key(partial_key_type partial_key) const
+    noexcept(false) {
   for (int i = 0; i < this->n_children_; ++i) {
     if (this->keys_[i] >= partial_key) {
       return this->keys_[i];
     }
   }
   throw out_of_range("provided partial key does not have a successor");
+}
+
+template <class T>
+partial_key_type node_4<T>::prev_partial_key(partial_key_type partial_key) const
+    noexcept(false) {
+  for (int i = this->n_children_ - 1; i >= 0; --i) {
+    if (this->keys_[i] <= partial_key) {
+      return this->keys_[i];
+    }
+  }
+  throw out_of_range("provided partial key does not have a predecessor");
 }
 
 template <class T> int node_4<T>::get_n_children() const {
