@@ -14,11 +14,6 @@
 
 namespace art {
 
-using std::array;
-using std::make_pair;
-using std::out_of_range;
-using std::pair;
-
 template <class T> class node_48 : public node<T> {
 public:
   node_48();
@@ -30,11 +25,11 @@ public:
   bool is_full() const override;
   bool is_leaf() const override;
 
-  partial_key_type next_partial_key(
-      partial_key_type partial_key) const noexcept(false) override;
-  
-  partial_key_type prev_partial_key(
-      partial_key_type partial_key) const noexcept(false) override;
+  partial_key_type next_partial_key(partial_key_type partial_key) const
+      noexcept(false) override;
+
+  partial_key_type prev_partial_key(partial_key_type partial_key) const
+      noexcept(false) override;
 
   int get_n_children() const override;
 
@@ -42,8 +37,8 @@ private:
   static const partial_key_type EMPTY;
 
   uint8_t n_children_;
-  array<partial_key_type, 256> indexes_;
-  array<node<T> *, 48> children_;
+  std::array<partial_key_type, 256> indexes_;
+  std::array<node<T> *, 48> children_;
 };
 
 template <class T> node_48<T>::node_48() : node_48<T>(key_type(0), nullptr) {}
@@ -107,27 +102,30 @@ template <class T> bool node_48<T>::is_leaf() const {
 template <class T> const unsigned char node_48<T>::EMPTY = 48;
 
 template <class T>
-partial_key_type node_48<T>::next_partial_key(
-    partial_key_type partial_key) const noexcept(false) {
+partial_key_type
+node_48<T>::next_partial_key(partial_key_type partial_key) const
+    noexcept(false) {
   for (partial_key_type i = partial_key;; ++i) {
     if (this->indexes_[i] != node_48<T>::EMPTY) {
       return i;
     }
     if (i == 255) {
-      throw out_of_range("provided partial key does not have a successor");
+      throw std::out_of_range("provided partial key does not have a successor");
     }
   }
 }
 
 template <class T>
-partial_key_type node_48<T>::prev_partial_key(
-    partial_key_type partial_key) const noexcept(false) {
+partial_key_type
+node_48<T>::prev_partial_key(partial_key_type partial_key) const
+    noexcept(false) {
   for (partial_key_type i = partial_key;; --i) {
     if (this->indexes_[i] != node_48<T>::EMPTY) {
       return i;
     }
     if (i == 0) {
-      throw out_of_range("provided partial key does not have a predecessor");
+      throw std::out_of_range(
+          "provided partial key does not have a predecessor");
     }
   }
 }

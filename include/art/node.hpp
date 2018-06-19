@@ -6,6 +6,8 @@
 #ifndef ART_NODE_HPP
 #define ART_NODE_HPP
 
+#include "children_iterator.hpp"
+#include "constants.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -13,17 +15,8 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
-#include <vector>
 
 namespace art {
-
-using std::make_reverse_iterator;
-using std::out_of_range;
-using std::reverse_iterator;
-using std::vector;
-
-using partial_key_type = uint8_t;
-using key_type = vector<partial_key_type>;
 
 template <class T> class node {
 public:
@@ -103,44 +96,15 @@ public:
   virtual partial_key_type prev_partial_key(partial_key_type partial_key) const
       noexcept(false) = 0;
 
-  class iterator {
-  public:
-    iterator(node<T> *n, int relative_index);
-
-    using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = const partial_key_type;
-    using difference_type = int;
-    using pointer = value_type *;
-    using reference = value_type &;
-
-    reference operator*() const;
-    pointer operator->() const;
-    node<T>::iterator &operator++();
-    node<T>::iterator operator++(int);
-    node<T>::iterator &operator--();
-    node<T>::iterator operator--(int);
-    bool operator==(const node<T>::iterator &rhs) const;
-    bool operator!=(const node<T>::iterator &rhs) const;
-    bool operator<(const node<T>::iterator &rhs) const;
-    bool operator>(const node<T>::iterator &rhs) const;
-    bool operator<=(const node<T>::iterator &rhs) const;
-    bool operator>=(const node<T>::iterator &rhs) const;
-
-  private:
-    node<T> *node_;
-    partial_key_type cur_partial_key_;
-    int relative_index_;
-  };
-
   /**
    * Iterator on the first child node.
    *
    * @return Iterator on the first child node.
    */
-  iterator begin();
-  reverse_iterator<iterator> rbegin();
-  iterator end();
-  reverse_iterator<iterator> rend();
+  children_iterator<T> begin();
+  std::reverse_iterator<children_iterator<T>> rbegin();
+  children_iterator<T> end();
+  std::reverse_iterator<children_iterator<T>> rend();
 
 private:
   key_type prefix_ = key_type(0);
@@ -174,122 +138,21 @@ template <class T> void node<T>::set_prefix(const key_type &prefix) {
   this->prefix_ = prefix;
 }
 
-template <class T> typename node<T>::iterator node<T>::begin() {
-  return node<T>::iterator(this, 0);
+template <class T> children_iterator<T> node<T>::begin() {
+  return children_iterator<T>(this, 0);
 }
 
 template <class T>
-reverse_iterator<typename node<T>::iterator> node<T>::rbegin() {
-  return std::make_reverse_iterator<node<T>::iterator>(this->end());
+std::reverse_iterator<children_iterator<T>> node<T>::rbegin() {
+  return std::make_reverse_iterator<children_iterator<T>>(this->end());
 }
 
-template <class T> typename node<T>::iterator node<T>::end() {
-  return node<T>::iterator(this, this->get_n_children());
+template <class T> children_iterator<T> node<T>::end() {
+  return children_iterator<T>(this, this->get_n_children());
 }
 
-template <class T>
-reverse_iterator<typename node<T>::iterator> node<T>::rend() {
-  return std::make_reverse_iterator<node<T>::iterator>(this->begin());
-}
-
-template <class T>
-node<T>::iterator::iterator(node<T> *n, int relative_index)
-    : node_(n), cur_partial_key_(0), relative_index_(relative_index) {
-  if (relative_index_ < 0) {
-    /* relative_index is out of bounds, no seek */
-    return;
-  }
-  if (relative_index_ >= node_->get_n_children()) {
-    /* relative_index is out of bounds, no seek */
-    return;
-  }
-
-  /* relative_index is in bounds, (forward) seek next partial key */
-  for (int i = 0; i < relative_index_; ++i) {
-    cur_partial_key_ = node_->next_partial_key(cur_partial_key_);
-  }
-}
-
-template <class T>
-typename node<T>::iterator::reference node<T>::iterator::operator*() const {
-  return cur_partial_key_;
-}
-
-template <class T>
-typename node<T>::iterator::pointer node<T>::iterator::operator->() const {
-  return &cur_partial_key_;
-}
-
-template <class T> typename node<T>::iterator &node<T>::iterator::operator++() {
-  ++relative_index_;
-  if (relative_index_ == 0) {
-    cur_partial_key_ = node_->next_partial_key(0);
-  } else if (relative_index_ < node_->get_n_children()) {
-    cur_partial_key_ = node_->next_partial_key(cur_partial_key_ + 1);
-  }
-  return *this;
-}
-
-template <class T>
-typename node<T>::iterator node<T>::iterator::operator++(int) {
-  auto old = *this;
-  operator++();
-  return old;
-}
-
-template <class T> typename node<T>::iterator &node<T>::iterator::operator--() {
-  --relative_index_;
-  if (relative_index_ == node_->get_n_children() - 1) {
-    cur_partial_key_ = node_->prev_partial_key(255);
-  } else if (relative_index_ >= 0) {
-    cur_partial_key_ = node_->prev_partial_key(cur_partial_key_ - 1);
-  }
-  return *this;
-}
-
-template <class T>
-typename node<T>::iterator node<T>::iterator::operator--(int) {
-  auto old = *this;
-  operator--();
-  return old;
-}
-
-template <class T>
-bool node<T>::iterator::
-operator==(const typename node<T>::iterator &rhs) const {
-  /* should be from same node */
-  assert(node_ == rhs.node_);
-  return relative_index_ == rhs.relative_index_;
-}
-
-template <class T>
-bool node<T>::iterator::operator<(const typename node<T>::iterator &rhs) const {
-  /* should be from same node */
-  assert(node_ == rhs.node_);
-  return relative_index_ < rhs.relative_index_;
-}
-
-template <class T>
-bool node<T>::iterator::
-operator!=(const typename node<T>::iterator &rhs) const {
-  return !((*this) == rhs);
-}
-
-template <class T>
-bool node<T>::iterator::
-operator>=(const typename node<T>::iterator &rhs) const {
-  return !((*this) < rhs);
-}
-
-template <class T>
-bool node<T>::iterator::
-operator<=(const typename node<T>::iterator &rhs) const {
-  return (rhs >= (*this));
-}
-
-template <class T>
-bool node<T>::iterator::operator>(const typename node<T>::iterator &rhs) const {
-  return (rhs < (*this));
+template <class T> std::reverse_iterator<children_iterator<T>> node<T>::rend() {
+  return std::make_reverse_iterator<children_iterator<T>>(this->begin());
 }
 
 } // namespace art

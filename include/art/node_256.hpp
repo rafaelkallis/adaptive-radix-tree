@@ -12,9 +12,6 @@
 
 namespace art {
 
-using std::array;
-using std::out_of_range;
-
 template <class T> class node_256 : public node<T> {
 public:
   node_256();
@@ -36,7 +33,7 @@ public:
 
 private:
   uint16_t n_children_;
-  array<node<T> *, 256> children_;
+  std::array<node<T> *, 256> children_;
 };
 
 template <class T>
@@ -81,7 +78,7 @@ partial_key_type node_256<T>::next_partial_key(
       return i;
     }
     if (i == 255) {
-      throw out_of_range("provided partial key does not have a successor");
+      throw std::out_of_range("provided partial key does not have a successor");
     }
   }
 }
@@ -94,7 +91,7 @@ partial_key_type node_256<T>::prev_partial_key(
       return i;
     }
     if (i == 0) {
-      throw out_of_range("provided partial key does not have a predecessor");
+      throw std::out_of_range("provided partial key does not have a predecessor");
     }
   }
 }

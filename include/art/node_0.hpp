@@ -13,8 +13,6 @@
 
 namespace art {
 
-using std::out_of_range;
-
 template <class T> class node_0 : public node<T> {
 public:
   node_0() = default;
@@ -62,13 +60,13 @@ template <class T> int node_0<T>::get_n_children() const { return 0; }
 template <class T>
 partial_key_type node_0<T>::next_partial_key(partial_key_type partial_key) const
     noexcept(false) {
-  throw out_of_range("provided partial key does not have a successor");
+  throw std::out_of_range("provided partial key does not have a successor");
 }
 
 template <class T>
 partial_key_type node_0<T>::prev_partial_key(partial_key_type partial_key) const
     noexcept(false) {
-  throw out_of_range("provided partial key does not have a predecessor");
+  throw std::out_of_range("provided partial key does not have a predecessor");
 }
 
 } // namespace art

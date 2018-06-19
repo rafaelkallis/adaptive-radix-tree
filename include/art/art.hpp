@@ -9,12 +9,10 @@
 #include "node.hpp"
 #include "node_0.hpp"
 #include "node_4.hpp"
+#include "preorder_traversal_iterator.hpp"
 #include <algorithm>
-#include <stack>
 
 namespace art {
-
-using std::min;
 
 template <class T> class art {
 public:
@@ -28,29 +26,8 @@ public:
 
   T *set(const key_type &key, T *value);
 
-  class preorder_traversal_iterator {
-  public:
-    preorder_traversal_iterator(node<T> *root);
-
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = node<T> *;
-    using difference_type = int;
-    using pointer = value_type *;
-    using reference = value_type &;
-
-    reference operator*();
-    pointer operator->();
-    art<T>::preorder_traversal_iterator &operator++();
-    art<T>::preorder_traversal_iterator operator++(int);
-    bool operator==(const art<T>::preorder_traversal_iterator &rhs) const;
-    bool operator!=(const art<T>::preorder_traversal_iterator &rhs) const;
-
-  private:
-    std::stack<node<T> *> stack_;
-  };
-
-  preorder_traversal_iterator preorder_traversal_begin();
-  preorder_traversal_iterator preorder_traversal_end();
+  preorder_traversal_iterator<T> preorder_traversal_begin();
+  preorder_traversal_iterator<T> preorder_traversal_end();
 
 private:
   node<T> *root_ = nullptr;
@@ -110,7 +87,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
 
     /* true if the current node's prefix matches with a part of the key */
     const bool is_prefix_match =
-        min(prefix_len, key_len - depth) == prefix_match_len;
+        std::min(prefix_len, key_len - depth) == prefix_match_len;
 
     if (is_prefix_match && prefix_len == key_len - depth) {
       /* exact match:
@@ -231,68 +208,13 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
 }
 
 template <class T>
-typename art<T>::preorder_traversal_iterator
-art<T>::preorder_traversal_begin() {
-  return art<T>::preorder_traversal_iterator(root_);
+preorder_traversal_iterator<T> art<T>::preorder_traversal_begin() {
+  return preorder_traversal_iterator<T>(root_);
 }
 
 template <class T>
-typename art<T>::preorder_traversal_iterator art<T>::preorder_traversal_end() {
-  return art<T>::preorder_traversal_iterator(nullptr);
-}
-
-template <class T>
-art<T>::preorder_traversal_iterator::preorder_traversal_iterator(node<T> *root)
-    : stack_() {
-  if (root != nullptr) {
-    stack_.push(root);
-  }
-}
-
-template <class T>
-typename art<T>::preorder_traversal_iterator::reference
-    art<T>::preorder_traversal_iterator::operator*() {
-  return stack_.top();
-}
-
-template <class T>
-typename art<T>::preorder_traversal_iterator::pointer
-    art<T>::preorder_traversal_iterator::operator->() {
-  return &stack_.top();
-}
-
-template <class T>
-typename art<T>::preorder_traversal_iterator &
-art<T>::preorder_traversal_iterator::operator++() {
-  node<T> *prev = stack_.top();
-  stack_.pop();
-  for (auto it = prev->rbegin(), it_end = prev->rend(); it != it_end; ++it) {
-    partial_key_type child_partial_key = *it;
-    stack_.push(*prev->find_child(child_partial_key));
-  }
-  return *this;
-}
-
-template <class T>
-typename art<T>::preorder_traversal_iterator
-art<T>::preorder_traversal_iterator::operator++(int) {
-  auto old = *this;
-  operator++();
-  return old;
-}
-
-template <class T>
-bool art<T>::preorder_traversal_iterator::
-operator==(const typename art<T>::preorder_traversal_iterator &rhs) const {
-  return (stack_.empty() && rhs.stack_.empty()) ||
-         (!stack_.empty() && !rhs.stack_.empty() &&
-          stack_.top() == rhs.stack_.top());
-}
-
-template <class T>
-bool art<T>::preorder_traversal_iterator::
-operator!=(const typename art<T>::preorder_traversal_iterator &rhs) const {
-  return !(*this == rhs);
+preorder_traversal_iterator<T> art<T>::preorder_traversal_end() {
+  return preorder_traversal_iterator<T>(nullptr);
 }
 
 } // namespace art

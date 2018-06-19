@@ -14,8 +14,6 @@
 
 namespace art {
 
-using std::out_of_range;
-
 template <class T> class node_4 : public node<T> {
 public:
   node_4();
@@ -37,8 +35,8 @@ public:
 
 private:
   uint8_t n_children_;
-  array<partial_key_type, 4> keys_;
-  array<node<T> *, 4> children_;
+  std::array<partial_key_type, 4> keys_;
+  std::array<node<T> *, 4> children_;
 };
 
 template <class T> node_4<T>::node_4() : node_4<T>(key_type(0), nullptr) {}
@@ -102,7 +100,7 @@ partial_key_type node_4<T>::next_partial_key(partial_key_type partial_key) const
       return this->keys_[i];
     }
   }
-  throw out_of_range("provided partial key does not have a successor");
+  throw std::out_of_range("provided partial key does not have a successor");
 }
 
 template <class T>
@@ -113,7 +111,7 @@ partial_key_type node_4<T>::prev_partial_key(partial_key_type partial_key) const
       return this->keys_[i];
     }
   }
-  throw out_of_range("provided partial key does not have a predecessor");
+  throw std::out_of_range("provided partial key does not have a predecessor");
 }
 
 template <class T> int node_4<T>::get_n_children() const {
