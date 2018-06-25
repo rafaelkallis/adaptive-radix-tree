@@ -21,7 +21,6 @@ public:
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
   node<T> *grow() override;
   bool is_full() const override;
-  bool is_leaf() const override;
 
   partial_key_type next_partial_key(
       partial_key_type partial_key) const noexcept(false) override;
@@ -64,10 +63,6 @@ template <class T> node<T> *node_256<T>::grow() { return this; }
 
 template <class T> bool node_256<T>::is_full() const {
   return this->n_children_ == 256;
-}
-
-template <class T> bool node_256<T>::is_leaf() const {
-  return this->n_children_ == 0;
 }
 
 template <class T>

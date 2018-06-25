@@ -7,7 +7,6 @@
 #include "doctest.h"
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <random>
 #include <string>
 #include <vector>
@@ -75,7 +74,6 @@ TEST_SUITE("art") {
     random_device rd;
     mt19937 g(rd());
     for (int experiment = 0; experiment < 10; experiment += 1) {
-      std::cout << "art experiment: #" << experiment << std::endl;
       for (int i = 0; i < n; i += 1) {
         std::string random_num_str = std::to_string(g());
         keys[i] = key_type(random_num_str.cbegin(), random_num_str.cend());
@@ -98,7 +96,7 @@ TEST_SUITE("art") {
     }
   }
 
-  TEST_CASE("preorder traversal") {
+  TEST_CASE("full lexicographic traversal") {
     int int0;
     int int1;
     int int2;
@@ -131,45 +129,103 @@ TEST_SUITE("art") {
      *    3<-(aa) 4<-(a)  (aa)->6
      */ 
 
-    auto it = subject.preorder_traversal_begin();
-    auto it_end = subject.preorder_traversal_end();
+    auto it = subject.lexicographic_it();
+    auto it_end = subject.lexicographic_it_end();
 
     // 0
     REQUIRE(it != it_end);
-    REQUIRE_EQ(&int0, (*it)->get_value());
+    REQUIRE_EQ(&int0, *it);
 
     ++it;
     // 1
     REQUIRE(it != it_end);
-    REQUIRE_EQ(&int1, (*it)->get_value());
+    REQUIRE_EQ(&int1, *it);
     
     ++it;
     // 2
     REQUIRE(it != it_end);
-    REQUIRE_EQ(&int2, (*it)->get_value());
+    REQUIRE_EQ(&int2, *it);
     
     ++it;
     // 3
     REQUIRE(it != it_end);
-    REQUIRE_EQ(&int3, (*it)->get_value());
+    REQUIRE_EQ(&int3, *it);
     
     ++it;
     // 4
     REQUIRE(it != it_end);
-    REQUIRE_EQ(&int4, (*it)->get_value());
+    REQUIRE_EQ(&int4, *it);
     
     ++it;
     // 5
     REQUIRE(it != it_end);
-    REQUIRE_EQ(&int5, (*it)->get_value());
+    REQUIRE_EQ(&int5, *it);
     
     ++it;
     // 6
     REQUIRE(it != it_end);
-    REQUIRE_EQ(&int6, (*it)->get_value());
+    REQUIRE_EQ(&int6, *it);
 
     ++it;
     // 7 (overflow)
+    REQUIRE(it == it_end);
+  }
+  
+  TEST_CASE("range lexicographic traversal") {
+    int int0 = 0;
+    int int1 = 1;
+    int int2 = 2;
+    int int3 = 3;
+    int int4 = 4;
+    int int5 = 5;
+    int int6 = 6;
+
+    art<int> subject;
+
+    subject.set(key_type{'a','a'}, &int0);
+    subject.set(key_type{'a','a','a','a'}, &int1);
+    subject.set(key_type{'a','a','a','a','a','a','a'}, &int2);
+    subject.set(key_type{'a','a','a','a','a','a','a','a','a','a'}, &int3);
+    subject.set(key_type{'a','a','a','a','a','a','a','b','a'}, &int4);
+    subject.set(key_type{'a','a','a','a','b','a','a'}, &int5);
+    subject.set(key_type{'a','a','a','a','b','a','a','a','a','a'}, &int6);
+
+    /* The above statements construct the following tree:
+     *
+     *                (aa)->0
+     *                 |a
+     *                 |
+     *                (a)->1
+     *             a /   \ b
+     *              /     \
+     *        2<-(aa)     (aa)->5
+     *         a /  \ b    |a
+     *          /    \     |
+     *    3<-(aa) 4<-(a)  (aa)->6
+     */ 
+
+    // iterator on ["aaaaaaaaaa",3]
+    auto it = subject.lexicographic_it(key_type{'a','a','a','a','a','a','a','a','a','a'});
+    
+    // iterator on ["aaaabaaaaa",6]
+    auto it_end = subject.lexicographic_it(key_type{'a','a','a','a','b','a','a','a','a','a'});
+
+    // 3
+    REQUIRE(it != it_end);
+    REQUIRE_EQ(&int3, *it);
+    
+    ++it;
+    // 4
+    REQUIRE(it != it_end);
+    REQUIRE_EQ(&int4, *it);
+    
+    ++it;
+    // 5
+    REQUIRE(it != it_end);
+    REQUIRE_EQ(&int5, *it);
+    
+    ++it;
+    // 6
     REQUIRE(it == it_end);
   }
 }

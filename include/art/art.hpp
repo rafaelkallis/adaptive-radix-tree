@@ -24,10 +24,33 @@ public:
    */
   T *get(const key_type &key) const;
 
+  /**
+   * Associates the given key with the given value.
+   * If another value is already associated with the given key,
+   * since the art consumer is the resource owner.
+   *
+   * @param key - The key to associate with the value.
+   * @param value - The value to be associated with the key.
+   * @return a nullptr if no other value is associated with they or the
+   * previously associated value.
+   */
   T *set(const key_type &key, T *value);
 
-  preorder_traversal_iterator<T> preorder_traversal_begin();
-  preorder_traversal_iterator<T> preorder_traversal_end();
+  /**
+   * Forward iterator that traverses the tree in lexicographic order.
+   */
+  preorder_traversal_iterator<T> lexicographic_it();
+
+  /**
+   * Forward iterator that traverses the tree in lexicographic order starting
+   * from the provided key.
+   */
+  preorder_traversal_iterator<T> lexicographic_it(const key_type &key);
+
+  /**
+   * Iterator to the end of the lexicographic order.
+   */
+  preorder_traversal_iterator<T> lexicographic_it_end();
 
 private:
   node<T> *root_ = nullptr;
@@ -207,14 +230,18 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
   }
 }
 
-template <class T>
-preorder_traversal_iterator<T> art<T>::preorder_traversal_begin() {
+template <class T> preorder_traversal_iterator<T> art<T>::lexicographic_it() {
   return preorder_traversal_iterator<T>(root_);
 }
 
 template <class T>
-preorder_traversal_iterator<T> art<T>::preorder_traversal_end() {
-  return preorder_traversal_iterator<T>(nullptr);
+preorder_traversal_iterator<T> art<T>::lexicographic_it(const key_type &key) {
+  return preorder_traversal_iterator<T>::from_min_key(root_, key);
+}
+
+template <class T>
+preorder_traversal_iterator<T> art<T>::lexicographic_it_end() {
+  return preorder_traversal_iterator<T>();
 }
 
 } // namespace art

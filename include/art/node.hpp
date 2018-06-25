@@ -20,8 +20,11 @@ namespace art {
 
 template <class T> class node {
 public:
+  using value_type = T *;
+  using reference = value_type &;
+
   node() = default;
-  node(key_type prefix, T *value);
+  node(key_type prefix, value_type value);
   node(const node<T> &other) = default;
   node(node<T> &&other) noexcept = default;
   virtual ~node() = default;
@@ -67,7 +70,7 @@ public:
   /**
    * Determines if the node is a leaf node.
    */
-  virtual bool is_leaf() const = 0;
+  bool is_leaf() const;
 
   /**
    * Determines the number of matching bytes between the node's prefix and
@@ -83,8 +86,8 @@ public:
    */
   int check_prefix(const key_type &key, int depth) const;
 
-  T *get_value() const;
-  void set_value(T *value);
+  reference get_value();
+  void set_value(reference value);
   key_type get_prefix() const;
   void set_prefix(const key_type &prefix);
 
@@ -108,11 +111,11 @@ public:
 
 private:
   key_type prefix_ = key_type(0);
-  T *value_ = nullptr;
+  value_type value_ = nullptr;
 };
 
 template <class T>
-node<T>::node(key_type prefix, T *value)
+node<T>::node(key_type prefix, value_type value)
     : prefix_(move(prefix)), value_(value){};
 
 template <class T>
@@ -126,9 +129,17 @@ int node<T>::check_prefix(const key_type &key, int depth) const {
   return prefix_len;
 }
 
-template <class T> T *node<T>::get_value() const { return this->value_; }
+template <class T> bool node<T>::is_leaf() const {
+  return this->get_n_children() == 0;
+}
 
-template <class T> void node<T>::set_value(T *value) { this->value_ = value; }
+template <class T> typename node<T>::value_type &node<T>::get_value() {
+  return this->value_;
+}
+
+template <class T> void node<T>::set_value(reference value) {
+  this->value_ = value;
+}
 
 template <class T> key_type node<T>::get_prefix() const {
   return this->prefix_;
