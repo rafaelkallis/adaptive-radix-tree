@@ -7,17 +7,20 @@
 
 using namespace art;
 
-art t;
+art tree;
 ```
 
 ## Test
 
 ```cpp
 # build test binaries
-make
+make [release]
 
 # run tests
 make test
+
+# run benchmarks
+make bench
 ```
 
 ## References
