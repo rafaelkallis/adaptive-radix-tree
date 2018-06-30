@@ -17,7 +17,7 @@ namespace art {
 template <class T> class node_4 : public node<T> {
 public:
   node_4();
-  node_4(key_type prefix, T *value);
+  node_4(const key_type &prefix, T *value);
 
   node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
@@ -41,7 +41,7 @@ private:
 template <class T> node_4<T>::node_4() : node_4<T>(key_type(0), nullptr) {}
 
 template <class T>
-node_4<T>::node_4(key_type prefix, T *value)
+node_4<T>::node_4(const key_type &prefix, T *value)
     : node<T>(prefix, value), n_children_(0), keys_(), children_() {}
 
 template <class T>

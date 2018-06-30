@@ -16,7 +16,7 @@ namespace art {
 template <class T> class node_0 : public node<T> {
 public:
   node_0() = default;
-  node_0(key_type prefix, T *value);
+  node_0(const key_type &prefix, T *value);
 
   node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
@@ -33,7 +33,7 @@ public:
 };
 
 template <class T>
-node_0<T>::node_0(key_type prefix, T *value) : node<T>(prefix, value) {}
+node_0<T>::node_0(const key_type &prefix, T *value) : node<T>(prefix, value) {}
 
 template <class T>
 node<T> **node_0<T>::find_child(const partial_key_type & /* partial_key */) {
@@ -55,13 +55,13 @@ template <class T> bool node_0<T>::is_full() const { return true; }
 template <class T> int node_0<T>::get_n_children() const { return 0; }
 
 template <class T>
-partial_key_type node_0<T>::next_partial_key(partial_key_type partial_key) const
+partial_key_type node_0<T>::next_partial_key(partial_key_type /* partial_key */) const
     noexcept(false) {
   throw std::out_of_range("provided partial key does not have a successor");
 }
 
 template <class T>
-partial_key_type node_0<T>::prev_partial_key(partial_key_type partial_key) const
+partial_key_type node_0<T>::prev_partial_key(partial_key_type /* partial_key */) const
     noexcept(false) {
   throw std::out_of_range("provided partial key does not have a predecessor");
 }

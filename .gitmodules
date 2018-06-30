@@ -1,3 +1,12 @@
 [submodule "third_party/doctest"]
 	path = third_party/doctest
 	url = https://github.com/onqtam/doctest.git
+[submodule "third_party/benchpress"]
+	path = third_party/benchpress
+	url = https://github.com/cjgdev/benchpress.git
+[submodule "third_party/benchmark"]
+	path = third_party/benchmark
+	url = https://github.com/google/benchmark.git
+[submodule "third_party/picobench"]
+	path = third_party/picobench
+	url = https://github.com/iboB/picobench.git

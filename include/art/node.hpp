@@ -24,7 +24,7 @@ public:
   using reference = value_type &;
 
   node() = default;
-  node(key_type prefix, value_type value);
+  node(const key_type &prefix, value_type value);
   node(const node<T> &other) = default;
   node(node<T> &&other) noexcept = default;
   virtual ~node() = default;
@@ -115,8 +115,8 @@ private:
 };
 
 template <class T>
-node<T>::node(key_type prefix, value_type value)
-    : prefix_(move(prefix)), value_(value){};
+node<T>::node(const key_type &prefix, value_type value)
+    : prefix_(prefix), value_(value){};
 
 template <class T>
 int node<T>::check_prefix(const key_type &key, int depth) const {
