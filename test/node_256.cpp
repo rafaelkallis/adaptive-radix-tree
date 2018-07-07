@@ -66,6 +66,79 @@ TEST_SUITE("node 256") {
       delete children[i];
     }
   }
+  
+  TEST_CASE("delete child") {
+    node_0<void> n0;
+    node_0<void> n1;
+    node_0<void> n2;
+    node_0<void> n3;
+    node_0<void> n4;
+    node_0<void> n5;
+    node_0<void> n6;
+
+    node_256<void> subject;
+
+    subject.set_child(1, &n1);
+    subject.set_child(2, &n2);
+    subject.set_child(4, &n4);
+    subject.set_child(5, &n5);
+
+    SUBCASE("delete child that doesn't exist (0)") {
+      REQUIRE(subject.del_child(0) == nullptr);
+      REQUIRE(*subject.find_child(1) == &n1);
+      REQUIRE(*subject.find_child(2) == &n2);
+      REQUIRE(*subject.find_child(4) == &n4);
+      REQUIRE(*subject.find_child(5) == &n5);
+    }
+    
+    SUBCASE("delete min (1)") {
+      REQUIRE(subject.del_child(1) == &n1);
+      REQUIRE(subject.find_child(1) == nullptr);
+      REQUIRE(*subject.find_child(2) == &n2);
+      REQUIRE(*subject.find_child(4) == &n4);
+      REQUIRE(*subject.find_child(5) == &n5);
+    }
+
+    SUBCASE("delete inner (2)") {
+      REQUIRE(subject.del_child(2) == &n2);
+      REQUIRE(*subject.find_child(1) == &n1);
+      REQUIRE(subject.find_child(2) == nullptr);
+      REQUIRE(*subject.find_child(4) == &n4);
+      REQUIRE(*subject.find_child(5) == &n5);
+    }
+    
+    SUBCASE("delete child that doesn't exist (3)") {
+      REQUIRE(subject.del_child(3) == nullptr);
+      REQUIRE(*subject.find_child(1) == &n1);
+      REQUIRE(*subject.find_child(2) == &n2);
+      REQUIRE(*subject.find_child(4) == &n4);
+      REQUIRE(*subject.find_child(5) == &n5);
+    }
+
+    SUBCASE("delete inner (4)") {
+      REQUIRE(subject.del_child(4) == &n4);
+      REQUIRE(*subject.find_child(1) == &n1);
+      REQUIRE(*subject.find_child(2) == &n2);
+      REQUIRE(subject.find_child(4) == nullptr);
+      REQUIRE(*subject.find_child(5) == &n5);
+    }
+
+    SUBCASE("delete max (5)") {
+      REQUIRE(subject.del_child(5) == &n5);
+      REQUIRE(*subject.find_child(1) == &n1);
+      REQUIRE(*subject.find_child(2) == &n2);
+      REQUIRE(*subject.find_child(4) == &n4);
+      REQUIRE(subject.find_child(5) == nullptr);
+    }
+    
+    SUBCASE("delete child that doesn't exist (6)") {
+      REQUIRE(subject.del_child(6) == nullptr);
+      REQUIRE(*subject.find_child(1) == &n1);
+      REQUIRE(*subject.find_child(2) == &n2);
+      REQUIRE(*subject.find_child(4) == &n4);
+      REQUIRE(*subject.find_child(5) == &n5);
+    }
+  }
 
   TEST_CASE("next partial key") {
     node_256<void> n;

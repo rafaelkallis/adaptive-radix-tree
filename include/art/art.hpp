@@ -27,7 +27,7 @@ public:
   /**
    * Associates the given key with the given value.
    * If another value is already associated with the given key,
-   * since the art consumer is the resource owner.
+   * since the method consumer is the resource owner.
    *
    * @param key - The key to associate with the value.
    * @param value - The value to be associated with the key.
@@ -35,6 +35,17 @@ public:
    * previously associated value.
    */
   T *set(const key_type &key, T *value);
+
+  /**
+   * Deletes the given key and returns it's associated value.
+   * The associated value is returned,
+   * since the method consumer is the resource owner.
+   * If no value is associated with the given key, nullptr is returned.
+   *
+   * @param key - The key to delete.
+   * @return the values assciated with they key or a nullptr otherwise.
+   */
+  T *del(const key_type &key);
 
   /**
    * Forward iterator that traverses the tree in lexicographic order.
@@ -91,7 +102,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
   /* length of the key */
   const int key_len = key.size();
 
-  for (;;) {
+  while (true) {
     if (*cur == nullptr) {
       const key_type new_node_prefix =
           key_type(key.cbegin() + depth, key.cend());
@@ -226,6 +237,126 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
      */
 
     cur = next;
+    depth += prefix_len + 1;
+  }
+}
+
+template <class T> T *art<T>::del(const key_type &key) {
+  /* pointer to current node */
+  node<T> **cur = &root_;
+
+  partial_key_type cur_partial_key = 0;
+
+  /* pointer to parent/previous node */
+  node<T> **prev = nullptr;
+
+  /* current key depth */
+  int depth = 0;
+
+  /* length of the key */
+  const int key_len = key.size();
+
+  while (true) {
+    if (*cur == nullptr) {
+      return nullptr;
+    }
+
+    /* prefix of the current node */
+    const key_type prefix = (*cur)->get_prefix();
+
+    /* length of the prefix of the current node */
+    const int prefix_len = prefix.size();
+
+    /* number of bytes of the current node's prefix that match the key */
+    const int prefix_match_len = (*cur)->check_prefix(key, depth);
+
+    /* true if the current node's prefix matches with a part of the key */
+    const bool is_prefix_match =
+        std::min(prefix_len, key_len - depth) == prefix_match_len;
+
+    if (!is_prefix_match) {
+      /* prefix mismatch => node doesn't exist */
+      return nullptr;
+    }
+
+    if (prefix_len == key_len - depth) {
+      /* exact match */
+      T *value = (*cur)->get_value();
+      const int n_children = (*cur)->get_n_children();
+      if (n_children == 0) {
+        const int n_siblings =
+            prev != nullptr ? (*prev)->get_n_children() - 1 : 0;
+        if (n_siblings == 0) {
+          /* leaf node with 0 sibling nodes:
+           * => delete leaf node
+           *
+           *     |                 |
+           *    (aa)->v1          (aa)->v1
+           *     | a     -[aaaaa]
+           *     |       =======>
+           *   *(aa)->v2
+           */
+
+          delete (*cur);
+          (*prev)->del_child(cur_partial_key);
+
+        } else if (n_siblings == 1 && (*prev)->get_value() == nullptr) {
+          /* leaf node with 1 sibling node and a parent with no value:
+           * => delete leaf node
+           * => replace parent with sibling
+           * 
+           *       (aa)->v1                   (aa)->v1
+           *        |a                         |a
+           *        |                          |
+           *       (aa)->Ø                     |
+           *    a /    \ b     -[aaaaabaa]    /
+           *     /      \      ==========>   /
+           *  (aa)->v2 *()->v3             (aaaaa)->v2
+           *  /|\
+           */
+
+          /* find sibling */
+          partial_key_type sibling_partial_key = (*prev)->next_partial_key(0);
+          if (sibling_partial_key == cur_partial_key) {
+            sibling_partial_key =
+                (*prev)->next_partial_key(cur_partial_key + 1);
+          }
+          const node<T> *sibling = *(*prev)->find_child(sibling_partial_key);
+
+          const key_type new_sibling_prefix = (*prev)->get_prefix() +
+                                              sibling_partial_key +
+                                              sibling->get_prefix();
+          sibling->set_prefix(new_sibling_prefix);
+
+          delete (*cur);
+          delete (*prev);
+          *prev = sibling;
+        }
+      } else if (n_children == 1) {
+        /* node with =1 child */
+
+        const partial_key_type child_partial_key = (*cur)->next_partial_key(0);
+        const node<T> *child = *(*cur)->find_child(child_partial_key);
+        const key_type new_child_prefix =
+            (*cur)->get_prefix() + child_partial_key + child->get_prefix();
+
+        child->set_prefix(new_child_prefix);
+        delete (*cur);
+        *cur = child;
+
+      } else {
+        /* node with >1 children */
+
+        (*cur)->set_value(nullptr);
+      }
+      return value;
+    }
+
+    /* propagate down and repeat */
+
+    const partial_key_type next_partial_key = key[depth + prefix_len];
+    prev = cur;
+    cur = (*cur)->find_child(next_partial_key);
     depth += prefix_len + 1;
   }
 }

@@ -55,17 +55,39 @@ public:
                          node<T> *child) = 0;
 
   /**
+   * Deletes the child associated with the given partial key.
+   *
+   * @param partial_key - The partial key associated with the child.
+   */
+  virtual node<T> * del_child(const partial_key_type &partial_key) = 0;
+
+  /**
    * Creates and returns a new node with bigger children capacity.
    * The current node gets deleted.
    *
-   * @return
+   * @return node with bigger capacity
    */
   virtual node<T> *grow() = 0;
+
+  /**
+   * Creates and returns a new node with lesser children capacity.
+   * The current node gets deleted.
+   *
+   * @pre node must be undefull
+   * @return node with lesser capacity
+   */
+  virtual node<T> *shrink() = 0;
 
   /**
    * Determines if the node is full, i.e. can carry no more child nodes.
    */
   virtual bool is_full() const = 0;
+
+  /**
+   * Determines if the node is underfull, i.e. carries less child nodes than
+   * intended.
+   */
+  virtual bool is_underfull() const = 0;
 
   /**
    * Determines if the node is a leaf node.
@@ -93,11 +115,11 @@ public:
 
   virtual int get_n_children() const = 0;
 
-  virtual partial_key_type next_partial_key(partial_key_type partial_key) const
-      noexcept(false) = 0;
+  virtual partial_key_type
+  next_partial_key(partial_key_type partial_key) const = 0;
 
-  virtual partial_key_type prev_partial_key(partial_key_type partial_key) const
-      noexcept(false) = 0;
+  virtual partial_key_type
+  prev_partial_key(partial_key_type partial_key) const = 0;
 
   /**
    * Iterator on the first child node.
@@ -121,7 +143,7 @@ node<T>::node(const key_type &prefix, value_type value)
 template <class T>
 int node<T>::check_prefix(const key_type &key, int depth) const {
   auto prefix_len = this->prefix_.size();
-  for (int i = 0; i < prefix_len; i += 1) {
+  for (int i = 0; i < prefix_len; ++i) {
     if (this->prefix_[i] != key[depth + i]) {
       return i;
     }

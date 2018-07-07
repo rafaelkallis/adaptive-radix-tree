@@ -7,11 +7,13 @@
 #define ART_NODE_16_HPP
 
 #include "node.hpp"
-#include "node_48.hpp"
 #include <stdexcept>
 #include <utility>
 
 namespace art {
+
+template <class T> class node_4;
+template <class T> class node_48;
 
 template <class T> class node_16 : public node<T> {
 public:
@@ -20,14 +22,17 @@ public:
 
   node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
+  node<T> *del_child(const partial_key_type &partial_key) override;
   node<T> *grow() override;
+  node<T> *shrink() override;
   bool is_full() const override;
+  bool is_underfull() const override;
 
-  partial_key_type next_partial_key(partial_key_type partial_key) const
-      noexcept(false) override;
+  partial_key_type
+  next_partial_key(partial_key_type partial_key) const override;
 
-  partial_key_type prev_partial_key(partial_key_type partial_key) const
-      noexcept(false) override;
+  partial_key_type
+  prev_partial_key(partial_key_type partial_key) const override;
 
   int get_n_children() const override;
 
@@ -45,7 +50,7 @@ node_16<T>::node_16(key_type prefix, T *value)
 
 template <class T>
 node<T> **node_16<T>::find_child(const partial_key_type &partial_key) {
-  for (int i = 0; i < this->n_children_; i += 1) {
+  for (int i = 0; i < this->n_children_; ++i) {
     if (this->keys_[i] == partial_key) {
       return &this->children_[i];
     }
@@ -58,7 +63,7 @@ void node_16<T>::set_child(const partial_key_type &partial_key,
                            node<T> *child) {
   /* determine index for child */
   int child_i;
-  for (int i = this->n_children_ - 1;; i -= 1) {
+  for (int i = this->n_children_ - 1;; --i) {
     if (i >= 0 && partial_key < this->keys_[i]) {
       /* move existing sibling to the right */
       this->keys_[i + 1] = this->keys_[i];
@@ -71,12 +76,40 @@ void node_16<T>::set_child(const partial_key_type &partial_key,
 
   this->keys_[child_i] = partial_key;
   this->children_[child_i] = child;
-  this->n_children_ += 1;
+  ++n_children_;
+}
+
+template <class T>
+node<T> *node_16<T>::del_child(const partial_key_type &partial_key) {
+  node<T> *child_to_delete = nullptr;
+  for (int i = 0; i < n_children_; ++i) {
+    if (child_to_delete == nullptr && partial_key == keys_[i]) {
+      child_to_delete = children_[i];
+    }
+    if (child_to_delete != nullptr) {
+      /* move existing sibling to the left */
+      keys_[i] = i < n_children_ - 1 ? keys_[i + 1] : 0;
+      children_[i] = i < n_children_ - 1 ? children_[i + 1] : nullptr;
+    }
+  }
+  if (child_to_delete != nullptr) {
+    --n_children_;
+  }
+  return child_to_delete;
 }
 
 template <class T> node<T> *node_16<T>::grow() {
   auto new_node = new node_48<T>(this->get_prefix(), this->get_value());
-  for (int i = 0; i < this->n_children_; i += 1) {
+  for (int i = 0; i < this->n_children_; ++i) {
+    new_node->set_child(this->keys_[i], this->children_[i]);
+  }
+  delete this;
+  return new_node;
+}
+
+template <class T> node<T> *node_16<T>::shrink() {
+  auto new_node = new node_4<T>(this->get_prefix(), this->get_value());
+  for (int i = 0; i < this->n_children_; ++i) {
     new_node->set_child(this->keys_[i], this->children_[i]);
   }
   delete this;
@@ -87,10 +120,13 @@ template <class T> bool node_16<T>::is_full() const {
   return this->n_children_ == 16;
 }
 
+template <class T> bool node_16<T>::is_underfull() const {
+  return this->n_children_ == 4;
+}
+
 template <class T>
 partial_key_type
-node_16<T>::next_partial_key(partial_key_type partial_key) const
-    noexcept(false) {
+node_16<T>::next_partial_key(partial_key_type partial_key) const {
   for (int i = 0; i < this->n_children_; ++i) {
     if (this->keys_[i] >= partial_key) {
       return this->keys_[i];
@@ -101,8 +137,7 @@ node_16<T>::next_partial_key(partial_key_type partial_key) const
 
 template <class T>
 partial_key_type
-node_16<T>::prev_partial_key(partial_key_type partial_key) const
-    noexcept(false) {
+node_16<T>::prev_partial_key(partial_key_type partial_key) const {
   for (int i = this->n_children_ - 1; i >= 0; --i) {
     if (this->keys_[i] <= partial_key) {
       return this->keys_[i];

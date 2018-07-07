@@ -7,12 +7,14 @@
 #define ART_NODE_48_HPP
 
 #include "node.hpp"
-#include "node_256.hpp"
 #include <array>
 #include <stdexcept>
 #include <utility>
 
 namespace art {
+
+template <class T> class node_16;
+template <class T> class node_256;
 
 template <class T> class node_48 : public node<T> {
 public:
@@ -21,14 +23,17 @@ public:
 
   node<T> **find_child(const partial_key_type &partial_key) override;
   void set_child(const partial_key_type &partial_key, node<T> *child) override;
+  node<T> *del_child(const partial_key_type &partial_key) override;
   node<T> *grow() override;
+  node<T> *shrink() override;
   bool is_full() const override;
+  bool is_underfull() const override;
 
-  partial_key_type next_partial_key(partial_key_type partial_key) const
-      noexcept(false) override;
+  partial_key_type
+  next_partial_key(partial_key_type partial_key) const override;
 
-  partial_key_type prev_partial_key(partial_key_type partial_key) const
-      noexcept(false) override;
+  partial_key_type
+  prev_partial_key(partial_key_type partial_key) const override;
 
   int get_n_children() const override;
 
@@ -45,7 +50,7 @@ template <class T> node_48<T>::node_48() : node_48<T>(key_type(0), nullptr) {}
 template <class T>
 node_48<T>::node_48(key_type prefix, T *value)
     : node<T>(prefix, value), n_children_(0), indexes_(), children_() {
-  for (int i = 0; i < 256; i += 1) {
+  for (int i = 0; i < 256; ++i) {
     this->indexes_[i] = node_48::EMPTY;
     if (i < 48) {
       this->children_[i] = nullptr;
@@ -68,19 +73,44 @@ void node_48<T>::set_child(const partial_key_type &partial_key,
   // 48){}
 
   /* find empty child entry */
-  for (int i = 0; i < 48; i += 1) {
+  for (int i = 0; i < 48; ++i) {
     if (nullptr == this->children_[i]) {
       this->indexes_[partial_key] = i;
       this->children_[i] = child;
       break;
     }
   }
-  this->n_children_ += 1;
+  ++n_children_;
+}
+
+template <class T>
+node<T> *node_48<T>::del_child(const partial_key_type &partial_key) {
+  node<T> *child_to_delete = nullptr;
+  uint8_t index = indexes_[partial_key];
+  if (index != node_48::EMPTY) {
+    indexes_[partial_key] = node_48::EMPTY;
+    child_to_delete = children_[index];
+    children_[index] = nullptr;
+    --n_children_;
+  }
+  return child_to_delete;
 }
 
 template <class T> node<T> *node_48<T>::grow() {
   auto new_node = new node_256<T>(this->get_prefix(), this->get_value());
-  for (int partial_key = 0; partial_key < 256; partial_key += 1) {
+  for (int partial_key = 0; partial_key < 256; ++partial_key) {
+    unsigned char index = this->indexes_[partial_key];
+    if (index != node_48::EMPTY) {
+      new_node->set_child(partial_key, this->children_[index]);
+    }
+  }
+  delete this;
+  return new_node;
+}
+
+template <class T> node<T> *node_48<T>::shrink() {
+  auto new_node = new node_16<T>(this->get_prefix(), this->get_value());
+  for (int partial_key = 0; partial_key < 256; ++partial_key) {
     unsigned char index = this->indexes_[partial_key];
     if (index != node_48::EMPTY) {
       new_node->set_child(partial_key, this->children_[index]);
@@ -94,12 +124,15 @@ template <class T> bool node_48<T>::is_full() const {
   return this->n_children_ == 48;
 }
 
+template <class T> bool node_48<T>::is_underfull() const {
+  return this->n_children_ == 16;
+}
+
 template <class T> const unsigned char node_48<T>::EMPTY = 48;
 
 template <class T>
 partial_key_type
-node_48<T>::next_partial_key(partial_key_type partial_key) const
-    noexcept(false) {
+node_48<T>::next_partial_key(partial_key_type partial_key) const {
   for (partial_key_type i = partial_key;; ++i) {
     if (this->indexes_[i] != node_48<T>::EMPTY) {
       return i;
@@ -112,8 +145,7 @@ node_48<T>::next_partial_key(partial_key_type partial_key) const
 
 template <class T>
 partial_key_type
-node_48<T>::prev_partial_key(partial_key_type partial_key) const
-    noexcept(false) {
+node_48<T>::prev_partial_key(partial_key_type partial_key) const {
   for (partial_key_type i = partial_key;; --i) {
     if (this->indexes_[i] != node_48<T>::EMPTY) {
       return i;
