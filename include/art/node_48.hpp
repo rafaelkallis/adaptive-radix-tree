@@ -45,7 +45,7 @@ private:
   std::array<node<T> *, 48> children_;
 };
 
-template <class T> node_48<T>::node_48() : node_48<T>(key_type(0), nullptr) {}
+template <class T> node_48<T>::node_48() : node_48<T>(key_type(), nullptr) {}
 
 template <class T>
 node_48<T>::node_48(key_type prefix, T *value)
@@ -128,7 +128,7 @@ template <class T> bool node_48<T>::is_underfull() const {
   return this->n_children_ == 16;
 }
 
-template <class T> const unsigned char node_48<T>::EMPTY = 48;
+template <class T> const partial_key_type node_48<T>::EMPTY = 48;
 
 template <class T>
 partial_key_type

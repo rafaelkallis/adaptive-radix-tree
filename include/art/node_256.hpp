@@ -41,7 +41,7 @@ private:
 };
 
 template <class T>
-node_256<T>::node_256() : node_256<T>(key_type(0), nullptr) {}
+node_256<T>::node_256() : node_256<T>(key_type(), nullptr) {}
 
 template <class T>
 node_256<T>::node_256(key_type prefix, T *value)

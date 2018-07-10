@@ -20,11 +20,8 @@ namespace art {
 
 template <class T> class node {
 public:
-  using value_type = T *;
-  using reference = value_type &;
-
   node() = default;
-  node(const key_type &prefix, value_type value);
+  node(const key_type &prefix, T *value);
   node(const node<T> &other) = default;
   node(node<T> &&other) noexcept = default;
   virtual ~node() = default;
@@ -59,7 +56,7 @@ public:
    *
    * @param partial_key - The partial key associated with the child.
    */
-  virtual node<T> * del_child(const partial_key_type &partial_key) = 0;
+  virtual node<T> *del_child(const partial_key_type &partial_key) = 0;
 
   /**
    * Creates and returns a new node with bigger children capacity.
@@ -108,8 +105,8 @@ public:
    */
   int check_prefix(const key_type &key, int depth) const;
 
-  reference get_value();
-  void set_value(reference value);
+  T *get_value();
+  void set_value(T *value);
   key_type get_prefix() const;
   void set_prefix(const key_type &prefix);
 
@@ -132,19 +129,19 @@ public:
   std::reverse_iterator<children_iterator<T>> rend();
 
 private:
-  key_type prefix_ = key_type(0);
-  value_type value_ = nullptr;
+  key_type prefix_;
+  T *value_;
 };
 
 template <class T>
-node<T>::node(const key_type &prefix, value_type value)
+node<T>::node(const key_type &prefix, T *value)
     : prefix_(prefix), value_(value){};
 
 template <class T>
 int node<T>::check_prefix(const key_type &key, int depth) const {
   auto prefix_len = this->prefix_.size();
   for (int i = 0; i < prefix_len; ++i) {
-    if (this->prefix_[i] != key[depth + i]) {
+    if (prefix_[i] != key[depth + i]) {
       return i;
     }
   }
@@ -155,11 +152,9 @@ template <class T> bool node<T>::is_leaf() const {
   return this->get_n_children() == 0;
 }
 
-template <class T> typename node<T>::value_type &node<T>::get_value() {
-  return this->value_;
-}
+template <class T> T *node<T>::get_value() { return this->value_; }
 
-template <class T> void node<T>::set_value(reference value) {
+template <class T> void node<T>::set_value(T * value) {
   this->value_ = value;
 }
 

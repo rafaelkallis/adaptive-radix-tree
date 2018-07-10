@@ -31,9 +31,10 @@ public:
   using value_type = T *;
   using difference_type = int;
   using pointer = value_type *;
-  using reference = value_type &;
+  /* using reference = const value_type &; */
 
-  reference operator*();
+  /* reference operator*(); */
+  value_type operator*();
   pointer operator->();
   preorder_traversal_iterator<T> &operator++();
   preorder_traversal_iterator<T> operator++(int);
@@ -108,8 +109,8 @@ preorder_traversal_iterator<T>::from_min_key(node<T> *root, key_type key) {
 }
 
 template <class T>
-typename preorder_traversal_iterator<T>::reference
-    preorder_traversal_iterator<T>::operator*() {
+typename preorder_traversal_iterator<T>::value_type
+preorder_traversal_iterator<T>::operator*() {
   return traversal_stack_.top()->get_value();
 }
 

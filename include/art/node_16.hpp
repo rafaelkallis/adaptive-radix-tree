@@ -42,7 +42,7 @@ private:
   std::array<node<T> *, 16> children_;
 };
 
-template <class T> node_16<T>::node_16() : node_16<T>(key_type(0), nullptr) {}
+template <class T> node_16<T>::node_16() : node_16<T>(key_type(), nullptr) {}
 
 template <class T>
 node_16<T>::node_16(key_type prefix, T *value)

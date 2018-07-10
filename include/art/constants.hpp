@@ -6,12 +6,12 @@
 #ifndef ART_CONSTANTS_HPP
 #define ART_CONSTANTS_HPP
 
-#include <vector>
+#include <string>
 
 namespace art {
 
 using partial_key_type = uint8_t;
-using key_type = std::vector<partial_key_type>;
+using key_type = std::string;
 
 } // namespace art
 

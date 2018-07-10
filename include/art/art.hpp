@@ -11,6 +11,7 @@
 #include "node_4.hpp"
 #include "preorder_traversal_iterator.hpp"
 #include <algorithm>
+#include <iostream>
 
 namespace art {
 
@@ -70,25 +71,23 @@ private:
 template <class T> T *art<T>::get(const key_type &key) const {
   node<T> *cur = root_;
   int depth = 0;
-  for (;;) {
+  while (true) {
     if (cur == nullptr) {
       return nullptr;
     }
-    const int prefix_len = cur->get_prefix().size();
+    const int prefix_len = cur->get_prefix().length();
     const bool is_prefix_match = cur->check_prefix(key, depth) == prefix_len;
     if (!is_prefix_match) {
       return nullptr;
     }
-    if (prefix_len == key.size() - depth) {
+    if (prefix_len == key.length() - depth) {
       /* exact match */
       return cur->get_value();
     }
     depth += prefix_len;
     node<T> **next = cur->find_child(key[depth]);
-    if (next != nullptr) {
-      cur = *next;
-    }
-    depth += 1;
+    cur = next != nullptr ? *next : nullptr;
+    ++depth;
   }
 }
 
@@ -274,89 +273,117 @@ template <class T> T *art<T>::del(const key_type &key) {
     const bool is_prefix_match =
         std::min(prefix_len, key_len - depth) == prefix_match_len;
 
-    if (!is_prefix_match) {
+    if (!is_prefix_match || prefix_match_len != prefix_len) {
       /* prefix mismatch => node doesn't exist */
       return nullptr;
     }
 
     if (prefix_len == key_len - depth) {
       /* exact match */
+
       T *value = (*cur)->get_value();
       const int n_children = (*cur)->get_n_children();
-      if (n_children == 0) {
-        const int n_siblings =
-            prev != nullptr ? (*prev)->get_n_children() - 1 : 0;
-        if (n_siblings == 0) {
-          /* leaf node with 0 sibling nodes:
-           * => delete leaf node
-           *
-           *     |                 |
-           *    (aa)->v1          (aa)->v1
-           *     | a     -[aaaaa]
-           *     |       =======>
-           *   *(aa)->v2
-           */
+      const int n_siblings =
+          prev != nullptr ? (*prev)->get_n_children() - 1 : 0;
+      if (n_children == 0 && n_siblings == 0) {
+        /* leaf node with 0 sibling nodes:
+         * => delete leaf node
+         *
+         *     |                 |
+         *    (aa)->v1          (aa)->v1
+         *     | a     -[aaaaa]
+         *     |       =======>
+         *   *(aa)->v2
+         */
 
-          delete (*cur);
+        delete (*cur);
+        if (prev != nullptr) {
           (*prev)->del_child(cur_partial_key);
-
-        } else if (n_siblings == 1 && (*prev)->get_value() == nullptr) {
-          /* leaf node with 1 sibling node and a parent with no value:
-           * => delete leaf node
-           * => replace parent with sibling
-           * 
-           *       (aa)->v1                   (aa)->v1
-           *        |a                         |a
-           *        |                          |
-           *       (aa)->Ø                     |
-           *    a /    \ b     -[aaaaabaa]    /
-           *     /      \      ==========>   /
-           *  (aa)->v2 *()->v3             (aaaaa)->v2
-           *  /|\
-           */
-
-          /* find sibling */
-          partial_key_type sibling_partial_key = (*prev)->next_partial_key(0);
-          if (sibling_partial_key == cur_partial_key) {
-            sibling_partial_key =
-                (*prev)->next_partial_key(cur_partial_key + 1);
-          }
-          const node<T> *sibling = *(*prev)->find_child(sibling_partial_key);
-
-          const key_type new_sibling_prefix = (*prev)->get_prefix() +
-                                              sibling_partial_key +
-                                              sibling->get_prefix();
-          sibling->set_prefix(new_sibling_prefix);
-
-          delete (*cur);
-          delete (*prev);
-          *prev = sibling;
+        } else {
+          *cur = nullptr;
         }
+
+      } else if (n_children == 0 && n_siblings == 1 &&
+                 (*prev)->get_value() == nullptr) {
+        /* leaf node with 1 sibling node and a parent with no value:
+         * => delete leaf node
+         * => replace parent with sibling
+         *
+         *       (aa)->v1                   (aa)->v1
+         *        |a                         |a
+         *        |                          |
+         *       (aa)->Ø                     |
+         *    a /    \ b     -[aaaaabaa]    /
+         *     /      \      ==========>   /
+         *  (aa)->v2 *()->v3             (aaaaa)->v2
+         *  /|\
+         */
+
+        /* find sibling */
+        partial_key_type sibling_partial_key = (*prev)->next_partial_key(0);
+        if (sibling_partial_key == cur_partial_key) {
+          sibling_partial_key = (*prev)->next_partial_key(cur_partial_key + 1);
+        }
+        node<T> *sibling = *(*prev)->find_child(sibling_partial_key);
+
+        const key_type new_sibling_prefix = (*prev)->get_prefix() +
+                                            key_type(1, sibling_partial_key) +
+                                            sibling->get_prefix();
+        sibling->set_prefix(new_sibling_prefix);
+
+        delete (*cur);
+        delete (*prev);
+        *prev = sibling;
       } else if (n_children == 1) {
-        /* node with =1 child */
+        /* node with 1 child
+         * => replace node with child
+         *
+         *       (aa)->v1            (aa)->v1
+         *        |a                  |a
+         *        |        -[aaaaa]   |
+         *      *(aa)->v2  =======>   |
+         *        |a                  |
+         *        |                   |
+         *       (aa)->v3            (aaaaa)->v3
+         */
 
         const partial_key_type child_partial_key = (*cur)->next_partial_key(0);
-        const node<T> *child = *(*cur)->find_child(child_partial_key);
-        const key_type new_child_prefix =
-            (*cur)->get_prefix() + child_partial_key + child->get_prefix();
+        node<T> *child = *(*cur)->find_child(child_partial_key);
+        const key_type new_child_prefix = (*cur)->get_prefix() +
+                                          key_type(1, child_partial_key) +
+                                          child->get_prefix();
 
         child->set_prefix(new_child_prefix);
         delete (*cur);
         *cur = child;
 
       } else {
-        /* node with >1 children */
+        /* node with >1 children
+         * => remove value of node
+         *
+         *       (aa)->v1                 (aa)->v1
+         *        |a                       |a
+         *        |                        |
+         *      *(aa)->v2                *(aa)->Ø
+         *    a /    \ b     -[aaaaa]  a /    \ b
+         *     /      \      =======>   /      \
+         *    ()->v4  ()->v4           ()->v4  ()->v4
+         */
 
         (*cur)->set_value(nullptr);
+      }
+
+      if (prev != nullptr && (*prev)->is_underfull()) {
+        *prev = (*prev)->shrink();
       }
       return value;
     }
 
     /* propagate down and repeat */
 
-    const partial_key_type next_partial_key = key[depth + prefix_len];
+    cur_partial_key = key[depth + prefix_len];
     prev = cur;
-    cur = (*cur)->find_child(next_partial_key);
+    cur = (*cur)->find_child(cur_partial_key);
     depth += prefix_len + 1;
   }
 }

@@ -28,9 +28,9 @@ TEST_SUITE("node") {
 
   TEST_CASE("check_prefix") {
     node_0<int> node;
-    key_type key = {0, 0, 0, 1, 0, 0, 0, 0, 1};
+    key_type key = "000100001";
 
-    node.set_prefix(key_type{0, 0, 0, 0});
+    node.set_prefix("0000");
 
     CHECK_EQ(3, node.check_prefix(key, 0));
     CHECK_EQ(2, node.check_prefix(key, 1));
