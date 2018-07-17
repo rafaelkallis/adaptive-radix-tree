@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=latex 2018.4.16)  16 JUL 2018 19:33
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=latex 2018.4.16)  17 JUL 2018 18:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1130,18 +1130,18 @@ Package: ulem 2012/05/18
  (./art.aux)
 \openout1 = `art.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 89.
-LaTeX Font Info:    ... okay on input line 89.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 89.
-LaTeX Font Info:    ... okay on input line 89.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 89.
-LaTeX Font Info:    ... okay on input line 89.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 89.
-LaTeX Font Info:    ... okay on input line 89.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 89.
-LaTeX Font Info:    ... okay on input line 89.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 89.
-LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
 
 ABD: EveryShipout initializing macros
 \c@lstlisting=\count337
@@ -1160,12 +1160,12 @@ Package pdflscape Info: Auto-detected driver: dvips (dvips) on input line 125.
 )
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
-LaTeX Font Info:    Try loading font information for U+msa on input line 92.
+LaTeX Font Info:    Try loading font information for U+msa on input line 93.
 
 (/usr/local/texlive/2018/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 92.
+LaTeX Font Info:    Try loading font information for U+msb on input line 93.
 
 (/usr/local/texlive/2018/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -1179,29 +1179,44 @@ File: images/dbtgBW.eps Graphic file (type eps)
 
 ]
 
-LaTeX Warning: Reference `sec:operations' on page 1 undefined on input line 125
+LaTeX Warning: Reference `sec:operations' on page 1 undefined on input line 126
 .
 
 
-LaTeX Warning: Reference `sec:benchmarks' on page 1 undefined on input line 127
+LaTeX Warning: Reference `sec:benchmarks' on page 1 undefined on input line 128
 .
 
 [2]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[3] (./art.bbl) [4] (./art.aux)
+[3]
+Overfull \hbox (5.59041pt too wide) in paragraph at lines 392--392
+[][][]\OT1/cmr/m/n/12 a  
+ []
+
+
+Overfull \hbox (6.24318pt too wide) in paragraph at lines 392--392
+[][][]\OT1/cmr/m/n/12 b  
+ []
+
+
+Overfull \hbox (4.93764pt too wide) in paragraph at lines 392--392
+[][][]\OT1/cmr/m/n/12 c  
+ []
+
+[4] (./art.bbl) [5] (./art.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 40611 strings out of 492650
- 887084 string characters out of 6129648
+ 40684 strings out of 492650
+ 888466 string characters out of 6129648
  1038868 words of memory out of 5000000
- 44062 multiletter control sequences out of 15000+600000
+ 44135 multiletter control sequences out of 15000+600000
  541493 words of font info for 66 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  157i,14n,179p,10376b,2536s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on art.dvi (4 pages, 49096 bytes).
+Output written on art.dvi (5 pages, 55848 bytes).

@@ -23,6 +23,7 @@
 \usepackage{subcaption}
 \usepackage{soul}
 \usepackage{ulem}
+\usepackage{ifthen}
 % \usepackage{geometry}
 % \usepackage{titlesec}
 
@@ -361,9 +362,35 @@ able to traverse the data structure even faster since the height decreased.
   \label{fig:vertical-compression}
 \end{figure}
 
-\subsection{Horizontal Compression}
+\subsection{Horizontal Compression (Adaptive Nodes)}
 
-With large values of $s$, we sacrifice a lot of space for a smaller height.
+With large values of span $s$, we sacrifice an excessive amount of space for a 
+smaller tree height. Space is allocated for pointers which keep
+references of child nodes. In order to reduce the space needed to keep
+such references, Leis et al.\ propose \textit{Adaptive Nodes} 
+\cite{leis2013adaptive}, which make use of dynamic data structures 
+instead of static arrays for child node bookkeeping. Doing so, we allocate 
+a minimal amount of space when the number of children is small and add more 
+space if required, i.e.\ more children are added.
+We refer to this heuristic as \textit{horizontal compression}.\footnote{The
+authors refer to this technique as adaptive nodes.}
+
+\begin{tikzpicture}
+  \draw [help lines] (0,0) grid (4,2);
+  \foreach \x/\key/\val in {0/65/a,1/82/b,2/84/c,3/0/0} {
+    \node at (\x.5,2.3) {\x};
+    % val
+    \ifnum \key>0
+      \node at (\x.5,1.5) {\key};
+    \fi
+    % ptr
+    \ifnum \key>0
+      \node [circle,draw,scale=0.1] (\x-fr) at (\x.5,0.5) {};
+      \node [regular polygon, regular polygon sides=3,draw, text width=0.1mm, inner sep=0pt] (\x-to) at (\x.5, -0.7) {\val};
+      \draw [->] (\x-fr) -- (\x-to) {};
+    \fi
+  } 
+\end{tikzpicture}
 
 \newpage
 
