@@ -1,16 +1,16 @@
 # Fdb version 3
-["bibtex art"] 1531840024 "art.aux" "art.bbl" "art" 1531846800
+["bibtex art"] 1532256778 "art.aux" "art.bbl" "art" 1532256792
   "/usr/local/texlive/2018/texmf-dist/bibtex/bst/base/abbrv.bst" 1480098433 20329 b5fed53e10044d0f8112183785c759b1 ""
-  "art.aux" 1531846799 1661 888a97ab7f0ea67de9bdf526a415ddda ""
+  "art.aux" 1532256791 2142 99dbcd997afc8cfa965ff9f06c277b97 ""
   "art.bib" 1531761860 993 3a5123920e3336f9d810e828209ef4ab ""
   (generated)
   "art.bbl"
   "art.blg"
-["dvips"] 1531846799 "art.dvi" "art.ps" "art" 1531846800
-  "art.dvi" 1531846799 55848 d1b18637e516f5ea2d0544fdd6e60129 "latex"
+["dvips"] 1532256791 "art.dvi" "art.ps" "art" 1532256792
+  "art.dvi" 1532256791 53588 1c71ea2b99faa0c1b50d7e5e8dc02808 "latex"
   (generated)
   "art.ps"
-["latex"] 1531846797 "art.tex" "art.dvi" "art" 1531846800
+["latex"] 1532256790 "art.tex" "art.dvi" "art" 1532256792
   "/usr/local/texlive/2018/texmf-dist/fonts/map/fontname/texfonts.map" 1511824771 3332 103109f5612ad95229751940c61aada0 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/jknappen/ec/ectt1000.tfm" 1480098696 1536 06717a2b50de47d4087ac0e6cd759455 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1480098698 1004 54797486969f23fa377b128694d548df ""
@@ -37,6 +37,7 @@
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmsy6.tfm" 1480098701 1116 933a60c408fc0a863a92debe84b2d294 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmsy8.tfm" 1480098701 1120 8b7d695260f3cff42e636090a8002094 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmti12.tfm" 1480098701 1484 ed72f8f5cf654cda15ecc8e32bfcbee5 ""
+  "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmtt12.tfm" 1480098701 772 9a936b7f5e2ff0557fce0f62822f0bbf ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmtt8.tfm" 1480098701 768 d7b9a2629a0c353102ad947dc9221d49 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/latex-fonts/lasy6.tfm" 1480098711 520 4889cce2180234b97cad636b6039c722 ""
   "/usr/local/texlive/2018/texmf-dist/tex/generic/ifxetex/ifxetex.sty" 1480098815 1458 43ab4710dc82f3edeabecd0d099626b2 ""
@@ -191,16 +192,17 @@
   "/usr/local/texlive/2018/texmf-dist/web2c/texmf.cnf" 1522066949 33362 cf75436e19743e94a92a6b1b9183c434 ""
   "/usr/local/texlive/2018/texmf-var/web2c/pdftex/latex.fmt" 1523934522 4220218 a831c9f2d85a9dd05945596dad7c1437 ""
   "/usr/local/texlive/2018/texmf.cnf" 1523934483 577 0b39adfd7c93507ff20c9c14c2f1a33f ""
-  "art.aux" 1531846799 1661 888a97ab7f0ea67de9bdf526a415ddda ""
-  "art.bbl" 1531840025 636 e628b8e762cfa2c7dd900dc52da6f5c5 "bibtex art"
-  "art.tex" 1531846796 14130 81e4c53b82330f2988baed87763d3c84 ""
+  "art.aux" 1532256791 2142 99dbcd997afc8cfa965ff9f06c277b97 ""
+  "art.bbl" 1532256778 636 e628b8e762cfa2c7dd900dc52da6f5c5 "bibtex art"
+  "art.tex" 1532256788 15880 f919424a5dff6ccb4e147ac290b00bc8 ""
   "images/IFIlogo.eps" 1531317649 363675 79e91ea1c9c34d70c5fa1aba524447d7 ""
+  "images/art_nodes_draw.eps" 1532203345 1444448 272e584ef2d025aec3902696392c4305 ""
   "images/dbtgBW.eps" 1531317649 13419 3fffa4a07dfac0af51ab406e44a55254 ""
   (generated)
-  "art.aux"
   "art.dvi"
+  "art.aux"
   "art.log"
-["ps2pdf"] 1531846799 "art.ps" "art.pdf" "art" 1531846800
-  "art.ps" 1531846799 692733 183b3adbc72c101b17d02721a6f01eb4 "dvips"
+["ps2pdf"] 1532256792 "art.ps" "art.pdf" "art" 1532256792
+  "art.ps" 1532256792 2132194 57eedac131e071e1161116fc7e1cd295 "dvips"
   (generated)
   "art.pdf"

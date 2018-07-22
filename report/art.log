@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=latex 2018.4.16)  17 JUL 2018 18:59
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=latex 2018.4.16)  22 JUL 2018 12:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1190,33 +1190,28 @@ LaTeX Warning: Reference `sec:benchmarks' on page 1 undefined on input line 128
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[3]
-Overfull \hbox (5.59041pt too wide) in paragraph at lines 392--392
-[][][]\OT1/cmr/m/n/12 a  
+[3] [4]
+File: images/art_nodes_draw.eps Graphic file (type eps)
+ <images/art_nodes_draw.eps>
+Overfull \hbox (40.7292pt too wide) in paragraph at lines 412--421
+[]  []
  []
 
 
-Overfull \hbox (6.24318pt too wide) in paragraph at lines 392--392
-[][][]\OT1/cmr/m/n/12 b  
- []
+LaTeX Warning: Float too large for page by 16.0551pt on input line 423.
 
-
-Overfull \hbox (4.93764pt too wide) in paragraph at lines 392--392
-[][][]\OT1/cmr/m/n/12 c  
- []
-
-[4] (./art.bbl) [5] (./art.aux)
+[5] [6] (./art.bbl) [7] (./art.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 40684 strings out of 492650
- 888466 string characters out of 6129648
- 1038868 words of memory out of 5000000
- 44135 multiletter control sequences out of 15000+600000
- 541493 words of font info for 66 fonts, out of 8000000 for 9000
+ 40618 strings out of 492650
+ 887247 string characters out of 6129648
+ 1038905 words of memory out of 5000000
+ 44067 multiletter control sequences out of 15000+600000
+ 541662 words of font info for 67 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  157i,14n,179p,10376b,2536s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on art.dvi (5 pages, 55848 bytes).
+Output written on art.dvi (7 pages, 53588 bytes).

@@ -372,25 +372,55 @@ such references, Leis et al.\ propose \textit{Adaptive Nodes}
 instead of static arrays for child node bookkeeping. Doing so, we allocate 
 a minimal amount of space when the number of children is small and add more 
 space if required, i.e.\ more children are added.
-We refer to this heuristic as \textit{horizontal compression}.\footnote{The
-authors refer to this technique as adaptive nodes.}
+We refer to this heuristic as \textit{horizontal compression}.
+Leis et al.\ also fix the span $s=8$, i.e. partial keys are 1 byte
+long and therefore each node can have up to $2^8 = 256$ children.
 
-\begin{tikzpicture}
-  \draw [help lines] (0,0) grid (4,2);
-  \foreach \x/\key/\val in {0/65/a,1/82/b,2/84/c,3/0/0} {
-    \node at (\x.5,2.3) {\x};
-    % val
-    \ifnum \key>0
-      \node at (\x.5,1.5) {\key};
-    \fi
-    % ptr
-    \ifnum \key>0
-      \node [circle,draw,scale=0.1] (\x-fr) at (\x.5,0.5) {};
-      \node [regular polygon, regular polygon sides=3,draw, text width=0.1mm, inner sep=0pt] (\x-to) at (\x.5, -0.7) {\val};
-      \draw [->] (\x-fr) -- (\x-to) {};
-    \fi
-  } 
-\end{tikzpicture}
+An adaptive node is in one of four configurations, depending on the number
+of children. Each of the four configurations is optimized for a different
+number of children. The most compact configuration is called
+\textit{Node4} which can carry up to four children. In the same manner,
+we also have \textit{Node16}, \textit{Node48} and \textit{Node256}.
+
+We now describe the structure of each of the four configurations.
+The node types are also illustrated in \Cref{fig:horizontal-compression}.
+We store the partial keys $65$, $82$, $84$ and their corresponding child nodes
+$\alpha$, $\beta$, $\gamma$ in each node type with the purposes of explaining 
+their structures. Note that $\emptyset$ is a \texttt{null} pointer.
+
+A node of type Node4 contains two static arrays, each of which can hold
+up to four values. The first array, called the ``partial keys'' array, holds
+partial keys which identify children of that node. The second array,
+called the ``children'' array, holds pointers to the child nodes.
+Partial keys and pointers are stored at corresponding positions and
+the partial keys are sorted. A node of type Node16 is structured similar
+to Node4, the only difference being the lengths of the two static arrays,
+which are now 16 each.
+
+An instance of Node48 contains a 256-element array named 
+``indexes'' and a 48-element array called ``children''.
+Partial keys are stored implicitly in ``indexes'', i.e.\ 
+can be indexed with partial key bytes directly.
+As the name suggests, ``indexes'' stores the index of a child
+node inside the ``children'' array. This node can be compared to
+virtual memory, since the address space (256 addresses) is wider 
+than the actual available storage space (48 slots).
+
+
+\begin{figure}
+  \vspace{-4cm}
+  \hspace{-2cm}
+  \includegraphics[height=27cm]{art_nodes_draw}
+  \vspace{-3cm}
+  \caption{
+    Tries with span $s=2$ storing keys ``$01000011$'', ``$01000110$''
+    and ``$01100100$''. The trie on the right incorporates vertical 
+    compression. Red nodes indicate nodes which get eliminated under
+    vertical compression. Gray strings represent the value of the ``prefix'' 
+    property.
+  }
+  \label{fig:horizontal-compression}
+\end{figure}
 
 \newpage
 
