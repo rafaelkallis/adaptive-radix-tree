@@ -2,7 +2,7 @@
 @default_files = ("art.tex");
 
 # gen synctex
-$latex = "latex -synctex=1 %O %S";
+$latex = "latex -shell-escape -synctex=1 %O %S";
 
 # gen .pdf on osx with pstopdf
 $pdf_mode = "2";

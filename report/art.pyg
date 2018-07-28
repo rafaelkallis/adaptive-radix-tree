@@ -1,0 +1,35 @@
+template <class T> class art {
+public:
+  /**
+   * Finds the value associated with the given key.
+   */
+  T *get(const key_type &key) const {
+    node<T> *cur = root_;
+    int depth = 0;
+    while (true) {
+      if (cur == nullptr) {
+        return nullptr;
+      }
+      const int prefix_len =
+        cur->get_prefix().length();
+      const bool is_prefix_match =
+        cur->check_prefix(key, depth) == prefix_len;
+      if (!is_prefix_match) {
+        return nullptr;
+      }
+      const bool is_exact_match =
+        prefix_len == key.length() - depth;
+      if (is_exact_match) {
+        return cur->get_value();
+      }
+      depth += prefix_len;
+      node<T> **next = cur->find_child(key[depth]);
+      cur = next != nullptr ? *next : nullptr;
+      ++depth;
+    }
+  }
+
+  /* ... */
+private:
+  node<T> *root_ = nullptr;
+}
