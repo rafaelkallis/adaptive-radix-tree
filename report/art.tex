@@ -22,9 +22,9 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{soul}
-\usepackage{ulem}
-\usepackage{ifthen}
-\usepackage{wrapfig}
+% \usepackage{ulem}
+% \usepackage{ifthen}
+% \usepackage{wrapfig}
 % \usepackage{geometry}
 % \usepackage{titlesec}
 
@@ -107,50 +107,38 @@
 \newpage
 \section{Introduction}
 
-Main-Memory Databases increasingly become a viable option for many applications.
-Whilst main memory is a considerably faster medium than a secondary disk, 
-utilizing caches more efficiently would lead to even better access times.
+Main-Memory Databases increasingly become a viable option for many applications
+due to the considerably faster access times of volatile memory 
+in comparison to secondary storage.
 
 Leis et al.\ \cite{leis2013adaptive} propose the Adaptive Radix Tree (ART), an in-memory
-data structure which efficiently stores and retrieves data, even outperforming
-red-black trees.
-As we will see later, ART achieves its exceptional performance, and space
+data structure which efficiently stores and retrieves data.
+As we will see later, ART achieves its performance, and space
 efficiency, by compressing the tree both vertically and horizontally.
-Higher space effiency allows ART to utilize caches more optimal.
 
-The goal of this project is to implement ART, as proposed by 
-\cite{leis2013adaptive} in C++ and compare its transactional throughput
-against other in-memory data structures, e.g.\ red-black trees and hash tables.
+The goal of this project is to study and implement ART, as proposed by 
+\cite{leis2013adaptive}. 
 In \Cref{sec:art} we describe how ART is constructed by applying 
 vertical and horizontal compression to a trie.
 Next, we describe the point query procedure, as well as 
-value insertion and removal in \Cref{sec:algorithms}.
+key deletion in \Cref{sec:algorithms}.
 Finally, a benchmark of ART, a red-black tree and a hashtable
 is presented in \Cref{sec:benchmarks}.
 
-\section{Adaptive Radix Tree (ART)}
-\label{sec:art}
+\section{Preliminaries}
+\label{sec:preliminaries}
 
-The \textit{Adaptive Radix Tree} (Tree) is a space efficient trie, which
-achieves its low memory consumption using \textit{vertical} and 
-\textit{horizontal} compression. Using vertical compression, we reduce
-the tree height significantly by merging parent nodes with child nodes
-under certain circumstances. Horizontal compression reduces the amount
-of space required by each node depending on the number of child nodes.
-We will talk about both concepts in-depth
-in \Cref{sec:vertical-compression,sec:horizontal-compression}.
+A trie \cite{fredkin1960trie} is a hierarchical data structure which
+stores key-value pairs. Tries can answer both point and range queries 
+efficiently since keys are stored in lexicographic order.
+A node's key can be reconstructed from its path. When constructing
+a trie from a set of keys, all insertion orders result in the same tree.
+Tries do not require rebalancing operations and therefore have no notion
+of balance, unlike comparison based search trees.
 
-\subsection{Trie}
-\label{sec:trie}
-
-The trie \cite{fredkin1960trie} is a hierarchical data structure which
-stores key-value pairs. The trie can answer both point and range queries 
-efficiently since keys are stored sorted according to their lexicographic order.
-A node's path represents the node's key. This is done by splitting a key into
-chunks of $s$ bits, where $s$ is called \textit{span}. 
-
-Each inner node has 
-$2^s$ child nodes, one for each possible $s$-bit sequence. During tree
+Keys are split into chunks of $s$ bits, where $s$ is called \textit{span}.
+Inner nodes have  $2^s$ child pointers (possibly \texttt{null}), 
+one for each possible $s$-bit sequence. During tree
 traversal, we propagate down to the child node identified by the $d$-th
 $s$-bit chunk of the key, where $d$ is the depth of the current node. 
 Using an array of $2^s$  pointers, this lookup can be done without any 
@@ -158,27 +146,17 @@ additional comparison.
 
 \Cref{fig:span} depicts tries storing the 
 8-bit keys ``$01000011$'', ``$01000110$'' and ``$01100100$'' with 
-$s=2, 4, 8$. Span $s$ is critical for the performance of the trie because $s$ 
+$s=1,2$. Span $s$ is critical for the performance of the trie because $s$ 
 determines the height of the trie. We observe that by increasing the span, 
 we decrease the tree height. A trie
 storing $k$ bit keys has $\lceil \frac{k}{s} \rceil$ levels of inner nodes.
 As a consequence, point queries, insertions and deletions have 
-$O(k)$ complexity. Having a data structure with
-time complexity not dependend on $n$, makes it very attractive for large
-data sets.
+$O(k)$ complexity.
 
 Span $s$ also determines the space consumption of the tree.
-A node with span $s$ requires $2^s$ pointers. The tries in 
-\Cref{fig:span} require a total of $240, 224, 384$ and $2048$ bytes 
-respectively, for the bookeeping of child nodes, assuming 64-bit pointers.
+A node with span $s$ requires $2^s$ pointers. 
 An apparent trade off exists between tree height versus space efficiency that
 depends on $s$.
-
-When storing key-value pairs, we might insert a tuple whose key is a prefix
-of an existing key. In order to support this operation, each node is given a
-pointer called ``value'' which defaults to \texttt{null}. With this addition,
-inner nodes can now hold values, i.e.\ key-value pairs can be added where
-the key is a prefix of an existing key.
 
 \begin{figure}[h]
   \vspace{0mm}
@@ -274,19 +252,34 @@ the key is a prefix of an existing key.
   \label{fig:span}
 \end{figure}
 
+
+\section{Adaptive Radix Tree (ART)}
+\label{sec:art}
+
+The \textit{Adaptive Radix Tree} (ART) is a space efficient trie, which
+achieves its low memory consumption using \textit{vertical} and 
+\textit{horizontal} compression. Using vertical compression, ART reduces
+the tree height significantly by merging parent nodes with child nodes
+under certain circumstances. Horizontal compression reduces the amount
+of space required by each node depending on the number of child nodes.
+
 \subsection{Vertical (Prefix) Compression}
 \label{sec:vertical-compression}
 
-When storing long keys, chains start to form where each node only has a
-single child. As a consequence, we waste a lot of space on structural
-information. Morrison introduced \textit{Patricia}~\cite{morrison1968patricia}. 
+When storing long keys, chains of nodes start to form where each node only
+has a single child. As a consequence, a lot of space is wasted as many nodes
+with little actual content are kept and traversals are slowed down because
+many nodes are traversed. Space wasting is further amplified with sparse
+datasets or a small span.
+
+Morrison introduced \textit{Patricia}~\cite{morrison1968patricia}. 
 Patricia is a space-optimized trie in which
 each node with no siblings is merged with its parent, i.e.\ inner nodes
 are only created if they are required to distinguish at least two leaf nodes. 
-Doing so, we eliminate chains caused by long keys which make tries 
+Doing so, chains caused by long keys are eliminated, which make tries 
 space-inefficient. Although Morrison's Patricia tree is a bitwise trie, i.e.\ 
-has a span $s=1$, the principle can be applied to tries with any span.
-We refer to this heuristic as \textit{vertical compression}.
+has a span $s=1$, the technique can be applied to tries with any span.
+We refer to this technique as \textit{vertical compression}.
 
 Vertical compression is implemented by storing an additional variable, called
 \textit{prefix}, inside each node. This variable stores the concatenation
@@ -294,12 +287,7 @@ of partial keys of descendants that were eliminated because they had no
 siblings. \Cref{fig:vertical-compression} depicts two tries, one with and one 
 without vertical compression. We observe that nodes with no siblings, color 
 coded red, are eliminated and their partial key is appended to the parent's 
-prefix. With even longer keys, the results of vertical compression are even 
-more astonishing. 
-
-Tall trees may become very compact, and so not only do we
-save space that was otherwise wasted on structural inforation, we also are now
-able to traverse the data structure even faster since the height decreased.
+prefix. 
 
 \begin{figure}[h]
   \begin{footnotesize}
@@ -369,8 +357,8 @@ able to traverse the data structure even faster since the height decreased.
     Tries with span $s=2$ storing keys ``$01000011$'', ``$01000110$''
     and ``$01100100$''. The trie on the right incorporates vertical 
     compression. Red nodes indicate nodes which get eliminated under
-    vertical compression. Gray strings represent the value of the ``prefix'' 
-    property.
+    vertical compression. Gray strings represent the value of the prefix 
+    variable.
   }
   \label{fig:vertical-compression}
 \end{figure}
@@ -380,9 +368,9 @@ able to traverse the data structure even faster since the height decreased.
 \subsection{Horizontal Compression (Adaptive Nodes)}
 \label{sec:horizontal-compression}
 
-With large values of span $s$, we sacrifice an excessive amount of space for a 
-smaller tree height. Space is allocated for pointers which keep
-references of child nodes. 
+With large values of span $s$, an excessive amount of space is sacrificed
+to achieve a smaller tree height. Space is allocated for pointers which keep
+references to child nodes, even if they are unused.
 
 In order to reduce the space needed to keep
 such references, Leis et al.\ propose \textit{Adaptive Nodes} 
@@ -390,59 +378,71 @@ such references, Leis et al.\ propose \textit{Adaptive Nodes}
 instead of static arrays for child node bookkeeping. Doing so, we allocate 
 a minimal amount of space when the number of children is small and add more 
 space if required, i.e.\ more children are added.
-We refer to this heuristic as \textit{horizontal compression}.
-Leis et al.\ also fix the span $s=8$, i.e. partial keys are 1 byte
+We refer to this technique as \textit{horizontal compression}.
+Leis et al.\ fix the span $s=8$, i.e. partial keys are 1 byte
 long and therefore each node can have up to $2^8 = 256$ children.
 
 When applying horizontal compression, a node is in one of four configurations, 
 depending on the number of child nodes. Each of the four configurations is 
-optimized for a different amount of children. The most compact configuration 
-is called \textit{Node4} which can carry up to four children. 
-In the same manner, we also have \textit{Node16}, \textit{Node48} 
-and \textit{Node256}.
+optimized for a different amount of children.
+When keys are inserted/deleted, the nodes are adapted accordingly.
+The most compact configuration 
+is called \texttt{Node4} which can carry up to four children. 
+In the same manner, we also have \texttt{Node16}, \texttt{Node48} 
+and \texttt{Node256}. All nodes have a header which stores the node type,
+the number of children and the prefix variable, which contains the compressed
+path (c.f.\ \Cref{sec:vertical-compression}).
+
+\begin{figure}[h]
+  \centering
+  \begin{tabular}{ l|r|r } 
+    Type & Children & Space (bytes) \\
+    \hline
+    \texttt{Node4} & 2-4 & $h + 4 + 4 \cdot 8 = h + 36$ \\ 
+    \texttt{Node16} & 5-16 & $h + 16 + 16 \cdot 8 = h + 144$ \\ 
+    \texttt{Node48} & 17-48 & $h + 256 + 48 \cdot 8 = h + 640$ \\ 
+    \texttt{Node256} & 49-256 & $h + 256 \cdot 8 = h + 2048$ 
+  \end{tabular}
+  \caption{Space consumption for each inner node type. $h$ is equal to
+    the size of the header.}
+  \label{fig:node-sizes}
+\end{figure}
 
 We now describe the structure of each of the four configurations.
-The node types are also illustrated in \Cref{fig:horizontal-compression}.
-We store the partial keys $65$, $82$, $84$ and their corresponding child nodes
-$\alpha$, $\beta$, $\gamma$ in an instance of each node type. 
+\Cref{fig:node-sizes} shows the space consumption for each inner node type.
+Note that $h$ is equal to the header's size.
+\Cref{fig:horizontal-compression} illustrates the state of a node
+for each node type,
+when storing the partial keys $65$, $82$, $84$ and pointers to their 
+corresponding child nodes $\alpha$, $\beta$, $\gamma$. 
 Note that $\varnothing$ represents a \texttt{null} pointer.
 
-A node of type \textit{Node4} contains two 4-element arrays, one called
+A node of type \texttt{Node4} contains two 4-element arrays, one called
 ``partial keys'' and one called ``children''.
 The ``partial keys'' array, holds
 partial keys which identify children of that node. 
 The ``children'' array, holds pointers to the child nodes.
 Partial keys and pointers are stored at corresponding positions and
-the partial keys are sorted. \textit{Node4} cannot be used with more than 
-4 child nodes.
+the partial keys are sorted.
 
-A node of type \textit{Node16} is structured similarly
-to \textit{Node4}, the only difference being the lengths of the two static 
-arrays, which are 16 each. \textit{Node16} shall be used when the number of 
-child nodes is at least 5 and not greater than 16.
+A node of type \texttt{Node16} is structured similarly
+to \texttt{Node4}, the only difference being the lengths of the two static 
+arrays, which are 16 each.
 
-An instance of \textit{Node48} contains a 256-element array named 
+An instance of \texttt{Node48} contains a 256-element array named 
 ``indexes'' and a 48-element array called ``children''.
 Partial keys are stored implicitly in ``indexes'', i.e.\ 
 can be indexed with partial key bytes directly.
 As the name suggests, ``indexes'' stores the index of a child
 node inside the ``children'' array. This node can be compared to
 virtual memory, since the address space (256 addresses) is wider 
-than the actual available storage space (48 slots). \textit{Node48}
-shall be used when a node has at least 17 child nodes and not more
-than 48. In \Cref{fig:horizontal-compression}, some entries in the
-``indexes'' array contain the value $48$, which is used to indicate that
-no child node is identified by the corresponding partial key.
+than the actual available storage space (48 slots).
 
-Finally, a node of type \textit{Node256} contains an array of
+Finally, a node of type \texttt{Node256} contains an array of
 256 pointers which can be indexed with partial key bytes directly.
-Child nodes can be found with a single lookup. A node shall be an instance
-of \textit{Node256} if it has at least 48 child nodes.
+Child nodes can be found with a single lookup.
 
-In addition to the state required to bookkeep child nodes,
-the nodes also have to store the node type.
-
-\begin{figure}
+\begin{figure}[h!]
   \vspace{-4cm}
   \centering
   % \hspace{-2cm}
@@ -450,35 +450,62 @@ the nodes also have to store the node type.
   \vspace{-3cm}
   \caption{
     When horizontal compression is applied, a node is in one of four 
-    configurations, namely \textit{Node4}, \textit{Node16}, \textit{Node48} 
-    and \textit{Node256}.
+    configurations, namely \texttt{Node4}, \texttt{Node16}, \texttt{Node48} 
+    and \texttt{Node256}.
     Each of the four configurations is optimized for a different number of 
     child nodes. We store the partial keys $65$, $82$, $84$ and their 
     corresponding child nodes $\alpha$, $\beta$, $\gamma$ in an instance
     of each node type. Note that $\varnothing$ represents a \texttt{null} 
     pointer.
   }
-  \label{fig:horizontal-compression}
+ \label{fig:horizontal-compression}
 \end{figure}
 
-\section{Algorithms}
-\label{sec:algorithms}
+\newpage
 
-We will now describe how four fundamental operations, namely
-point query, insert and delete are implemented in ART.
+\section{Algorithms}\label{sec:algorithms}
+
+We will now describe how two fundamental operations, namely
+point query and deletion are implemented in ART.
 The algorithms mentioned below are based on the implementations presented by
-Leis et al.\ \cite{leis2013adaptive}. However, their implementation does not 
-allow for two key-value pairs to be stored simultaneously where one key is a 
-prefix of the other. We therefore adjusted the algorithms accordingly. In
-addition to prefix key insertion support, we also use iteration
-instead of recursion in order to avoid expensive context switches. We
-present our implementations below.
+Leis et al.\ \cite{leis2013adaptive}. Note that our implementation uses
+\textit{single-value leaves} (c.f.\ Leis et al.\ \cite{leis2013adaptive}), 
+i.e.\ values are stored using an additional leaf node type, conveniently
+called \texttt{Node0}, which stores one value. Additionally, we utilize
+\textit{pessimistic} vertical compression, i.e.\ each inner node stores
+the entire compressed path inside the prefix variable using a variable length
+partial key vector. During traversal, prefix is compared to the search key.
+We present our implementations below.
 
-\subsection{Point Query}
-\label{sec:point-query}
+\subsection{Point Query}\label{sec:point-query}
 
-\begin{wrapfigure}{r}{0.51\textwidth}
-  \begin{minted}[numbers=right,frame=single,fontsize=\scriptsize]{c++}
+The code fragment shows the implementation of a point query on ART in
+C++. Method \texttt{get} accepts a key as an argument and returns a pointer
+to the value associated with the given key, or \texttt{null} if the key is not found.
+
+In lines 7-8 we declare and initialize a pointer, \texttt{cur}, which references the
+current node during tree traversal, and an integer, \texttt{depth} which holds the depth
+of the current node.
+
+We now enter a loop in which we check if \texttt{cur} references \texttt{null}
+during the beginning of each iteration, and if so, we return \texttt{null}.
+
+In lines 13-19 we check if a prefix mismatch occurs. This step is required
+because of vertical compression (c.f.\ \Cref{sec:vertical-compression}).
+Method \texttt{check\_prefix} is a member of the \texttt{node} class which
+determines the number of matching bytes between \texttt{cur}'s prefix
+and \texttt{key} w.r.t.\ the current depth. If a prefix mismatch is discovered,
+\texttt{null} is returned.
+
+Lines 20-24 check for an exact match of the key at the current node. If so,
+we return the value of the current node.
+
+Finally, we traverse to the next child node. \texttt{depth} is increased to
+account for the nodes merged due to vertical compression.
+We lookup the next child node, which is assigned to \texttt{cur}.
+
+\begin{figure}[h]
+  \begin{minted}[numbers=left,frame=single,fontsize=\footnotesize]{c++}
 template <class T> class art {
 public:
   /**
@@ -487,10 +514,7 @@ public:
   T *get(const key_type &key) const {
     node<T> *cur = root_;
     int depth = 0;
-    while (true) {
-      if (cur == nullptr) {
-        return nullptr;
-      }
+    while (cur != nullptr) {
       const int prefix_len = 
         cur->get_prefix().length();
       const bool is_prefix_match = 
@@ -508,6 +532,7 @@ public:
       cur = next != nullptr ? *next : nullptr;
       ++depth;
     }
+    return nullptr;
   }
 
   /* ... */
@@ -517,37 +542,9 @@ private:
   \end{minted}
   % \caption{Point query implemented in C++.}
   \label{algo:point-query}
-\end{wrapfigure}
-
-The code fragment shows the implementation of a point query on ART in
-C++. Method \texttt{get} accepts a key as an argument and returns a pointer
-the the value associated with the given key, or \texttt{null} otherwise.
-
-In lines 7-8 we declare and initialize a pointer, \texttt{cur}, which references the
-current node during tree traversal, and an integer, \texttt{depth} which holds the depth
-of the current node.
-
-We now enter a loop in which we check if \texttt{cur} references \texttt{null}
-during the beginning of each iteration, and if so, we return \texttt{null}.
-
-In lines 13-19 we check if a prefix mismatch occurs. This step is required
-because of vertical compression (c.f.\ \Cref{sec:vertical-compression}).
-Method \texttt{check\_prefix} is a member of the \texttt{node} class which
-determines the number of matching bytes between \texttt{cur}'s prefix
-and \texttt{key} w.r.t.\ the current depth. If a byte mismatch is discovered,
-\texttt{null} is returned.
-
-Lines 20-24 check for an exact match of the key at the current node. If so,
-we return the value of the current node.
-
-Finally, we traverse to the next child node. \texttt{depth} is increased to
-account for the nodes merged due to vertical compression.
-We lookup the next child node, which is assigned to \texttt{cur}.
+\end{figure}
 
 \newpage
-
-\subsection{Insertion}
-\label{sec:insertion}
 
 \subsection{Deletion}
 \label{sec:deletion}

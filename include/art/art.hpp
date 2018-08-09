@@ -80,8 +80,8 @@ template <class T> T *art<T>::get(const key_type &key) const {
     if (!is_prefix_match) {
       return nullptr;
     }
-    if (prefix_len == key.length() - depth) {
-      /* exact match */
+    const bool is_exact_match = prefix_len == key.length() - depth;
+    if (is_exact_match) {
       return cur->get_value();
     }
     depth += prefix_len;

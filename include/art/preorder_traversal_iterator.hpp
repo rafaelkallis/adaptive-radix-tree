@@ -98,7 +98,6 @@ preorder_traversal_iterator<T>::from_min_key(node<T> *root, key_type key) {
       auto partial_key = *child_it;
       if (partial_key < key[depth + prefix_len]) {
         break;
-        /* return preorder_traversal_iterator<T>(node_stack); */
       }
       node_stack.push(*cur_node->find_child(partial_key));
       depth_stack.push(depth + prefix_len + 1);
