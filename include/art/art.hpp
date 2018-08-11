@@ -12,11 +12,14 @@
 #include "preorder_traversal_iterator.hpp"
 #include <algorithm>
 #include <iostream>
+#include <stack>
 
 namespace art {
 
 template <class T> class art {
 public:
+  ~art();
+
   /**
    * Finds the value associated with the given key.
    *
@@ -67,6 +70,24 @@ public:
 private:
   node<T> *root_ = nullptr;
 };
+
+template <class T> art<T>::~art() {
+  if (root_ == nullptr) {
+    return;
+  }
+  std::stack<node<T> *> node_stack;
+  node_stack.push(root_);
+  while (!node_stack.empty()) {
+    node<T> *cur = node_stack.top();
+    node_stack.pop();
+    for (auto child_it = cur->rbegin(), child_it_end = cur->rend();
+         child_it != child_it_end; ++child_it) {
+      auto partial_key = *child_it;
+      node_stack.push(*cur->find_child(partial_key));
+    }
+    delete cur;
+  }
+}
 
 template <class T> T *art<T>::get(const key_type &key) const {
   node<T> *cur = root_;
@@ -278,7 +299,7 @@ template <class T> T *art<T>::del(const key_type &key) {
       const int n_siblings =
           prev != nullptr ? (*prev)->get_n_children() - 1 : 0;
       if (n_children == 0 && n_siblings == 0) {
-        /* 
+        /*
          * => delete leaf node
          *
          *     |                 |
@@ -328,15 +349,15 @@ template <class T> T *art<T>::del(const key_type &key) {
       } else if (n_children == 0 && n_siblings > 1) {
         /* => delete leaf node
          *
-         *        |a                         |a        
-         *        |                          |         
-         *       (aa)->Ø     -"aaaaabaa"    (aa)->Ø    
+         *        |a                         |a
+         *        |                          |
+         *       (aa)->Ø     -"aaaaabaa"    (aa)->Ø
          *    a / |  \ b     ==========> a / |
          *     /  |   \                   /  |
-         *           *()->v1                  
+         *           *()->v1
          */
 
-        delete(*cur);
+        delete (*cur);
         (*prev)->del_child(cur_partial_key);
 
       } else if (n_children == 1) {
