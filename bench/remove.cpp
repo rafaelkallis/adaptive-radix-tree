@@ -35,7 +35,7 @@ static void art_delete_sparse(state &s) {
   }
 }
 PICOBENCH(art_delete_sparse)
-    .iterations({1 << 8, 1 << 10, 1 << 12, 1 << 14, 1 << 16, 1 << 18, 1 << 20});
+    .iterations({1 << 10, 1 << 20});
 
 static void red_black_delete_sparse(state &s) {
   std::map<key_type, int> m;
@@ -55,7 +55,7 @@ static void red_black_delete_sparse(state &s) {
   }
 }
 PICOBENCH(red_black_delete_sparse)
-    .iterations({1 << 8, 1 << 10, 1 << 12, 1 << 14, 1 << 16, 1 << 18, 1 << 20});
+    .iterations({1 << 10, 1 << 20});
 
 static void hashmap_delete_sparse(state &s) {
   std::unordered_map<key_type, int> m;
@@ -75,4 +75,4 @@ static void hashmap_delete_sparse(state &s) {
   }
 }
 PICOBENCH(hashmap_delete_sparse)
-    .iterations({1 << 8, 1 << 10, 1 << 12, 1 << 14, 1 << 16, 1 << 18, 1 << 20});
+    .iterations({1 << 10, 1 << 20});

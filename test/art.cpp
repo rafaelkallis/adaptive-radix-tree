@@ -115,6 +115,12 @@ TEST_SUITE("art") {
     int int5 = 5;
     key_type key6 = "aaaabaaaaa";
     int int6 = 6;
+    key_type key7 = "aaaaaaaaaaa";
+    int int7 = 7;
+    key_type key8 = "aaaaaaaaaab";
+    int int8 = 8;
+    key_type key9 = "aaaaaaaaaac";
+    int int9 = 9;
 
     art<int> subject;
 
@@ -125,6 +131,9 @@ TEST_SUITE("art") {
     subject.set(key4, &int4);
     subject.set(key5, &int5);
     subject.set(key6, &int6);
+    subject.set(key7, &int7);
+    subject.set(key8, &int8);
+    subject.set(key9, &int9);
 
     /* The above statements construct the following tree:
      *
@@ -138,6 +147,11 @@ TEST_SUITE("art") {
      *         a /  \ b    |a
      *          /    \     |
      *    3<-(aa) 4<-(a)  (aa)->6
+     *      a/|b\c
+     *      / |  \
+     *  7<-() () ()->8
+     *        |
+     *        9
      */
 
     SUBCASE("delete non existing value") {
@@ -152,9 +166,12 @@ TEST_SUITE("art") {
       REQUIRE(subject.get(key4) == &int4);
       REQUIRE(subject.get(key5) == &int5);
       REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
     }
 
-    SUBCASE("delete leaf with no siblings (6)") {
+    SUBCASE("n_children == 0 && n_siblings == 0 (6)") {
       REQUIRE(subject.del(key6) == &int6);
       REQUIRE(subject.get(key0) == &int0);
       REQUIRE(subject.get(key1) == &int1);
@@ -163,20 +180,12 @@ TEST_SUITE("art") {
       REQUIRE(subject.get(key4) == &int4);
       REQUIRE(subject.get(key5) == &int5);
       REQUIRE(subject.get(key6) == nullptr);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
     }
     
-    SUBCASE("delete leaf with sibling (3)") {
-      REQUIRE(subject.del(key3) == &int3);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == nullptr);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-    }
-    
-    SUBCASE("delete leaf with sibling (4)") {
+    SUBCASE("n_children == 0 && n_siblings == 1 (4)") {
       REQUIRE(subject.del(key4) == &int4);
       REQUIRE(subject.get(key0) == &int0);
       REQUIRE(subject.get(key1) == &int1);
@@ -185,29 +194,26 @@ TEST_SUITE("art") {
       REQUIRE(subject.get(key4) == nullptr);
       REQUIRE(subject.get(key5) == &int5);
       REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
     }
 
-    SUBCASE("delete internal node with >1 children (2),(1)") {
-      REQUIRE(subject.del(key2) == &int2);
+    SUBCASE("n_children == 0 && n_siblings > 1 (7)") {
+      REQUIRE(subject.del(key7) == &int7);
       REQUIRE(subject.get(key0) == &int0);
       REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == nullptr);
+      REQUIRE(subject.get(key2) == &int2);
       REQUIRE(subject.get(key3) == &int3);
       REQUIRE(subject.get(key4) == &int4);
       REQUIRE(subject.get(key5) == &int5);
       REQUIRE(subject.get(key6) == &int6);
-      
-      REQUIRE(subject.del(key1) == &int1);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == nullptr);
-      REQUIRE(subject.get(key2) == nullptr);
-      REQUIRE(subject.get(key3) == &int3);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == nullptr);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
     }
     
-    SUBCASE("delete internal node with 1 child (0),(5)") {
+    SUBCASE("n_children == 1 (0),(5)") {
       REQUIRE(subject.del(key0) == &int0);
       REQUIRE(subject.get(key0) == nullptr);
       REQUIRE(subject.get(key1) == &int1);
@@ -216,6 +222,9 @@ TEST_SUITE("art") {
       REQUIRE(subject.get(key4) == &int4);
       REQUIRE(subject.get(key5) == &int5);
       REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
 
       REQUIRE(subject.del(key5) == &int5);
       REQUIRE(subject.get(key0) == nullptr);
@@ -225,6 +234,47 @@ TEST_SUITE("art") {
       REQUIRE(subject.get(key4) == &int4);
       REQUIRE(subject.get(key5) == nullptr);
       REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
+    }
+    
+    SUBCASE("n_children > 1 (3),(2),(1)") {
+      REQUIRE(subject.del(key3) == &int3);
+      REQUIRE(subject.get(key0) == &int0);
+      REQUIRE(subject.get(key1) == &int1);
+      REQUIRE(subject.get(key2) == &int2);
+      REQUIRE(subject.get(key3) == nullptr);
+      REQUIRE(subject.get(key4) == &int4);
+      REQUIRE(subject.get(key5) == &int5);
+      REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
+      
+      REQUIRE(subject.del(key2) == &int2);
+      REQUIRE(subject.get(key0) == &int0);
+      REQUIRE(subject.get(key1) == &int1);
+      REQUIRE(subject.get(key2) == nullptr);
+      REQUIRE(subject.get(key3) == nullptr);
+      REQUIRE(subject.get(key4) == &int4);
+      REQUIRE(subject.get(key5) == &int5);
+      REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
+      
+      REQUIRE(subject.del(key1) == &int1);
+      REQUIRE(subject.get(key0) == &int0);
+      REQUIRE(subject.get(key1) == nullptr);
+      REQUIRE(subject.get(key2) == nullptr);
+      REQUIRE(subject.get(key3) == nullptr);
+      REQUIRE(subject.get(key4) == &int4);
+      REQUIRE(subject.get(key5) == &int5);
+      REQUIRE(subject.get(key6) == &int6);
+      REQUIRE(subject.get(key7) == &int7);
+      REQUIRE(subject.get(key8) == &int8);
+      REQUIRE(subject.get(key9) == &int9);
     }
   }
 

@@ -71,10 +71,7 @@ private:
 template <class T> T *art<T>::get(const key_type &key) const {
   node<T> *cur = root_;
   int depth = 0;
-  while (true) {
-    if (cur == nullptr) {
-      return nullptr;
-    }
+  while (cur != nullptr) {
     const int prefix_len = cur->get_prefix().length();
     const bool is_prefix_match = cur->check_prefix(key, depth) == prefix_len;
     if (!is_prefix_match) {
@@ -89,6 +86,7 @@ template <class T> T *art<T>::get(const key_type &key) const {
     cur = next != nullptr ? *next : nullptr;
     ++depth;
   }
+  return nullptr;
 }
 
 template <class T> T *art<T>::set(const key_type &key, T *value) {
@@ -99,7 +97,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
   int depth = 0;
 
   /* length of the key */
-  const int key_len = key.size();
+  const int key_len = key.length();
 
   while (true) {
     if (*cur == nullptr) {
@@ -113,7 +111,7 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
     const key_type prefix = (*cur)->get_prefix();
 
     /* length of the prefix of the current node */
-    const int prefix_len = prefix.size();
+    const int prefix_len = prefix.length();
 
     /* number of bytes of the current node's prefix that match the key */
     const int prefix_match_len = (*cur)->check_prefix(key, depth);
@@ -255,38 +253,32 @@ template <class T> T *art<T>::del(const key_type &key) {
   /* length of the key */
   const int key_len = key.size();
 
-  while (true) {
-    if (*cur == nullptr) {
-      return nullptr;
-    }
-
+  while (*cur != nullptr) {
     /* prefix of the current node */
     const key_type prefix = (*cur)->get_prefix();
 
     /* length of the prefix of the current node */
-    const int prefix_len = prefix.size();
+    const int prefix_len = prefix.length();
 
-    /* number of bytes of the current node's prefix that match the key */
-    const int prefix_match_len = (*cur)->check_prefix(key, depth);
+    /* true if the current node's prefix matches with the key */
+    const bool is_prefix_match = prefix_len == (*cur)->check_prefix(key, depth);
 
-    /* true if the current node's prefix matches with a part of the key */
-    const bool is_prefix_match =
-        std::min(prefix_len, key_len - depth) == prefix_match_len;
-
-    if (!is_prefix_match || prefix_match_len != prefix_len) {
-      /* prefix mismatch => node doesn't exist */
+    if (!is_prefix_match) {
+      /* prefix mismatch => key doesn't exist */
       return nullptr;
     }
 
-    if (prefix_len == key_len - depth) {
-      /* exact match */
+    /* true if the current node's key matches the search key exactly */
+    const bool is_exact_match = key_len - (depth + prefix_len) == 0;
 
+    if (is_exact_match) {
       T *value = (*cur)->get_value();
+      (*cur)->set_value(nullptr);
       const int n_children = (*cur)->get_n_children();
       const int n_siblings =
           prev != nullptr ? (*prev)->get_n_children() - 1 : 0;
       if (n_children == 0 && n_siblings == 0) {
-        /* leaf node with 0 sibling nodes:
+        /* 
          * => delete leaf node
          *
          *     |                 |
@@ -305,17 +297,15 @@ template <class T> T *art<T>::del(const key_type &key) {
 
       } else if (n_children == 0 && n_siblings == 1 &&
                  (*prev)->get_value() == nullptr) {
-        /* leaf node with 1 sibling node and a parent with no value:
-         * => delete leaf node
+        /* => delete leaf node
          * => replace parent with sibling
          *
-         *       (aa)->v1                   (aa)->v1
          *        |a                         |a
          *        |                          |
-         *       (aa)->Ø                     |
-         *    a /    \ b     -[aaaaabaa]    /
-         *     /      \      ==========>   /
-         *  (aa)->v2 *()->v3             (aaaaa)->v2
+         *       (aa)->Ø     -"aaaaabaa"     |
+         *    a /    \ b     ==========>    /
+         *     /      \                    /
+         *  (aa)->v1 *()->v2             (aaaaa)->v1
          *  /|\
          */
 
@@ -334,6 +324,21 @@ template <class T> T *art<T>::del(const key_type &key) {
         delete (*cur);
         delete (*prev);
         *prev = sibling;
+
+      } else if (n_children == 0 && n_siblings > 1) {
+        /* => delete leaf node
+         *
+         *        |a                         |a        
+         *        |                          |         
+         *       (aa)->Ø     -"aaaaabaa"    (aa)->Ø    
+         *    a / |  \ b     ==========> a / |
+         *     /  |   \                   /  |
+         *           *()->v1                  
+         */
+
+        delete(*cur);
+        (*prev)->del_child(cur_partial_key);
+
       } else if (n_children == 1) {
         /* node with 1 child
          * => replace node with child
@@ -356,21 +361,6 @@ template <class T> T *art<T>::del(const key_type &key) {
         child->set_prefix(new_child_prefix);
         delete (*cur);
         *cur = child;
-
-      } else {
-        /* node with >1 children
-         * => remove value of node
-         *
-         *       (aa)->v1                 (aa)->v1
-         *        |a                       |a
-         *        |                        |
-         *      *(aa)->v2                *(aa)->Ø
-         *    a /    \ b     -[aaaaa]  a /    \ b
-         *     /      \      =======>   /      \
-         *    ()->v4  ()->v4           ()->v4  ()->v4
-         */
-
-        (*cur)->set_value(nullptr);
       }
 
       if (prev != nullptr && (*prev)->is_underfull()) {
@@ -386,6 +376,7 @@ template <class T> T *art<T>::del(const key_type &key) {
     cur = (*cur)->find_child(cur_partial_key);
     depth += prefix_len + 1;
   }
+  return nullptr;
 }
 
 template <class T> preorder_traversal_iterator<T> art<T>::lexicographic_it() {
