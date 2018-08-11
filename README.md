@@ -7,7 +7,7 @@
 
 using namespace art;
 
-art tree;
+art<int> tree;
 ```
 
 ## Test

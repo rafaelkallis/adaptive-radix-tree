@@ -11,8 +11,8 @@ using std::vector;
 
 int main() {
   cout << "ART project" << endl;
-  /* cout << sizeof(vector<char>) << endl; */
-  /* cout << sizeof(string) << endl; */
+  cout << sizeof(vector<char>) << endl;
+  cout << sizeof(string) << endl;
   /* cout << "Sizes of nodes:" << endl; */
   /* cout << (sizeof(node<int>)) << endl; */
 
@@ -23,9 +23,14 @@ int main() {
   /* Node4 n4; */
   /* cout << sizeof(n4) << endl; */
 
-  /* cout << (sizeof(node_16<int>)) << endl; */
-  /* cout << (sizeof(node_48<int>)) << endl; */
-  /* cout << (sizeof(node_256<int>)) << endl; */
+  cout << "void* " << (sizeof(void*)) << endl;
+  cout << "key_type " << (sizeof(art::key_type)) << endl;
+  cout << "node " << (sizeof(art::node<int>)) << endl;
+  cout << "node_0 " << (sizeof(art::node_0<int>)) << endl;
+  cout << "node_4 " << (sizeof(art::node_4<int>)) << endl;
+  cout << "node_16 " << (sizeof(art::node_16<int>)) << endl;
+  cout << "node_48 " << (sizeof(art::node_48<int>)) << endl;
+  cout << "node_256 " << (sizeof(art::node_256<int>)) << endl;
 
   /* auto n0 = new node_0<int>(); */
   art::node_0<int> n0;
