@@ -23,6 +23,8 @@ int main() {
   /* Node4 n4; */
   /* cout << sizeof(n4) << endl; */
 
+  cout << "string " << (sizeof(vector<char>)) << endl;
+  cout << "vector " << (sizeof(vector<char>)) << endl;
   cout << "void* " << (sizeof(void*)) << endl;
   cout << "key_type " << (sizeof(art::key_type)) << endl;
   cout << "node " << (sizeof(art::node<int>)) << endl;

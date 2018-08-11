@@ -251,7 +251,7 @@ template <class T> T *art<T>::del(const key_type &key) {
   int depth = 0;
 
   /* length of the key */
-  const int key_len = key.size();
+  const int key_len = key.length();
 
   while (*cur != nullptr) {
     /* prefix of the current node */

@@ -17,7 +17,6 @@
 \usepackage{verbatim}
 \usepackage{cleveref}
 \usepackage{minted}
-\usepackage{framed}
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -540,7 +539,7 @@ private:
   node<T> *root_ = nullptr;
 }
   \end{minted}
-  % \caption{Point query implemented in C++.}
+  \caption{Point query implemented in C++.}
   \label{algo:point-query}
 \end{figure}
 
@@ -548,6 +547,133 @@ private:
 
 \subsection{Deletion}
 \label{sec:deletion}
+
+\Cref{algo:deletion} presents our implementation of key deletion on ART in C++.
+During deletion, the leaf node is removed from an inner node, which is shrunk
+if necessary. If the leaf to remove only has one sibling, vertical
+compression is applied to the parent, effectively deleting it.
+
+In lines 7-11, we declare and initialize two pointers, \texttt{cur} and
+\texttt{par} which reference the current and parent node during tree traversal.
+Variable \texttt{cur\_partial\_key} holds the partial key which indexes the
+current node in the parent's child lookup table.
+Variables \texttt{depth} and \texttt{key\_len} hold the depth of the current
+node and length of the key, respectively.
+
+Next, we loop until \texttt{cur} is a \texttt{null} pointer. During each
+iteration we define the following variables:
+\begin{itemize}
+  \item \texttt{prefix} compressed path of the current node.
+  \item \texttt{prefix\_len} length of the compressed path, i.e.\ the number
+    of nodes vertically compressed.
+  \item \texttt{is\_prefix\_match} evaluates to true iff \texttt{prefix} is a
+    prefix of the search key, starting from position \texttt{depth}
+    (e.g.\ if \texttt{prefix} = ``aa'' and \texttt{key} = ``aaa'', then
+    $\texttt{is\_prefix\_match} \iff \texttt{depth} > 0 \land \texttt{depth} < 2$).
+  \item \texttt{is\_exact\_match} evaluates to true iff \texttt{prefix} matches
+    the search key, starting from position \texttt{depth}.
+    (e.g.\ if \texttt{prefix} = ``aa'' and \texttt{key} = ``aaa'', then
+    $\texttt{is\_exact\_match} \iff \texttt{depth} = 1$).
+\end{itemize}
+
+If there is a prefix mismatch, i.e.\ \texttt{is\_prefix\_match} evaluates to
+false, the search key is not found and a \texttt{null} pointer is returned.
+If there is a exact match i.e.\ \texttt{is\_exact\_match} evaluates to true,
+we found the node to delete, otherwise we continue traversing down the tree.
+
+After the node to delete has been found, we first extract its associated value
+and determine its number of siblings. It must have at least one sibling, 
+unless the node to delete is the root node.
+
+If the node to delete has exactly one sibling (lines 26-40), we replace the 
+parent node with the sibling, append to the sibling's prefix the parent's
+prefix and the sibling's partial key and then delete the \texttt{cur} and
+\texttt{par}. We also delete \texttt{par} because of vertical compression.
+
+If the node to delete has more than one sibling (lines 40-42), then no additional action
+is required besides deleting \texttt{cur}.
+
+Lines 44-46 check if the parent node is undefull, i.e.\ requires shrinking
+(c.f.\ \Cref{sec:horizontal-compression}).
+
+Finally, the value associated with the deleted node is returned in case the
+procedure callee has to free resources.
+
+\begin{figure}[h]
+  \begin{minted}[numbers=left,frame=single,fontsize=\scriptsize]{c++}
+template <class T> class art {
+public:
+  /**
+   * Deletes the the given key and returns its associated value.
+   */
+  T *del(const key_type &key) {
+    node<T> **cur = &root_;
+    partial_key_type cur_partial_key = 0;
+    node<T> **par = nullptr;
+    int depth = 0;
+    const int key_len = key.length();
+
+    while (*cur != nullptr) {
+      const key_type prefix = (*cur)->get_prefix();
+      const int prefix_len = prefix.length();
+      const bool is_prefix_match = prefix_len == (*cur)->check_prefix(key, depth);
+      if (!is_prefix_match) {
+        return nullptr;
+      }
+      const bool is_exact_match = key_len - (depth + prefix_len) == 0;
+
+      if (is_exact_match) {
+        T *value = (*cur)->get_value();
+        const int n_siblings = par != nullptr ? (*par)->get_n_children() - 1 : 0;
+
+        if (n_siblings == 1) {
+          /* find sibling and compress */
+          partial_key_type sibling_partial_key = (*par)->next_partial_key(0);
+          if (sibling_partial_key == cur_partial_key) {
+            sibling_partial_key = (*par)->next_partial_key(cur_partial_key + 1);
+          }
+          node<T> *sibling = *(*par)->find_child(sibling_partial_key);
+          const key_type new_sibling_prefix = (*par)->get_prefix() +
+                                              key_type(1, sibling_partial_key) +
+                                              sibling->get_prefix();
+          sibling->set_prefix(new_sibling_prefix);
+          delete (*par);
+          *par = sibling;
+
+        } else if (n_siblings > 1) {
+          (*par)->del_child(cur_partial_key);
+        } 
+
+        if (par != nullptr && (*par)->is_underfull()) {
+          *par = (*par)->shrink();
+        }
+        delete(*cur);
+        *cur = nullptr;
+        return value;
+      }
+      cur_partial_key = key[depth + prefix_len];
+      par = cur;
+      cur = (*cur)->find_child(cur_partial_key);
+      depth += prefix_len + 1;
+    }
+    return nullptr;
+  }
+
+  /* ... */
+private:
+  node<T> *root_ = nullptr;
+}
+  \end{minted}
+  \caption{Key deletion implemented in C++.}
+  \label{algo:deletion}
+\end{figure}
+
+\newpage
+
+\section{Benchmarks}
+\label{sec:benchmarks}
+
+
 
 \newpage
 
