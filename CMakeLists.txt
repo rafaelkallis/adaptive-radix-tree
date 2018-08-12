@@ -14,8 +14,7 @@ target_include_directories(
     "$<INSTALL_INTERFACE:include>"
 )
 
-add_executable(main "${PROJECT_SOURCE_DIR}/src/example.cpp")
-target_link_libraries(main art)
+### dependencies ###
 
 # doctest
 set(DOCTEST_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/doctest/doctest)
@@ -27,14 +26,24 @@ set(PICOBENCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/picobench/include)
 add_library(picobench INTERFACE)
 target_include_directories(picobench INTERFACE ${PICOBENCH_INCLUDE_DIR})
 
+# zipf
+set(ZIPF_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/zipf/include)
+add_library(zipf INTERFACE)
+target_include_directories(zipf INTERFACE ${ZIPF_INCLUDE_DIR})
+
+### executables ###
+
+# main executable
+file(GLOB MAIN_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+add_executable(main ${MAIN_SOURCES})
+target_link_libraries(main art zipf)
+
 # test executable
 file(GLOB TEST_SOURCES "${PROJECT_SOURCE_DIR}/test/*.cpp")
 add_executable(test ${TEST_SOURCES})
-target_link_libraries(test art doctest)
+target_link_libraries(test art doctest zipf)
 
 # bench executable
 file(GLOB BENCH_SOURCES "${PROJECT_SOURCE_DIR}/bench/*.cpp")
 add_executable(bench ${BENCH_SOURCES})
-target_link_libraries(bench art picobench)
-
-add_subdirectory(src)
+target_link_libraries(bench art picobench zipf)
