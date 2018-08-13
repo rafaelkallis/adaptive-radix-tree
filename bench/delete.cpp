@@ -1,5 +1,5 @@
 /**
- * @file removal microbenchmarks
+ * @file deletion microbenchmarks
  * @author Rafael Kallis <rk@rafaelkallis.com>
  */
 
@@ -15,23 +15,18 @@
 using namespace art;
 using picobench::state;
 
-PICOBENCH_SUITE("remove");
+PICOBENCH_SUITE("delete");
 
 static void art_delete_sparse(state &s) {
   art<int> m;
   int v = 1;
-  std::queue<std::string> q;
-  std::random_device rd;
-  std::mt19937_64 g(rd());
+  std::mt19937_64 g1(0);
   for (auto _ : s) {
-    auto key = std::to_string(g());
-    m.set(key, &v);
-    q.push(key);
+    m.set(std::to_string(g1()), &v);
   }
+  std::mt19937_64 g2(0);
   for (auto _ : s) {
-    auto key = q.front();
-    q.pop();
-    m.del(key);
+    m.del(std::to_string(g2()));
   }
 }
 PICOBENCH(art_delete_sparse)
@@ -40,18 +35,13 @@ PICOBENCH(art_delete_sparse)
 static void red_black_delete_sparse(state &s) {
   std::map<key_type, int> m;
   int v = 1;
-  std::queue<std::string> q;
-  std::random_device rd;
-  std::mt19937_64 g(rd());
+  std::mt19937_64 g1(0);
   for (auto _ : s) {
-    auto key = std::to_string(g());
-    m[key] = v;
-    q.push(key);
+    m[std::to_string(g1())] = v;
   }
+  std::mt19937_64 g2(0);
   for (auto _ : s) {
-    auto key = q.front();
-    q.pop();
-    m.erase(m.find(key));
+    m.erase(m.find(std::to_string(g2())));
   }
 }
 PICOBENCH(red_black_delete_sparse)
@@ -60,18 +50,13 @@ PICOBENCH(red_black_delete_sparse)
 static void hashmap_delete_sparse(state &s) {
   std::unordered_map<key_type, int> m;
   int v = 1;
-  std::queue<std::string> q;
-  std::random_device rd;
-  std::mt19937_64 g(rd());
+  std::mt19937_64 g1(0);
   for (auto _ : s) {
-    auto key = std::to_string(g());
-    m[key] = v;
-    q.push(key);
+    m[std::to_string(g1())] = v;
   }
+  std::mt19937_64 g2(0);
   for (auto _ : s) {
-    auto key = q.front();
-    q.pop();
-    m.erase(m.find(key));
+    m.erase(m.find(std::to_string(g2())));
   }
 }
 PICOBENCH(hashmap_delete_sparse)

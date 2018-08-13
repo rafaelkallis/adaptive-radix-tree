@@ -21,6 +21,8 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{soul}
+\usepackage{microtype}
+\usepackage{pgfplots}
 % \usepackage{ulem}
 % \usepackage{ifthen}
 % \usepackage{wrapfig}
@@ -29,7 +31,7 @@
 
 \forestset{qtree/.style={for tree={parent anchor=south, child anchor=north,align=left,inner sep=0pt}}}
 \graphicspath{ {images/} }
-
+\pgfplotsset{yticklabel style={text width=2.5em,align=right}}
 % \setlength{\multicolsep}{6.0pt plus 2.0pt minus 1.5pt}% 50% of original values
 % \titleformat{\chapter}{}{\thechapter}{}{}
 % \titlespacing{\chapter}{-100pt}{-100pt}{-100pt}
@@ -130,10 +132,10 @@ is presented in \Cref{sec:benchmarks}.
 A trie \cite{fredkin1960trie} is a hierarchical data structure which
 stores key-value pairs. Tries can answer both point and range queries 
 efficiently since keys are stored in lexicographic order.
-A node's key can be reconstructed from its path. When constructing
-a trie from a set of keys, all insertion orders result in the same tree.
-Tries do not require rebalancing operations and therefore have no notion
-of balance, unlike comparison based search trees.
+A node's key can be reconstructed from its path and therefore, when 
+constructing a trie from a set of keys, all insertion orders result in the 
+same tree. Tries do not require rebalancing operations and therefore have 
+no notion of balance, unlike comparison based search trees.
 
 Keys are split into chunks of $s$ bits, where $s$ is called \textit{span}.
 Inner nodes have  $2^s$ child pointers (possibly \texttt{null}), 
@@ -472,13 +474,13 @@ Leis et al.\ \cite{leis2013adaptive}. Note that our implementation uses
 i.e.\ values are stored using an additional leaf node type, conveniently
 called \texttt{Node0}, which stores one value. Additionally, we utilize
 \textit{pessimistic} vertical compression, i.e.\ each inner node stores
-the entire compressed path inside the prefix variable using a variable length
-partial key vector. During traversal, prefix is compared to the search key.
+the entire compressed path inside the \texttt{prefix} variable using a variable length
+partial key vector. During traversal, \texttt{prefix} is compared to the search key.
 We present our implementations below.
 
 \subsection{Point Query}\label{sec:point-query}
 
-The code fragment shows the implementation of a point query on ART in
+The code fragment in \Cref{algo:point-query} shows the implementation of a point query on ART in
 C++. Method \texttt{get} accepts a key as an argument and returns a pointer
 to the value associated with the given key, or \texttt{null} if the key is not found.
 
@@ -513,16 +515,16 @@ public:
   T *get(const key_type &key) const {
     node<T> *cur = root_;
     int depth = 0;
+
     while (cur != nullptr) {
-      const int prefix_len = 
-        cur->get_prefix().length();
-      const bool is_prefix_match = 
-        cur->check_prefix(key, depth) == prefix_len;
+      const int prefix_len = cur->get_prefix().length();
+      const bool is_prefix_match = prefix_len == cur->check_prefix(key, depth);
+
       if (!is_prefix_match) {
         return nullptr;
       }
-      const bool is_exact_match = 
-        prefix_len == key.length() - depth;
+      const bool is_exact_match = prefix_len == key.length() - depth;
+
       if (is_exact_match) {
         return cur->get_value();
       }
@@ -617,10 +619,11 @@ public:
       const key_type prefix = (*cur)->get_prefix();
       const int prefix_len = prefix.length();
       const bool is_prefix_match = prefix_len == (*cur)->check_prefix(key, depth);
+
       if (!is_prefix_match) {
         return nullptr;
       }
-      const bool is_exact_match = key_len - (depth + prefix_len) == 0;
+      const bool is_exact_match = prefix_len == key_len - depth;
 
       if (is_exact_match) {
         T *value = (*cur)->get_value();
@@ -673,7 +676,127 @@ private:
 \section{Benchmarks}
 \label{sec:benchmarks}
 
+In this section we compare the performance of ART against red-black trees
+and hashtables. We use C++ standard library containers 
+\texttt{std::map} and \texttt{std::unordered\_map}\footnote{https://en.cppreference.com/w/cpp/container}
+which are implementations of the two other data structures mentioned above.
 
+We first conduct a series of microbenchmarks in order to assess lookup,
+insertion and deletion performance. Then we run a mixed workload benchmarks
+on the three data structures and finally we conduct an experiment in order
+to measure how ofter vertical compression in applied on ART.
+
+\subsection{Microbenchmarks}
+\label{sec:microbenchmarks}
+
+\begin{figure}[h]
+  \centering
+  \begin{subfigure}[b]{0.3\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+        ybar,
+        symbolic x coords={ART,RBT,HT},
+        ylabel=transactions/second,
+        width=5cm,
+        height=6cm,
+        ]
+        \addplot coordinates {(ART,1715000) (RBT,917000) (HT,2583000)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Lookup}
+    \label{fig:lookup-microbenchmark}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+        ybar,
+        symbolic x coords={ART,RBT,HT},
+        width=5cm,
+        height=6cm,
+        ]
+        \addplot coordinates {(ART,1441000) (RBT,695000) (HT,1467000)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Insertion}
+    \label{fig:insertion-microbenchmark}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+        ybar,
+        symbolic x coords={ART,RBT,HT},
+        width=5cm,
+        height=6cm,
+        ]
+        \addplot coordinates {(ART,1064000) (RBT,725000) (HT,1939000)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Deletion}
+    \label{fig:deletion-microbenchmark}
+  \end{subfigure}
+  \caption{Lookup, insertion and deletion performance of ART,
+  red-black trees and hashtables.}
+  \label{fig:microbenchmark}
+\end{figure}
+
+During the lookup microbenchmark, we execute point queries on an instance
+of each of the three data structures (ART, red-black tree, hashtable)
+containing the same four million keys. The keys are sparse (i.e.\ uniformly
+distributed), 64-bit integers. Each key is queried exactly once.
+\Cref{fig:lookup-microbenchmark}
+shows the lookup performance of the three data structures. ART can handle
+at least as many transactions per time unit as a red-black tree, but the
+hashtable has a significntly higher transactional throughput.
+
+The insertion microbenchmark inserts the same four million sparse 64-bitkeys
+used previously. \Cref{fig:insertion-microbenchmark} shows that ART was 
+significantly faster than the red-black tree but the hashtable outperformed ART.
+
+Finally, the deletion microbenchmark, structured similar to the lookup
+microbenchmark, attempts to delete every stored key from the data structure.
+Keys are again sparse 64-bit integers. \Cref{fig:deletion-microbenchmark} 
+depicts the results of the
+deletion microbenchmark which are unsuprisingly similar to the ones shown
+previously. ART outperforms red-black trees whilst hastables outperform
+ART.
+
+\subsection{Main Benchmark}
+\label{sec:main-benchmark}
+
+We now conduct a benchmark which assesses the transactional throughput of 
+a well defined workload applied on each of the three data structures.
+
+The more than twelve million keys used during the benchmark have structure
+and do resemble paths of a hierarchy (e.g.\ ``\texttt{/a}'', ``\texttt{/a/b}'',
+``\texttt{/a/c}'', etc.). The keys are ordered in reverse level order and
+during each transaction we draw a key under the Zipf distribution.
+
+We query against the randomly drawn key, and if the query returns no results,
+i.e.\ the key does not exist, we insert the key, otherwise we delete it.
+
+As Figure X shows, ART performs as good as the red-black tree and the
+hashtable clearly outperforms its competitors.
+
+\subsection{Vertical Compression}
+\label{sec:compression-benchmark}
+
+Our last experiment measures how often vertical compression is applied.
+As mentioned in \Cref{sec:vertical-compression} when deleting a node with
+a single sibling, the sibling is compressed, i.e.\ merged with its parent.
+
+If each transaction only deletes one existing key, the number of compressions
+cannot exceed the number of transactions. The number of compressions
+depends on span $s$. If $s=1$, every node must have exactly one sibling,
+and therefore $\text{\#compressions}=\text{\#transactions}-1$. Deleting the
+root node dueing the last step requires no compression. ART has a span of $s=8$
+and we therefore do not expect a compression for every deletion.
+
+Results should also vary depending if keys are sparse or dense. Dense keys
+likely share common substrings and as a result tries require less nodes to 
+store the keys. Less nodes imply a smaller number compressions. In our 
+benchmark, we use sparse keys and therefore do not expect less compressions.
+
+Figure X depicts number of compressions over number of transactions.
 
 \newpage
 
