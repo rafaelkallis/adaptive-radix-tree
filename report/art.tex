@@ -160,99 +160,23 @@ An apparent trade off exists between tree height versus space efficiency that
 depends on $s$.
 
 \begin{figure}[h]
-  \vspace{0mm}
-  \begin{footnotesize}
-    \begin{multicols}{3}
-      \noindent
-      \centering
-      \framebox(140,160){
-        \begin{forest}
-          [,circle,draw
-            [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$01$}}
-              [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$00$}}
-                [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$00$}}
-                  [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$11$}}]
-                ]
-                [,phantom]
-                [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$01$}}
-                  [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}]
-                ]
-              ]
-              [,phantom]
-              [,phantom]
-              [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}
-                [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$01$}}
-                  [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}]
-                ]
-              ]
-            ]
-          ]
-        \end{forest}
-      }
-
-      \vspace{2mm}
-      \begin{normalsize}
-        $s=2$
-      \end{normalsize}
-      \columnbreak
-      ~
-
-      \centering
-      \framebox(140,160){
-        \begin{forest}
-          [,circle,draw
-            [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$0100$}}
-              [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$0011$}}]
-              [,phantom]
-              [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$0110$}}]
-            ]
-            [,phantom]
-            [,phantom]
-            [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$0110$}}
-              [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$0100$}}]
-            ]
-          ]
-        \end{forest}
-      }
-
-      \vspace{2mm}
-      \begin{normalsize}
-        $s=4$
-      \end{normalsize}
-      \columnbreak
-      ~
-
-      \centering
-      \framebox(140,160){
-        \begin{forest}
-          [,circle,draw
-            [,circle,draw, edge label={node[midway,left,font=\scriptsize]{$01000011$}}]
-            [,phantom]
-            [,phantom]
-            [,circle,draw, edge label={node[midway,font=\scriptsize]{$01000110$}}]
-            [,phantom]
-            [,phantom]
-            [,circle,draw, edge label={node[midway,right,font=\scriptsize]{$01100100$}}]
-          ]
-        \end{forest}
-      }
-
-      \vspace{2mm}
-      \begin{normalsize}
-        $s=8$
-      \end{normalsize}
-      \columnbreak
-      ~
-
-    \end{multicols}
-  \end{footnotesize}
+  \centering
+  \begin{subfigure}[b]{0.4\textwidth}
+    \includegraphics[height=10cm,trim={2cm 17.5cm 2.5cm 1.5cm},clip]{trie_s1_draw}
+    \caption{$s=1$}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.55\textwidth}
+    \includegraphics[height=10cm,trim={2cm 18.5cm 2.5cm 0.5cm},clip]{trie_s2_draw}
+    \caption{$s=2$}
+  \end{subfigure}
   \caption{
-    Tries with span $s=2,4,8$ storing keys ``$01000011$'', ``$01000110$''
+    Tries with span $s=1,2$ storing keys ``$01000011$'', ``$01000110$''
     and ``$01100100$''.
   }
   \label{fig:span}
 \end{figure}
 
+\newpage
 
 \section{Adaptive Radix Tree (ART)}
 \label{sec:art}
@@ -364,8 +288,6 @@ prefix.
   \label{fig:vertical-compression}
 \end{figure}
 
-\newpage
-
 \subsection{Horizontal Compression (Adaptive Nodes)}
 \label{sec:horizontal-compression}
 
@@ -444,11 +366,8 @@ Finally, a node of type \texttt{Node256} contains an array of
 Child nodes can be found with a single lookup.
 
 \begin{figure}[h!]
-  \vspace{-4cm}
   \centering
-  % \hspace{-2cm}
-  \includegraphics[height=23.5cm]{art_nodes_draw}
-  \vspace{-3cm}
+  \includegraphics[height=20cm,trim={2.5cm 5cm 2.5cm 3.5cm},clip]{art_nodes_draw}
   \caption{
     When horizontal compression is applied, a node is in one of four 
     configurations, namely \texttt{Node4}, \texttt{Node16}, \texttt{Node48} 
@@ -461,8 +380,6 @@ Child nodes can be found with a single lookup.
   }
  \label{fig:horizontal-compression}
 \end{figure}
-
-\newpage
 
 \section{Algorithms}\label{sec:algorithms}
 
@@ -491,22 +408,22 @@ of the current node.
 We now enter a loop in which we check if \texttt{cur} references \texttt{null}
 during the beginning of each iteration, and if so, we return \texttt{null}.
 
-In lines 13-19 we check if a prefix mismatch occurs. This step is required
+In lines 11-16 we check if a prefix mismatch occurs. This step is required
 because of vertical compression (c.f.\ \Cref{sec:vertical-compression}).
 Method \texttt{check\_prefix} is a member of the \texttt{node} class which
 determines the number of matching bytes between \texttt{cur}'s prefix
 and \texttt{key} w.r.t.\ the current depth. If a prefix mismatch is discovered,
 \texttt{null} is returned.
 
-Lines 20-24 check for an exact match of the key at the current node. If so,
+Lines 17-21 check for an exact match of the key at the current node. If so,
 we return the value of the current node.
 
 Finally, we traverse to the next child node. \texttt{depth} is increased to
 account for the nodes merged due to vertical compression.
 We lookup the next child node, which is assigned to \texttt{cur}.
 
-\begin{figure}[h]
-  \begin{minted}[numbers=left,frame=single,fontsize=\footnotesize]{c++}
+\begin{figure}[H]
+  \begin{minted}[numbers=left,frame=single,fontsize=\scriptsize]{c++}
 template <class T> class art {
 public:
   /**
@@ -544,8 +461,6 @@ private:
   \caption{Point query implemented in C++.}
   \label{algo:point-query}
 \end{figure}
-
-\newpage
 
 \subsection{Deletion}
 \label{sec:deletion}
@@ -587,21 +502,21 @@ After the node to delete has been found, we first extract its associated value
 and determine its number of siblings. It must have at least one sibling, 
 unless the node to delete is the root node.
 
-If the node to delete has exactly one sibling (lines 26-40), we replace the 
+If the node to delete has exactly one sibling (lines 27-41), we replace the 
 parent node with the sibling, append to the sibling's prefix the parent's
 prefix and the sibling's partial key and then delete the \texttt{cur} and
 \texttt{par}. We also delete \texttt{par} because of vertical compression.
 
-If the node to delete has more than one sibling (lines 40-42), then no additional action
+If the node to delete has more than one sibling (lines 41-43), then no additional action
 is required besides deleting \texttt{cur}.
 
-Lines 44-46 check if the parent node is undefull, i.e.\ requires shrinking
+Lines 45-47 check if the parent node is undefull, i.e.\ requires shrinking
 (c.f.\ \Cref{sec:horizontal-compression}).
 
-Finally, the value associated with the deleted node is returned in case the
-procedure callee has to free resources.
+Finally, the value associated with the deleted node is returned (in case the
+procedure callee has to free resources).
 
-\begin{figure}[h]
+\begin{figure}[H]
   \begin{minted}[numbers=left,frame=single,fontsize=\scriptsize]{c++}
 template <class T> class art {
 public:
@@ -689,7 +604,28 @@ to measure how ofter vertical compression in applied on ART.
 \subsection{Microbenchmarks}
 \label{sec:microbenchmarks}
 
-\begin{figure}[h]
+During the lookup microbenchmark, we execute point queries on an instance
+of each of the three data structures (ART, red-black tree, hashtable)
+containing the same four million keys. The keys are sparse (i.e.\ uniformly
+distributed), 64-bit integers. Each key is queried exactly once.
+\Cref{fig:lookup-microbenchmark}
+shows the lookup performance of the three data structures. ART can handle
+as many transactions per time unit as a hashtable. The red-black tree does
+not perform as good as its competitors.
+
+The insertion microbenchmark inserts the same four million sparse 64-bitkeys
+used previously. \Cref{fig:insertion-microbenchmark} shows that ART was 
+significantly faster than the red-black tree but the hashtable outperformed ART.
+
+Finally, the deletion microbenchmark, structured similar to the lookup
+microbenchmark, attempts to delete every stored key from the data structure.
+Keys are again sparse 64-bit integers. \Cref{fig:deletion-microbenchmark} 
+depicts the results of the
+deletion microbenchmark which are unsuprisingly similar to the ones shown
+previously. ART outperforms red-black trees whilst hastables outperform
+ART.
+
+\begin{figure}[H]
   \centering
   \begin{subfigure}[b]{0.3\textwidth}
     \begin{tikzpicture}
@@ -739,27 +675,6 @@ to measure how ofter vertical compression in applied on ART.
   \label{fig:microbenchmark}
 \end{figure}
 
-During the lookup microbenchmark, we execute point queries on an instance
-of each of the three data structures (ART, red-black tree, hashtable)
-containing the same four million keys. The keys are sparse (i.e.\ uniformly
-distributed), 64-bit integers. Each key is queried exactly once.
-\Cref{fig:lookup-microbenchmark}
-shows the lookup performance of the three data structures. ART can handle
-at least as many transactions per time unit as a red-black tree, but the
-hashtable has a significntly higher transactional throughput.
-
-The insertion microbenchmark inserts the same four million sparse 64-bitkeys
-used previously. \Cref{fig:insertion-microbenchmark} shows that ART was 
-significantly faster than the red-black tree but the hashtable outperformed ART.
-
-Finally, the deletion microbenchmark, structured similar to the lookup
-microbenchmark, attempts to delete every stored key from the data structure.
-Keys are again sparse 64-bit integers. \Cref{fig:deletion-microbenchmark} 
-depicts the results of the
-deletion microbenchmark which are unsuprisingly similar to the ones shown
-previously. ART outperforms red-black trees whilst hastables outperform
-ART.
-
 \subsection{Main Benchmark}
 \label{sec:main-benchmark}
 
@@ -774,8 +689,27 @@ during each transaction we draw a key under the Zipf distribution.
 We query against the randomly drawn key, and if the query returns no results,
 i.e.\ the key does not exist, we insert the key, otherwise we delete it.
 
-As Figure X shows, ART performs as good as the red-black tree and the
+As \Cref{fig:main-benchmark} shows, ART performs as good as the red-black tree and the
 hashtable clearly outperforms its competitors.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      ybar,
+      symbolic x coords={ART,RBT,HT},
+      ylabel=transactions/second,
+      width=6cm,
+      height=7.5cm,
+      ]
+      \addplot coordinates {(ART,358000) (RBT,364000) (HT,782000)};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Transactional throughput of ART,
+    red-black trees and hashtables over a skewed worload with
+    mixed reads and writes.}
+  \label{fig:main-benchmark}
+\end{figure}
 
 \subsection{Vertical Compression}
 \label{sec:compression-benchmark}
@@ -788,7 +722,7 @@ If each transaction only deletes one existing key, the number of compressions
 cannot exceed the number of transactions. The number of compressions
 depends on span $s$. If $s=1$, every node must have exactly one sibling,
 and therefore $\text{\#compressions}=\text{\#transactions}-1$. Deleting the
-root node dueing the last step requires no compression. ART has a span of $s=8$
+root node during the last step requires no compression. ART has a span of $s=8$
 and we therefore do not expect a compression for every deletion.
 
 Results should also vary depending if keys are sparse or dense. Dense keys
@@ -797,6 +731,34 @@ store the keys. Less nodes imply a smaller number compressions. In our
 benchmark, we use sparse keys and therefore do not expect less compressions.
 
 Figure X depicts number of compressions over number of transactions.
+
+\section{Future Work}
+\label{sec:future-work}
+
+In this project we achieved correctness but left potential for improvements.
+
+Our implementation uses C++ dynamic arrays, i.e. \texttt{std::vector} in order
+to store compressed paths, which requires $24 + n$ bytes, where $n$ is the
+number of compressed nodes. Using C-style arrays, nodes require only $16 + n$
+bytes to support vertical compression.
+
+We also plan to optimize commonly used procedures, e.g.\ prefix checking
+against a search key or child node lookup/modification by leveraging the vastly
+faster C++ standard library array comparison and modification methods
+(e.g.\ \texttt{memcmp}, \texttt{memset}) and try avoiding loops.
+
+Leis et al.\ use \textit{hybrid} vertical compression, i.e.\ only store the
+8 first bytes of the compressed path in a static array and the number of
+compressed nodes. We use pessimistic vertical compression, which stores
+the entire compressed path.
+Their approach leverages on-CPU caches since it decreases memory fragmentation
+but keys must be stored at the leaves and one additional comparison is
+required at the leaf node. We want to know how strong we benefit from hybrid 
+vertical compression and how much it impacts memory consumption.
+
+Finally, our implementation dictates single threaded usage, but we intend to
+incorporate concurrency control in order to further increase the transactional
+throughput of ART when multiple cores are present.
 
 \newpage
 
