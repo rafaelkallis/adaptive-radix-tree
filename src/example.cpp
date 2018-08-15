@@ -1,7 +1,7 @@
 #include "art.hpp"
 #include "zipf.hpp"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <random>
 #include <string>
@@ -9,9 +9,6 @@
 
 void art_bench() {
   std::ifstream file("dataset.txt");
-  if (!file) {
-    return;
-  }
   std::unordered_map<uint32_t, std::string> dataset;
   uint32_t n = 0;
   std::string line;
@@ -33,6 +30,29 @@ void art_bench() {
   }
 }
 
+/* void art_compressions() { */
+/*   art::art<int> m; */
+/*   int v = 1; */
+/*   auto file = std::ifstream("dataset.txt"); */
+/*   std::string line; */
+/*   while (std::getline(file, line)) { */
+/*     m.set(line, &v); */
+/*   } */
+/*   file.close(); */
+/*   file = std::ifstream("dataset.txt"); */
+/*   int i = 0; */
+/*   while (std::getline(file, line)) { */
+/*     if (i % 1000000 == 0) { */
+/*       std::cout << i << " " << m.compression_count << std::endl; */
+/*     } */
+/*     m.del(line); */
+/*     ++i; */
+/*   } */
+/*   file.close(); */
+/*   std::cout << i << " " << m.compression_count << std::endl; */
+/* } */
+
 int main() {
+  /* art_compressions(); */
   return 0;
 }

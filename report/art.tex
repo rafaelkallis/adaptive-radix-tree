@@ -700,7 +700,7 @@ hashtable clearly outperforms its competitors.
       symbolic x coords={ART,RBT,HT},
       ylabel=transactions/second,
       width=6cm,
-      height=7.5cm,
+      height=6cm,
       ]
       \addplot coordinates {(ART,358000) (RBT,364000) (HT,782000)};
     \end{axis}
@@ -727,10 +727,49 @@ and we therefore do not expect a compression for every deletion.
 
 Results should also vary depending if keys are sparse or dense. Dense keys
 likely share common substrings and as a result tries require less nodes to 
-store the keys. Less nodes imply a smaller number compressions. In our 
-benchmark, we use sparse keys and therefore do not expect less compressions.
+store the keys. We expect that having dense keys imply smaller number
+of compressions due to the smaller number of nodes.
 
-Figure X depicts number of compressions over number of transactions.
+\Cref{fig:compressions-sparse,fig:compressions-dense} depict number of vertical
+compressions over number of transactions for sparse and dense keys. 
+We observe a linear relation between the two variables. As expected, 
+dense keys require less compressions compared to sparse keys. That is because 
+less nodes are needed to store dense keys, thus path compression is applied
+fewer.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.49\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel=transactions,
+        ylabel=compressions,
+        height=7cm,
+        width=7cm,
+        ]
+        \addplot table {compressions_sparse.dat};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Sparse Keys}
+    \label{fig:compressions-sparse}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.49\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel=transactions,
+        ylabel=compressions,
+        height=7cm,
+        width=7cm,
+        ]
+        \addplot table {compressions_paths.dat};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Dense Keys}
+    \label{fig:compressions-dense}
+  \end{subfigure}
+  \caption{Number of compressions over number of transactions. Each transaction
+  deletes a random key.}
+\end{figure}
 
 \section{Future Work}
 \label{sec:future-work}
