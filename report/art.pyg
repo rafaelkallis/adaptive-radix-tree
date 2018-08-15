@@ -1,0 +1,63 @@
+template <class T> class art {
+public:
+  /**
+   * Deletes the the given key and returns its associated value.
+   */
+  T *del(const key_type &key) {
+    node<T> **cur = &root_;
+    partial_key_type cur_partial_key = 0;
+    node<T> **par = nullptr;
+    int depth = 0;
+    const int key_len = key.length();
+
+    while (*cur != nullptr) {
+      const key_type prefix = (*cur)->get_prefix();
+      const int prefix_len = prefix.length();
+      const bool is_prefix_match = prefix_len == (*cur)->check_prefix(key, depth);
+
+      if (!is_prefix_match) {
+        return nullptr;
+      }
+      const bool is_exact_match = prefix_len == key_len - depth;
+
+      if (is_exact_match) {
+        T *value = (*cur)->get_value();
+        const int n_siblings = par != nullptr ? (*par)->get_n_children() - 1 : 0;
+
+        if (n_siblings == 1) {
+          /* find sibling and compress */
+          partial_key_type sibling_partial_key = (*par)->next_partial_key(0);
+          if (sibling_partial_key == cur_partial_key) {
+            sibling_partial_key = (*par)->next_partial_key(cur_partial_key + 1);
+          }
+          node<T> *sibling = *(*par)->find_child(sibling_partial_key);
+          const key_type new_sibling_prefix = (*par)->get_prefix() +
+                                              key_type(1, sibling_partial_key) +
+                                              sibling->get_prefix();
+          sibling->set_prefix(new_sibling_prefix);
+          delete (*par);
+          *par = sibling;
+
+        } else if (n_siblings > 1) {
+          (*par)->del_child(cur_partial_key);
+        }
+
+        if (par != nullptr && (*par)->is_underfull()) {
+          *par = (*par)->shrink();
+        }
+        delete(*cur);
+        *cur = nullptr;
+        return value;
+      }
+      cur_partial_key = key[depth + prefix_len];
+      par = cur;
+      cur = (*cur)->find_child(cur_partial_key);
+      depth += prefix_len + 1;
+    }
+    return nullptr;
+  }
+
+  /* ... */
+private:
+  node<T> *root_ = nullptr;
+}

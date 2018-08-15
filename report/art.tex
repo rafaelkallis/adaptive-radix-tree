@@ -739,7 +739,7 @@ In this project we achieved correctness but left potential for improvements.
 
 Our implementation uses C++ dynamic arrays, i.e. \texttt{std::vector} in order
 to store compressed paths, which requires $24 + n$ bytes, where $n$ is the
-number of compressed nodes. Using C-style arrays, nodes require only $16 + n$
+number of compressed nodes. Using C-style arrays, nodes require only $12 + n$
 bytes to support vertical compression.
 
 We also plan to optimize commonly used procedures, e.g.\ prefix checking
