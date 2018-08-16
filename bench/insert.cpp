@@ -26,8 +26,7 @@ static void art_insert_sparse(state &s) {
     m.set(std::to_string(g()), &v);
   }
 }
-PICOBENCH(art_insert_sparse)
-    .iterations({1 << 10/*, 1 << 20*/});
+PICOBENCH(art_insert_sparse);
 
 static void red_black_insert_sparse(state &s) {
   std::map<key_type, int> m;
@@ -38,8 +37,7 @@ static void red_black_insert_sparse(state &s) {
     m[std::to_string(g())] = v;
   }
 }
-PICOBENCH(red_black_insert_sparse)
-    .iterations({1 << 10/*, 1 << 20*/});
+PICOBENCH(red_black_insert_sparse);
 
 static void hashmap_insert_sparse(state &s) {
   std::unordered_map<key_type, int> m;
@@ -50,5 +48,4 @@ static void hashmap_insert_sparse(state &s) {
     m[std::to_string(g())] = v;
   }
 }
-PICOBENCH(hashmap_insert_sparse)
-    .iterations({1 << 10/*, 1 << 20*/});
+PICOBENCH(hashmap_insert_sparse);

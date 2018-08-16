@@ -111,6 +111,12 @@ template <class T> T *art<T>::get(const key_type &key) const {
 }
 
 template <class T> T *art<T>::set(const key_type &key, T *value) {
+  if (root_ == nullptr) {
+    const key_type new_node_prefix =
+      key_type(key.cbegin(), key.cend());
+    root_ = new node_0<T>(new_node_prefix, value);
+    return nullptr;
+  }
   /* pointer to current node */
   node<T> **cur = &root_;
 
@@ -121,13 +127,6 @@ template <class T> T *art<T>::set(const key_type &key, T *value) {
   const int key_len = key.length();
 
   while (true) {
-    if (*cur == nullptr) {
-      const key_type new_node_prefix =
-          key_type(key.cbegin() + depth, key.cend());
-      *cur = new node_0<T>(new_node_prefix, value);
-      return nullptr;
-    }
-
     /* prefix of the current node */
     const key_type prefix = (*cur)->get_prefix();
 
