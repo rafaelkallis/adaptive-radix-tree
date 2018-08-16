@@ -54,5 +54,13 @@ void art_bench() {
 
 int main() {
   /* art_compressions(); */
+  art::art<void> m;
+  int v = 1;
+  m.set("a", &v);
+  m.set("b", &v);
+  m.set("c", &v);
+  m.set("d", &v);
+  /* m.set("ab", &v); */
+  /* m.get("ab"); */
   return 0;
 }

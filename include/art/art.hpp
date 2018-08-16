@@ -90,21 +90,21 @@ template <class T> art<T>::~art() {
 }
 
 template <class T> T *art<T>::get(const key_type &key) const {
-  node<T> *cur = root_;
-  int depth = 0;
+  node<T> *cur = root_, **child;
+  int depth = 0, prefix_len;
   while (cur != nullptr) {
-    const int prefix_len = cur->get_prefix().length();
-    const bool is_prefix_match = cur->check_prefix(key, depth) == prefix_len;
-    if (!is_prefix_match) {
+    prefix_len = cur->get_prefix().length();
+    if (prefix_len != cur->check_prefix(key, depth)) {
+      /* prefix mismatch */
       return nullptr;
     }
-    const bool is_exact_match = prefix_len == key.length() - depth;
-    if (is_exact_match) {
+    if (prefix_len == key.length() - depth) {
+      /* exact match */
       return cur->get_value();
     }
     depth += prefix_len;
-    node<T> **next = cur->find_child(key[depth]);
-    cur = next != nullptr ? *next : nullptr;
+    child = cur->find_child(key[depth]);
+    cur = child != nullptr ? *child : nullptr;
     ++depth;
   }
   return nullptr;

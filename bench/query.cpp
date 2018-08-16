@@ -30,7 +30,7 @@ static void art_query_sparse(state &s) {
   }
 }
 PICOBENCH(art_query_sparse)
-    .iterations({1 << 10, 1 << 20});
+    .iterations({100000/*, 1 << 20 */});
 
 static void red_black_query_sparse(state &s) {
   std::map<key_type, int> m;
@@ -45,7 +45,7 @@ static void red_black_query_sparse(state &s) {
   }
 }
 PICOBENCH(red_black_query_sparse)
-    .iterations({1 << 10, 1 << 20});
+    .iterations({100000/*, 1 << 20 */});
 
 static void hashmap_query_sparse(state &s) {
   std::unordered_map<key_type, int> m;
@@ -60,4 +60,4 @@ static void hashmap_query_sparse(state &s) {
   }
 }
 PICOBENCH(hashmap_query_sparse)
-    .iterations({1 << 10, 1 << 20});
+    .iterations({100000/*, 1 << 20 */});

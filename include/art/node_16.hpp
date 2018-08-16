@@ -50,9 +50,9 @@ node_16<T>::node_16(key_type prefix, T *value)
 
 template <class T>
 node<T> **node_16<T>::find_child(const partial_key_type &partial_key) {
-  for (int i = 0; i < this->n_children_; ++i) {
-    if (this->keys_[i] == partial_key) {
-      return &this->children_[i];
+  for (int i = 0; i < n_children_; ++i) {
+    if (keys_[i] == partial_key) {
+      return &children_[i];
     }
   }
   return nullptr;

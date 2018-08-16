@@ -7,6 +7,7 @@
 #define ART_NODE_4_HPP
 
 #include "node.hpp"
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -51,9 +52,9 @@ node_4<T>::node_4(const key_type &prefix, T *value)
 
 template <class T>
 node<T> **node_4<T>::find_child(const partial_key_type &partial_key) {
-  for (int i = 0; i < this->n_children_; ++i) {
-    if (this->keys_[i] == partial_key) {
-      return &this->children_[i];
+  for (int i = 0; i < n_children_; ++i) {
+    if (keys_[i] == partial_key) {
+      return &children_[i];
     }
   }
   return nullptr;
@@ -100,8 +101,8 @@ node<T> *node_4<T>::del_child(const partial_key_type &partial_key) {
 
 template <class T> node<T> *node_4<T>::grow() {
   auto new_node = new node_16<T>(this->get_prefix(), this->get_value());
-  for (int i = 0; i < this->n_children_; ++i) {
-    new_node->set_child(this->keys_[i], this->children_[i]);
+  for (int i = 0; i < n_children_; ++i) {
+    new_node->set_child(keys_[i], children_[i]);
   }
   delete this;
   return new_node;
@@ -124,11 +125,12 @@ template <class T> bool node_4<T>::is_underfull() const {
 template <class T>
 partial_key_type
 node_4<T>::next_partial_key(partial_key_type partial_key) const {
-  for (int i = 0; i < this->n_children_; ++i) {
-    if (this->keys_[i] >= partial_key) {
-      return this->keys_[i];
+  for (int i = 0; i < n_children_; ++i) {
+    if (keys_[i] >= partial_key) {
+      return keys_[i];
     }
   }
+  /* return 0; */
   throw std::out_of_range("provided partial key does not have a successor");
 }
 
@@ -140,6 +142,7 @@ node_4<T>::prev_partial_key(partial_key_type partial_key) const {
       return this->keys_[i];
     }
   }
+  /* return 255; */
   throw std::out_of_range("provided partial key does not have a predecessor");
 }
 
