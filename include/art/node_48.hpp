@@ -19,11 +19,11 @@ template <class T> class node_256;
 template <class T> class node_48 : public node<T> {
 public:
   node_48();
-  node_48(key_type prefix, T *value);
+  node_48(const string &key, const T &value);
 
-  node<T> **find_child(const partial_key_type &partial_key) override;
-  void set_child(const partial_key_type &partial_key, node<T> *child) override;
-  node<T> *del_child(const partial_key_type &partial_key) override;
+  node<T> **find_child(partial_key_type partial_key) override;
+  void set_child(partial_key_type partial_key, node<T> *child) override;
+  node<T> *del_child(partial_key_type partial_key) override;
   node<T> *grow() override;
   node<T> *shrink() override;
   bool is_full() const override;
@@ -35,21 +35,14 @@ public:
   partial_key_type
   prev_partial_key(partial_key_type partial_key) const override;
 
-  int get_n_children() const override;
+  partial_key_type indexes_[256];
+  node<T> *children_[48];
 
 private:
   static const partial_key_type EMPTY;
-
-  uint8_t n_children_;
-  std::array<partial_key_type, 256> indexes_;
-  std::array<node<T> *, 48> children_;
 };
 
-template <class T> node_48<T>::node_48() : node_48<T>(key_type(), nullptr) {}
-
-template <class T>
-node_48<T>::node_48(key_type prefix, T *value)
-    : node<T>(prefix, value), n_children_(0), indexes_(), children_() {
+template <class T> node_48<T>::node_48() : node<T>() {
   for (int i = 0; i < 256; ++i) {
     this->indexes_[i] = node_48::EMPTY;
     if (i < 48) {
@@ -59,14 +52,17 @@ node_48<T>::node_48(key_type prefix, T *value)
 }
 
 template <class T>
-node<T> **node_48<T>::find_child(const partial_key_type &partial_key) {
+node_48<T>::node_48(const string &key, const T &value)
+    : node<T>(key, value), node_48<T>() {}
+
+template <class T>
+node<T> **node_48<T>::find_child(partial_key_type partial_key) {
   unsigned char index = this->indexes_[partial_key];
   return node_48::EMPTY != index ? &this->children_[index] : nullptr;
 }
 
 template <class T>
-void node_48<T>::set_child(const partial_key_type &partial_key,
-                           node<T> *child) {
+void node_48<T>::set_child(partial_key_type partial_key, node<T> *child) {
 
   // TODO(rafaelkallis): pick random starting entry in order to increase
   // performance? i.e. for (int i = random([0,48)); i != (i-1) % 48; i = (i+1) %
@@ -80,26 +76,29 @@ void node_48<T>::set_child(const partial_key_type &partial_key,
       break;
     }
   }
-  ++n_children_;
+  ++this->n_children_;
 }
 
 template <class T>
-node<T> *node_48<T>::del_child(const partial_key_type &partial_key) {
+node<T> *node_48<T>::del_child(partial_key_type partial_key) {
   node<T> *child_to_delete = nullptr;
   uint8_t index = indexes_[partial_key];
   if (index != node_48::EMPTY) {
     indexes_[partial_key] = node_48::EMPTY;
     child_to_delete = children_[index];
     children_[index] = nullptr;
-    --n_children_;
+    --this->n_children_;
   }
   return child_to_delete;
 }
 
 template <class T> node<T> *node_48<T>::grow() {
-  auto new_node = new node_256<T>(this->get_prefix(), this->get_value());
+  auto new_node = new node_256<T>();
+  new_node.prefix_ = this->prefix_;
+  new_node.prefix_len_ = this->prefix_len_;
+  new_node.value_ = this->value_;
   for (int partial_key = 0; partial_key < 256; ++partial_key) {
-    unsigned char index = this->indexes_[partial_key];
+    partial_key_type index = this->indexes_[partial_key];
     if (index != node_48::EMPTY) {
       new_node->set_child(partial_key, this->children_[index]);
     }
@@ -109,9 +108,12 @@ template <class T> node<T> *node_48<T>::grow() {
 }
 
 template <class T> node<T> *node_48<T>::shrink() {
-  auto new_node = new node_16<T>(this->get_prefix(), this->get_value());
+  auto new_node = new node_16<T>();
+  new_node.prefix_ = this->prefix_;
+  new_node.prefix_len_ = this->prefix_len_;
+  new_node.value_ = this->value_;
   for (int partial_key = 0; partial_key < 256; ++partial_key) {
-    unsigned char index = this->indexes_[partial_key];
+    partial_key_type index = this->indexes_[partial_key];
     if (index != node_48::EMPTY) {
       new_node->set_child(partial_key, this->children_[index]);
     }
@@ -155,10 +157,6 @@ node_48<T>::prev_partial_key(partial_key_type partial_key) const {
           "provided partial key does not have a predecessor");
     }
   }
-}
-
-template <class T> int node_48<T>::get_n_children() const {
-  return this->n_children_;
 }
 
 } // namespace art

@@ -11,7 +11,7 @@
 namespace art {
 
 using partial_key_type = uint8_t;
-using key_type = std::string;
+using key_type = partial_key_type *;
 
 } // namespace art
 

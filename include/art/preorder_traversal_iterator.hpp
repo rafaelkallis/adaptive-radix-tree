@@ -25,7 +25,7 @@ public:
   explicit preorder_traversal_iterator(std::stack<node<T> *> traversal_stack);
 
   static preorder_traversal_iterator<T> from_min_key(node<T> *root,
-                                                     key_type key);
+                                                     key_type key, int key_len);
 
   using iterator_category = std::forward_iterator_tag;
   using value_type = T *;
@@ -70,7 +70,8 @@ preorder_traversal_iterator<T>::preorder_traversal_iterator(
 
 template <class T>
 preorder_traversal_iterator<T>
-preorder_traversal_iterator<T>::from_min_key(node<T> *root, key_type key) {
+preorder_traversal_iterator<T>::from_min_key(node<T> *root, key_type key,
+                                             int key_len) {
   assert(root != nullptr);
   std::stack<node<T> *> node_stack;
   std::stack<int> depth_stack;
@@ -83,7 +84,7 @@ preorder_traversal_iterator<T>::from_min_key(node<T> *root, key_type key) {
     auto prefix_len = prefix.size();
 
     for (int i = 0; i < prefix_len; ++i) {
-      if (depth + i + 1 == key.size()) {
+      if (depth + i + 1 == key_len) {
         return preorder_traversal_iterator<T>(node_stack);
       }
       if (prefix[i] < key[depth + i]) {
@@ -109,7 +110,7 @@ preorder_traversal_iterator<T>::from_min_key(node<T> *root, key_type key) {
 
 template <class T>
 typename preorder_traversal_iterator<T>::value_type
-preorder_traversal_iterator<T>::operator*() {
+    preorder_traversal_iterator<T>::operator*() {
   return traversal_stack_.top()->get_value();
 }
 
