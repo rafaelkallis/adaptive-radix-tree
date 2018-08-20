@@ -1,5 +1,5 @@
 /**
- * @file adaptive radix trie
+ * @file adaptive radix tree
  * @author Rafael Kallis <rk@rafaelkallis.com>
  */
 
@@ -7,7 +7,7 @@
 #define ART_HPP
 
 #include "art/art.hpp"
-#include "art/children_iterator.hpp"
+#include "art/child_it.hpp"
 #include "art/constants.hpp"
 #include "art/node.hpp"
 #include "art/node_0.hpp"
@@ -15,6 +15,6 @@
 #include "art/node_256.hpp"
 #include "art/node_4.hpp"
 #include "art/node_48.hpp"
-#include "art/preorder_traversal_iterator.hpp"
+#include "art/tree_it.hpp"
 
 #endif

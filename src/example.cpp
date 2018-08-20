@@ -53,14 +53,35 @@ void art_bench() {
 /* } */
 
 int main() {
-  /* art_compressions(); */
-  art::art<void> m;
-  int v = 1;
-  m.set("a", &v);
-  m.set("b", &v);
-  m.set("c", &v);
-  m.set("d", &v);
-  /* m.set("ab", &v); */
-  /* m.get("ab"); */
+  int v = 2;
+  art::art<int> m;
+
+  /* The above statements construct the following tree:
+   *
+   *                (aa)->0
+   *                 |a
+   *                 |
+   *                (a)->1
+   *             a /   \ b
+   *              /     \
+   *        2<-(aa)     (aa)->5
+   *         a /  \ b    |a
+   *          /    \     |
+   *    3<-(aa) 4<-(a)  (aa)->6
+   */
+
+  m.set("aa", &v);
+  m.set("aaaa", &v);
+  m.set("aaaaaaa", &v);
+  m.set("aaaaaaaaaa", &v);
+  m.set("aaaaaaaaaaa", &v);
+  m.set("aaaaaaaaaab", &v);
+  m.set("aaaaaaaaaac", &v);
+  m.set("aaaaaaaba", &v);
+  m.set("aaaabaa", &v);
+  m.set("aaaabaaaaa", &v);
+  m.del("aaaabaaaaa");
+  std::cout << 1 << std::endl;
+
   return 0;
 }

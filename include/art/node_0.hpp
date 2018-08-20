@@ -8,26 +8,26 @@
 
 #include "node.hpp"
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace art {
+
+using std::string;
 
 template <class T> class node_4;
 
 template <class T> class node_0 : public node<T> {
 public:
-  node_0() = default;
-  node_0(const key_type &prefix, T *value);
-
-  node<T> **find_child(const partial_key_type &partial_key) override;
-  void set_child(const partial_key_type &partial_key, node<T> *child) override;
-  node<T> * del_child(const partial_key_type &partial_key) override;
+  node<T> **find_child(partial_key_type partial_key) override;
+  void set_child(partial_key_type partial_key, node<T> *child) override;
+  node<T> *del_child(partial_key_type partial_key) override;
   node<T> *grow() override;
   node<T> *shrink() override;
   bool is_full() const override;
   bool is_underfull() const override;
 
-  int get_n_children() const override;
+  int n_children() const override;
 
   partial_key_type
   next_partial_key(partial_key_type partial_key) const override;
@@ -37,24 +37,24 @@ public:
 };
 
 template <class T>
-node_0<T>::node_0(const key_type &prefix, T *value) : node<T>(prefix, value) {}
-
-template <class T>
-node<T> **node_0<T>::find_child(const partial_key_type & /* partial_key */) {
+node<T> **node_0<T>::find_child(partial_key_type /* partial_key */) {
   return nullptr;
 }
 
 template <class T>
-void node_0<T>::set_child(const partial_key_type & /* partial_key */,
+void node_0<T>::set_child(partial_key_type /* partial_key */,
                           node<T> * /* child */) {}
 
 template <class T>
-node<T> * node_0<T>::del_child(const partial_key_type & /* partial_key */) {
+node<T> *node_0<T>::del_child(partial_key_type /* partial_key */) {
   return nullptr;
 }
 
 template <class T> node<T> *node_0<T>::grow() {
-  auto new_node = new node_4<T>(this->get_prefix(), this->get_value());
+  auto new_node = new node_4<T>();
+  new_node->prefix_ = this->prefix_;
+  new_node->prefix_len_ = this->prefix_len_;
+  new_node->value_ = this->value_;
   delete this;
   return new_node;
 }
@@ -67,7 +67,7 @@ template <class T> bool node_0<T>::is_full() const { return true; }
 
 template <class T> bool node_0<T>::is_underfull() const { return false; }
 
-template <class T> int node_0<T>::get_n_children() const { return 0; }
+template <class T> int node_0<T>::n_children() const { return 0; }
 
 template <class T>
 partial_key_type

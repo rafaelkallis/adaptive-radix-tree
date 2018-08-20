@@ -17,6 +17,7 @@ using std::array;
 using std::mt19937;
 using std::random_device;
 using std::shuffle;
+using std::string;
 
 TEST_SUITE("art") {
 
@@ -28,22 +29,20 @@ TEST_SUITE("art") {
     int dummy_value_2;
 
     SUBCASE("insert into empty tree") {
-      key_type key = "abc";
-      REQUIRE_EQ(nullptr, trie.get(key));
-      trie.set(key, &dummy_value_1);
-      REQUIRE_EQ(&dummy_value_1, trie.get(key));
+      REQUIRE_EQ(nullptr, trie.get("abc"));
+      trie.set("abc", &dummy_value_1);
+      REQUIRE_EQ(&dummy_value_1, trie.get("abc"));
     }
 
     SUBCASE("insert into empty tree & replace") {
-      key_type key = "abc";
-      trie.set(key, &dummy_value_1);
-      trie.set(key, &dummy_value_2);
-      REQUIRE_EQ(&dummy_value_2, trie.get(key));
+      trie.set("abc", &dummy_value_1);
+      trie.set("abc", &dummy_value_2);
+      REQUIRE_EQ(&dummy_value_2, trie.get("abc"));
     }
 
     SUBCASE("insert value s.t. existing value is a prefix") {
-      key_type prefix_key = "abc";
-      key_type key = {'a', 'b', 'c', 'd', 'e'};
+      string prefix_key = "abc";
+      string key = "abcde";
       trie.set(prefix_key, &dummy_value_1);
       trie.set(key, &dummy_value_2);
       REQUIRE_EQ(&dummy_value_1, trie.get(prefix_key));
@@ -51,17 +50,15 @@ TEST_SUITE("art") {
     }
 
     SUBCASE("insert value s.t. new value is a prefix") {
-      key_type prefix_key = {'a', 'b', 'c'};
-      key_type key = {'a', 'b', 'c', 'd', 'e'};
-      trie.set(key, &dummy_value_1);
-      trie.set(prefix_key, &dummy_value_2);
-      REQUIRE_EQ(&dummy_value_1, trie.get(key));
-      REQUIRE_EQ(&dummy_value_2, trie.get(prefix_key));
+      trie.set("abcde", &dummy_value_1);
+      trie.set("abc", &dummy_value_2);
+      REQUIRE_EQ(&dummy_value_1, trie.get("abcde"));
+      REQUIRE_EQ(&dummy_value_2, trie.get("abc"));
     }
 
     SUBCASE("insert key s.t. it mismatches existing key") {
-      key_type key1 = {'a', 'a', 'a', 'a', 'a'};
-      key_type key2 = {'a', 'a', 'b', 'a', 'a'};
+      string key1 = {'a', 'a', 'a', 'a', 'a'};
+      string key2 = {'a', 'a', 'b', 'a', 'a'};
       trie.set(key1, &dummy_value_1);
       trie.set(key2, &dummy_value_2);
       REQUIRE_EQ(&dummy_value_1, trie.get(key1));
@@ -70,7 +67,7 @@ TEST_SUITE("art") {
 
     SUBCASE("monte carlo") {
       const int n = 1000;
-      array<key_type, n> keys;
+      array<string, n> keys;
       array<int *, n> values;
       /* rng */
       random_device rd;
@@ -78,17 +75,17 @@ TEST_SUITE("art") {
       for (int experiment = 0; experiment < 10; experiment += 1) {
         for (int i = 0; i < n; i += 1) {
           std::string random_num_str = std::to_string(g());
-          keys[i] = key_type(random_num_str.cbegin(), random_num_str.cend());
+          keys[i] = string(random_num_str.cbegin(), random_num_str.cend());
           values[i] = new int();
         }
 
-        art<int> subject;
+        art<int> m;
 
         for (int i = 0; i < n; i += 1) {
-          subject.set(keys[i], values[i]);
+          m.set(keys[i], values[i]);
 
           for (int j = 0; j < i; j += 1) {
-            REQUIRE_EQ(values[j], subject.get(keys[j]));
+            REQUIRE_EQ(values[j], m.get(keys[j]));
           }
         }
 
@@ -100,40 +97,41 @@ TEST_SUITE("art") {
   }
 
   TEST_CASE("delete value") {
-  
-    key_type key0 = "aa";
+
+    string key0 = "aa";
     int int0 = 0;
-    key_type key1 = "aaaa";
+    string key1 = "aaaa";
     int int1 = 1;
-    key_type key2 = "aaaaaaa";
+    string key2 = "aaaaaaa";
     int int2 = 2;
-    key_type key3 = "aaaaaaaaaa";
+    string key3 = "aaaaaaaaaa";
     int int3 = 3;
-    key_type key4 = "aaaaaaaba";
+    string key4 = "aaaaaaaba";
     int int4 = 4;
-    key_type key5 = "aaaabaa";
+    string key5 = "aaaabaa";
     int int5 = 5;
-    key_type key6 = "aaaabaaaaa";
+    string key6 = "aaaabaaaaa";
     int int6 = 6;
-    key_type key7 = "aaaaaaaaaaa";
+    string key7 = "aaaaaaaaaaa";
     int int7 = 7;
-    key_type key8 = "aaaaaaaaaab";
+    string key8 = "aaaaaaaaaab";
     int int8 = 8;
-    key_type key9 = "aaaaaaaaaac";
+    string key9 = "aaaaaaaaaac";
     int int9 = 9;
 
-    art<int> subject;
+    art<int> m;
 
-    subject.set(key0, &int0);
-    subject.set(key1, &int1);
-    subject.set(key2, &int2);
-    subject.set(key3, &int3);
-    subject.set(key4, &int4);
-    subject.set(key5, &int5);
-    subject.set(key6, &int6);
-    subject.set(key7, &int7);
-    subject.set(key8, &int8);
-    subject.set(key9, &int9);
+    m.set(key0, &int0);
+    m.set(key1, &int1);
+    m.set(key2, &int2);
+    m.set(key3, &int3);
+    m.set(key4, &int4);
+    m.set(key5, &int5);
+    m.set(key6, &int6);
+    m.set(key7, &int7);
+    m.set(key8, &int8);
+    m.set(key9, &int9);
+    std::cout << 1 << std::endl;
 
     /* The above statements construct the following tree:
      *
@@ -155,126 +153,128 @@ TEST_SUITE("art") {
      */
 
     SUBCASE("delete non existing value") {
-      REQUIRE(subject.del("aaaaa") == nullptr);
-      REQUIRE(subject.del("aaaaaa") == nullptr);
-      REQUIRE(subject.del("aaaab") == nullptr);
-      REQUIRE(subject.del("aaaaba") == nullptr);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == &int3);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
+      REQUIRE(m.del("aaaaa") == nullptr);
+      REQUIRE(m.del("aaaaaa") == nullptr);
+      REQUIRE(m.del("aaaab") == nullptr);
+      REQUIRE(m.del("aaaaba") == nullptr);
+      REQUIRE(m.get(key0) == &int0);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == &int2);
+      REQUIRE(m.get(key3) == &int3);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
     }
 
     SUBCASE("n_children == 0 && n_siblings == 0 (6)") {
-      REQUIRE(subject.del(key6) == &int6);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == &int3);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == nullptr);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
+      REQUIRE(m.del(key6) == &int6);
+      REQUIRE(m.get(key0) == &int0);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == &int2);
+      REQUIRE(m.get(key3) == &int3);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == nullptr);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
+      std::cout << 2 << std::endl;
     }
-    
+
     SUBCASE("n_children == 0 && n_siblings == 1 (4)") {
-      REQUIRE(subject.del(key4) == &int4);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == &int3);
-      REQUIRE(subject.get(key4) == nullptr);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
+      std::cout << 2 << std::endl;
+      REQUIRE(m.del(key4) == &int4);
+      REQUIRE(m.get(key0) == &int0);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == &int2);
+      REQUIRE(m.get(key3) == &int3);
+      REQUIRE(m.get(key4) == nullptr);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
     }
 
     SUBCASE("n_children == 0 && n_siblings > 1 (7)") {
-      REQUIRE(subject.del(key7) == &int7);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == &int3);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == nullptr);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
+      REQUIRE(m.del(key7) == &int7);
+      REQUIRE(m.get(key0) == &int0);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == &int2);
+      REQUIRE(m.get(key3) == &int3);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == nullptr);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
     }
-    
-    SUBCASE("n_children == 1 (0),(5)") {
-      REQUIRE(subject.del(key0) == &int0);
-      REQUIRE(subject.get(key0) == nullptr);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == &int3);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
 
-      REQUIRE(subject.del(key5) == &int5);
-      REQUIRE(subject.get(key0) == nullptr);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == &int3);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == nullptr);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
+    SUBCASE("n_children == 1 (0),(5)") {
+      REQUIRE(m.del(key0) == &int0);
+      REQUIRE(m.get(key0) == nullptr);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == &int2);
+      REQUIRE(m.get(key3) == &int3);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
+
+      REQUIRE(m.del(key5) == &int5);
+      REQUIRE(m.get(key0) == nullptr);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == &int2);
+      REQUIRE(m.get(key3) == &int3);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == nullptr);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
     }
-    
+
     SUBCASE("n_children > 1 (3),(2),(1)") {
-      REQUIRE(subject.del(key3) == &int3);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == &int2);
-      REQUIRE(subject.get(key3) == nullptr);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
-      
-      REQUIRE(subject.del(key2) == &int2);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == &int1);
-      REQUIRE(subject.get(key2) == nullptr);
-      REQUIRE(subject.get(key3) == nullptr);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
-      
-      REQUIRE(subject.del(key1) == &int1);
-      REQUIRE(subject.get(key0) == &int0);
-      REQUIRE(subject.get(key1) == nullptr);
-      REQUIRE(subject.get(key2) == nullptr);
-      REQUIRE(subject.get(key3) == nullptr);
-      REQUIRE(subject.get(key4) == &int4);
-      REQUIRE(subject.get(key5) == &int5);
-      REQUIRE(subject.get(key6) == &int6);
-      REQUIRE(subject.get(key7) == &int7);
-      REQUIRE(subject.get(key8) == &int8);
-      REQUIRE(subject.get(key9) == &int9);
+      REQUIRE(m.del(key3) == &int3);
+      REQUIRE(m.get(key0) == &int0);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == &int2);
+      REQUIRE(m.get(key3) == nullptr);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
+
+      REQUIRE(m.del(key2) == &int2);
+      REQUIRE(m.get(key0) == &int0);
+      REQUIRE(m.get(key1) == &int1);
+      REQUIRE(m.get(key2) == nullptr);
+      REQUIRE(m.get(key3) == nullptr);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
+
+      REQUIRE(m.del(key1) == &int1);
+      REQUIRE(m.get(key0) == &int0);
+      REQUIRE(m.get(key1) == nullptr);
+      REQUIRE(m.get(key2) == nullptr);
+      REQUIRE(m.get(key3) == nullptr);
+      REQUIRE(m.get(key4) == &int4);
+      REQUIRE(m.get(key5) == &int5);
+      REQUIRE(m.get(key6) == &int6);
+      REQUIRE(m.get(key7) == &int7);
+      REQUIRE(m.get(key8) == &int8);
+      REQUIRE(m.get(key9) == &int9);
     }
   }
 
@@ -287,17 +287,15 @@ TEST_SUITE("art") {
     int int5 = 5;
     int int6 = 6;
 
-    art<int> subject;
+    art<int> m;
 
-    subject.set(key_type{'a', 'a'}, &int0);
-    subject.set(key_type{'a', 'a', 'a', 'a'}, &int1);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'a', 'a', 'a'}, &int2);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'},
-                &int3);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'a'}, &int4);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'b', 'a', 'a'}, &int5);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'b', 'a', 'a', 'a', 'a', 'a'},
-                &int6);
+    m.set("aa", &int0);
+    m.set("aaaa", &int1);
+    m.set("aaaaaaa", &int2);
+    m.set("aaaaaaaaaa", &int3);
+    m.set("aaaaaaaba", &int4);
+    m.set("aaaabaa", &int5);
+    m.set("aaaabaaaaa", &int6);
 
     /* The above statements construct the following tree:
      *
@@ -313,8 +311,8 @@ TEST_SUITE("art") {
      *    3<-(aa) 4<-(a)  (aa)->6
      */
 
-    auto it = subject.lexicographic_it();
-    auto it_end = subject.lexicographic_it_end();
+    auto it = m.begin();
+    auto it_end = m.end();
 
     // 0
     REQUIRE(it != it_end);
@@ -364,17 +362,16 @@ TEST_SUITE("art") {
     int int5 = 5;
     int int6 = 6;
 
-    art<int> subject;
+    art<int> m;
 
-    subject.set(key_type{'a', 'a'}, &int0);
-    subject.set(key_type{'a', 'a', 'a', 'a'}, &int1);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'a', 'a', 'a'}, &int2);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'},
-                &int3);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'a'}, &int4);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'b', 'a', 'a'}, &int5);
-    subject.set(key_type{'a', 'a', 'a', 'a', 'b', 'a', 'a', 'a', 'a', 'a'},
-                &int6);
+    m.set("aa", &int0);
+    m.set("aaaa", &int1);
+    m.set("aaaaaaa", &int2);
+    m.set("aaaaaaaaaa", &int3);
+    m.set("aaaaaaaba", &int4);
+    m.set("aaaabaa", &int5);
+    m.set("aaaabaaaaa", &int6);
+    std::cout << 1 << std::endl;
 
     /* The above statements construct the following tree:
      *
@@ -391,13 +388,13 @@ TEST_SUITE("art") {
      */
 
     // iterator on ["aaaaaaaaaa",3]
-    auto it = subject.lexicographic_it(
-        key_type{'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'});
+    auto it = m.begin("aaaaaaaaaa");
 
+    std::cout << 1 << std::endl;
     // iterator on ["aaaabaaaaa",6]
-    auto it_end = subject.lexicographic_it(
-        key_type{'a', 'a', 'a', 'a', 'b', 'a', 'a', 'a', 'a', 'a'});
+    auto it_end = m.begin("aaaabaaaaa");
 
+    std::cout << 1 << std::endl;
     // 3
     REQUIRE(it != it_end);
     REQUIRE_EQ(&int3, *it);

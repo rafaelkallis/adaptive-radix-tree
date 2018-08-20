@@ -6,7 +6,7 @@
 #ifndef ART_NODE_HPP
 #define ART_NODE_HPP
 
-#include "children_iterator.hpp"
+#include "child_it.hpp"
 #include "constants.hpp"
 #include <algorithm>
 #include <array>
@@ -20,12 +20,11 @@ namespace art {
 
 template <class T> class node {
 public:
-  node() = default;
-  node(const key_type &prefix, T *value);
-  node(const node<T> &other) = default;
-  node(node<T> &&other) noexcept = default;
   virtual ~node() = default;
 
+  node() = default;
+  node(const node<T> &other) = default;
+  node(node<T> &&other) noexcept = default;
   node<T> &operator=(const node<T> &other) = default;
   node<T> &operator=(node<T> &&other) noexcept = default;
 
@@ -36,7 +35,7 @@ public:
    * @return Child node identified by the given partial key or
    * a null pointer of no child node is associated with the partial key.
    */
-  virtual node<T> **find_child(const partial_key_type &partial_key) = 0;
+  virtual node<T> **find_child(partial_key_type partial_key) = 0;
 
   /**
    * Adds the given node to the node's children.
@@ -48,15 +47,14 @@ public:
    * @param partial_key - The partial key associated with the child.
    * @param child - The child node.
    */
-  virtual void set_child(const partial_key_type &partial_key,
-                         node<T> *child) = 0;
+  virtual void set_child(partial_key_type partial_key, node<T> *child) = 0;
 
   /**
    * Deletes the child associated with the given partial key.
    *
    * @param partial_key - The partial key associated with the child.
    */
-  virtual node<T> *del_child(const partial_key_type &partial_key) = 0;
+  virtual node<T> *del_child(partial_key_type partial_key) = 0;
 
   /**
    * Creates and returns a new node with bigger children capacity.
@@ -87,11 +85,6 @@ public:
   virtual bool is_underfull() const = 0;
 
   /**
-   * Determines if the node is a leaf node.
-   */
-  bool is_leaf() const;
-
-  /**
    * Determines the number of matching bytes between the node's prefix and
    * the key. The first byte we compare is prefix[0] and key[depth + 0].
    *
@@ -103,14 +96,9 @@ public:
    * prefix:    "abbbd"
    *             ^^^^*
    */
-  int check_prefix(const key_type &key, int depth) const;
+  int check_prefix(partial_key_type *key, int key_len) const;
 
-  T *get_value();
-  void set_value(T *value);
-  key_type get_prefix() const;
-  void set_prefix(const key_type &prefix);
-
-  virtual int get_n_children() const = 0;
+  virtual int n_children() const = 0;
 
   virtual partial_key_type
   next_partial_key(partial_key_type partial_key) const = 0;
@@ -123,64 +111,39 @@ public:
    *
    * @return Iterator on the first child node.
    */
-  children_iterator<T> begin();
-  std::reverse_iterator<children_iterator<T>> rbegin();
-  children_iterator<T> end();
-  std::reverse_iterator<children_iterator<T>> rend();
+  child_it<T> begin();
+  std::reverse_iterator<child_it<T>> rbegin();
+  child_it<T> end();
+  std::reverse_iterator<child_it<T>> rend();
 
-private:
-  key_type prefix_;
-  T *value_;
+  uint8_t *prefix_ = nullptr;
+  uint16_t prefix_len_ = 0;
+  T *value_ = nullptr;
 };
 
 template <class T>
-node<T>::node(const key_type &prefix, T *value)
-    : prefix_(prefix), value_(value){};
-
-template <class T>
-int node<T>::check_prefix(const key_type &key, int depth) const {
-  auto prefix_len = this->prefix_.size();
-  for (int i = 0; i < prefix_len; ++i) {
-    if (prefix_[i] != key[depth + i]) {
+int node<T>::check_prefix(partial_key_type *key, int key_len) const {
+  // TODO(rafaelkallis): && i < key_len ??
+  for (int i = 0; i < prefix_len_; ++i) {
+    if (prefix_[i] != key[i]) {
       return i;
     }
   }
-  return prefix_len;
+  return prefix_len_;
 }
 
-template <class T> bool node<T>::is_leaf() const {
-  return this->get_n_children() == 0;
+template <class T> child_it<T> node<T>::begin() { return child_it<T>(this, 0); }
+
+template <class T> std::reverse_iterator<child_it<T>> node<T>::rbegin() {
+  return std::make_reverse_iterator<child_it<T>>(end());
 }
 
-template <class T> T *node<T>::get_value() { return this->value_; }
-
-template <class T> void node<T>::set_value(T * value) {
-  this->value_ = value;
+template <class T> child_it<T> node<T>::end() {
+  return child_it<T>(this, n_children());
 }
 
-template <class T> key_type node<T>::get_prefix() const {
-  return this->prefix_;
-}
-
-template <class T> void node<T>::set_prefix(const key_type &prefix) {
-  this->prefix_ = prefix;
-}
-
-template <class T> children_iterator<T> node<T>::begin() {
-  return children_iterator<T>(this, 0);
-}
-
-template <class T>
-std::reverse_iterator<children_iterator<T>> node<T>::rbegin() {
-  return std::make_reverse_iterator<children_iterator<T>>(this->end());
-}
-
-template <class T> children_iterator<T> node<T>::end() {
-  return children_iterator<T>(this, this->get_n_children());
-}
-
-template <class T> std::reverse_iterator<children_iterator<T>> node<T>::rend() {
-  return std::make_reverse_iterator<children_iterator<T>>(this->begin());
+template <class T> std::reverse_iterator<child_it<T>> node<T>::rend() {
+  return std::make_reverse_iterator<child_it<T>>(begin());
 }
 
 } // namespace art
