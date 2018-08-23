@@ -42,7 +42,7 @@ static void art_mixed(state &s) {
   file.close();
 
   int v = 1;
-  fast_zipf rng(n, 1.0, 0);
+  fast_zipf rng(n);
 
   art<int> m;
   for (auto _ : s) {
@@ -55,7 +55,7 @@ static void art_mixed(state &s) {
     }
   }
 }
-/* PICOBENCH(art_mixed).iterations({1 << 20}); */
+PICOBENCH(art_mixed);
 
 static void red_black_mixed(state &s) {
   ifstream file("dataset.txt");
@@ -71,7 +71,7 @@ static void red_black_mixed(state &s) {
   file.close();
 
   int v = 1;
-  fast_zipf rng(n, 1.0, 0);
+  fast_zipf rng(n);
 
   map<string, int *> m;
   for (auto _ : s) {
@@ -84,7 +84,7 @@ static void red_black_mixed(state &s) {
     }
   }
 }
-/* PICOBENCH(red_black_mixed).iterations({1 << 20}); */
+PICOBENCH(red_black_mixed);
 
 static void hashmap_mixed(state &s) {
   ifstream file("dataset.txt");
@@ -100,7 +100,7 @@ static void hashmap_mixed(state &s) {
   file.close();
 
   int v = 1;
-  fast_zipf rng(n, 1.0, 0);
+  fast_zipf rng(n);
 
   unordered_map<string, int *> m;
   for (auto _ : s) {
@@ -113,11 +113,11 @@ static void hashmap_mixed(state &s) {
     }
   }
 }
-/* PICOBENCH(hashmap_mixed).iterations({1 << 20}); */
+PICOBENCH(hashmap_mixed);
 
 static void art_mixed_sparse(state &s) {
   art<int> m;
-  fast_zipf rng(1000000);
+  fast_zipf rng(10000000);
   hash<uint32_t> h;
   int v = 1;
   for (auto _ : s) {
@@ -134,7 +134,7 @@ PICOBENCH(art_mixed_sparse);
 
 static void red_black_mixed_sparse(state &s) {
   map<string, int *> m;
-  fast_zipf rng(1000000);
+  fast_zipf rng(10000000);
   hash<uint32_t> h;
   int v = 1;
   for (auto _ : s) {
@@ -150,7 +150,7 @@ PICOBENCH(red_black_mixed_sparse);
 
 static void hashmap_mixed_sparse(state &s) {
   unordered_map<string, int *> m;
-  fast_zipf rng(1000000);
+  fast_zipf rng(10000000);
   hash<uint32_t> h;
   int v = 1;
   for (auto _ : s) {
