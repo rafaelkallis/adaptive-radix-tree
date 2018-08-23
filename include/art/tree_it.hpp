@@ -6,7 +6,6 @@
 #ifndef ART_TREE_IT_HPP
 #define ART_TREE_IT_HPP
 
-#include "constants.hpp"
 #include <cassert>
 #include <iostream>
 #include <iterator>
@@ -60,7 +59,7 @@ tree_it<T>::tree_it(stack<node<T> *> traversal_stack)
     auto par = traversal_stack_.top();
     traversal_stack_.pop();
     for (auto it = par->rbegin(), it_end = par->rend(); it != it_end; ++it) {
-      partial_key_type child_partial_key = *it;
+      uint8_t child_partial_key = *it;
       traversal_stack_.push(*par->find_child(child_partial_key));
     }
   }
@@ -82,8 +81,6 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const string &key) {
   while (true) {
     cur = node_stack.top();
     depth = depth_stack.top();
-    std::cout << "prefix: " << cur->prefix_ << std::endl;
-    std::cout << "prefix_len: " << cur->prefix_len_ << std::endl;
 
     for (int i = 0; i < cur->prefix_len_; ++i) {
       if (depth + i + 1 == key.length()) {
@@ -94,14 +91,12 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const string &key) {
         return tree_it<T>(node_stack);
       }
     }
-    std::cout << "hmmm" << std::endl;
     node_stack.pop();
     depth_stack.pop();
     auto child_it = cur->rbegin();
     auto child_it_end = cur->rend();
     for (; child_it != child_it_end; ++child_it) {
       auto partial_key = *child_it;
-      std::cout << "child partial_key: " << partial_key << std::endl;
       if (partial_key < key[depth + cur->prefix_len_]) {
         break;
       }
@@ -126,7 +121,7 @@ template <class T> tree_it<T> &tree_it<T>::operator++() {
     node<T> *prev = traversal_stack_.top();
     traversal_stack_.pop();
     for (auto it = prev->rbegin(), it_end = prev->rend(); it != it_end; ++it) {
-      partial_key_type child_partial_key = *it;
+      uint8_t child_partial_key = *it;
       traversal_stack_.push(*prev->find_child(child_partial_key));
     }
     if (traversal_stack_.empty() || traversal_stack_.top() != nullptr) {

@@ -8,7 +8,6 @@
 
 #include "art/art.hpp"
 #include "art/child_it.hpp"
-#include "art/constants.hpp"
 #include "art/node.hpp"
 #include "art/node_0.hpp"
 #include "art/node_16.hpp"

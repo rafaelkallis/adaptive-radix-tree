@@ -1,5 +1,5 @@
 /**
- * @file adaptive radix tree header.
+ * @file adaptive radix tree
  * @author Rafael Kallis <rk@rafaelkallis.com>
  */
 
@@ -20,8 +20,8 @@ namespace art {
 using std::memcpy;
 using std::memmove;
 using std::min;
-using std::string;
 using std::stack;
+using std::string;
 
 template <class T> class art {
 public:
@@ -318,10 +318,14 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
     if (key_len == depth + (**cur).prefix_len_) {
       /* exact match */
 
-      T *value = (**cur).value_;
+      auto value = (**cur).value_;
+      if (value == nullptr) {
+        /* no value to delete */
+        return nullptr;
+      }
       (**cur).value_ = nullptr;
-      const int n_children = (**cur).n_children();
-      const int n_siblings = par != nullptr ? (**par).n_children() - 1 : 0;
+      auto n_children = (**cur).n_children();
+      auto n_siblings = par != nullptr ? (**par).n_children() - 1 : 0;
 
       if (n_children == 0 && n_siblings == 0) {
         /*
@@ -334,13 +338,19 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
          *   *(aa)->v2
          */
 
-        if (par != nullptr) {
-          (**par).del_child(cur_partial_key);
-        }
         if ((**cur).prefix_ != nullptr) {
           delete[](**cur).prefix_;
         }
         delete (*cur);
+        if (par != nullptr) {
+          (**par).del_child(cur_partial_key);
+          if ((**par).is_underfull()) {
+            *par = (**par).shrink();
+          }
+        } else {
+          /* deleting root node */
+          *cur = nullptr;
+        }
 
       } else if (n_children == 0 && n_siblings == 1 &&
                  (**par).value_ == nullptr) {
@@ -370,7 +380,7 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
             new uint8_t[(**par).prefix_len_ + 1 + old_prefix_len];
         sibling->prefix_len_ = (**par).prefix_len_ + 1 + old_prefix_len;
         memcpy(sibling->prefix_, (**par).prefix_, (**par).prefix_len_);
-        sibling->prefix_[(**par).prefix_len_ + 1] = sibling_partial_key;
+        sibling->prefix_[(**par).prefix_len_] = sibling_partial_key;
         memcpy(sibling->prefix_ + (**par).prefix_len_ + 1, old_prefix,
                old_prefix_len);
         delete[] old_prefix;
@@ -379,8 +389,6 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
           delete[](**cur).prefix_;
         }
         delete (*cur);
-        *cur = nullptr;
-
         if ((**par).prefix_ != nullptr) {
           delete[](**par).prefix_;
         }
@@ -402,9 +410,10 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
           delete[](**cur).prefix_;
         }
         delete (*cur);
-        *cur = nullptr;
-
         (**par).del_child(cur_partial_key);
+        if ((**par).is_underfull()) {
+          *par = (**par).shrink();
+        }
 
       } else if (n_children == 1) {
         /* node with 1 child
@@ -428,7 +437,7 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
         child->prefix_ = new uint8_t[(**cur).prefix_len_ + 1 + old_prefix_len];
         child->prefix_len_ = (**cur).prefix_len_ + 1 + old_prefix_len;
         memcpy(child->prefix_, (**cur).prefix_, (**cur).prefix_len_);
-        memcpy(child->prefix_ + (**cur).prefix_len_, &child_partial_key, 1);
+        child->prefix_[(**cur).prefix_len_] = child_partial_key;
         memcpy(child->prefix_ + (**cur).prefix_len_ + 1, old_prefix,
                old_prefix_len);
         delete[] old_prefix;
@@ -440,15 +449,13 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
         *cur = child;
       }
 
-      if (par != nullptr && (**par).is_underfull()) {
-        *par = (**par).shrink();
-      }
       return value;
     }
 
     /* propagate down and repeat */
     cur_partial_key = key[depth + (**cur).prefix_len_];
     depth += (**cur).prefix_len_ + 1;
+    par = cur;
     cur = (**cur).find_child(cur_partial_key);
   }
   return nullptr;

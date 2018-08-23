@@ -7,7 +7,6 @@
 #define ART_NODE_HPP
 
 #include "child_it.hpp"
-#include "constants.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -35,7 +34,7 @@ public:
    * @return Child node identified by the given partial key or
    * a null pointer of no child node is associated with the partial key.
    */
-  virtual node<T> **find_child(partial_key_type partial_key) = 0;
+  virtual node<T> **find_child(uint8_t partial_key) = 0;
 
   /**
    * Adds the given node to the node's children.
@@ -47,14 +46,14 @@ public:
    * @param partial_key - The partial key associated with the child.
    * @param child - The child node.
    */
-  virtual void set_child(partial_key_type partial_key, node<T> *child) = 0;
+  virtual void set_child(uint8_t partial_key, node<T> *child) = 0;
 
   /**
    * Deletes the child associated with the given partial key.
    *
    * @param partial_key - The partial key associated with the child.
    */
-  virtual node<T> *del_child(partial_key_type partial_key) = 0;
+  virtual node<T> *del_child(uint8_t partial_key) = 0;
 
   /**
    * Creates and returns a new node with bigger children capacity.
@@ -96,15 +95,13 @@ public:
    * prefix:    "abbbd"
    *             ^^^^*
    */
-  int check_prefix(partial_key_type *key, int key_len) const;
+  int check_prefix(uint8_t *key, int key_len) const;
 
   virtual int n_children() const = 0;
 
-  virtual partial_key_type
-  next_partial_key(partial_key_type partial_key) const = 0;
+  virtual uint8_t next_partial_key(uint8_t partial_key) const = 0;
 
-  virtual partial_key_type
-  prev_partial_key(partial_key_type partial_key) const = 0;
+  virtual uint8_t prev_partial_key(uint8_t partial_key) const = 0;
 
   /**
    * Iterator on the first child node.
@@ -121,8 +118,7 @@ public:
   T *value_ = nullptr;
 };
 
-template <class T>
-int node<T>::check_prefix(partial_key_type *key, int key_len) const {
+template <class T> int node<T>::check_prefix(uint8_t *key, int key_len) const {
   // TODO(rafaelkallis): && i < key_len ??
   for (int i = 0; i < prefix_len_; ++i) {
     if (prefix_[i] != key[i]) {
@@ -132,7 +128,7 @@ int node<T>::check_prefix(partial_key_type *key, int key_len) const {
   return prefix_len_;
 }
 
-template <class T> child_it<T> node<T>::begin() { return child_it<T>(this, 0); }
+template <class T> child_it<T> node<T>::begin() { return child_it<T>(this); }
 
 template <class T> std::reverse_iterator<child_it<T>> node<T>::rbegin() {
   return std::make_reverse_iterator<child_it<T>>(end());

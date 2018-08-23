@@ -18,6 +18,9 @@ using std::mt19937;
 using std::random_device;
 using std::shuffle;
 using std::string;
+using std::to_string;
+using std::mt19937_64;
+using std::hash;
 
 TEST_SUITE("art") {
 
@@ -70,11 +73,10 @@ TEST_SUITE("art") {
       array<string, n> keys;
       array<int *, n> values;
       /* rng */
-      random_device rd;
-      mt19937 g(rd());
+      mt19937_64 g(0);
       for (int experiment = 0; experiment < 10; experiment += 1) {
         for (int i = 0; i < n; i += 1) {
-          std::string random_num_str = std::to_string(g());
+          std::string random_num_str = to_string(g());
           keys[i] = string(random_num_str.cbegin(), random_num_str.cend());
           values[i] = new int();
         }
@@ -131,7 +133,6 @@ TEST_SUITE("art") {
     m.set(key7, &int7);
     m.set(key8, &int8);
     m.set(key9, &int9);
-    std::cout << 1 << std::endl;
 
     /* The above statements construct the following tree:
      *
@@ -181,11 +182,9 @@ TEST_SUITE("art") {
       REQUIRE(m.get(key7) == &int7);
       REQUIRE(m.get(key8) == &int8);
       REQUIRE(m.get(key9) == &int9);
-      std::cout << 2 << std::endl;
     }
 
     SUBCASE("n_children == 0 && n_siblings == 1 (4)") {
-      std::cout << 2 << std::endl;
       REQUIRE(m.del(key4) == &int4);
       REQUIRE(m.get(key0) == &int0);
       REQUIRE(m.get(key1) == &int1);
@@ -275,6 +274,29 @@ TEST_SUITE("art") {
       REQUIRE(m.get(key7) == &int7);
       REQUIRE(m.get(key8) == &int8);
       REQUIRE(m.get(key9) == &int9);
+    }
+  }
+
+  TEST_CASE("monte carlo delete") {
+    hash<string> h;
+    art<int> m;
+    mt19937_64 rng1(0);
+    for(int i = 0; i < 1000000; ++i) {
+      auto k = to_string(rng1());
+      int *v = new int();
+      *v = i;
+      REQUIRE(m.set(k, v) == nullptr);
+    }
+    mt19937_64 rng2(0);
+    for(int i = 0; i < 1000000; ++i) {
+      auto k = to_string(rng2());
+      auto get_res = m.get(k);
+      auto del_res = m.del(k);
+      REQUIRE(m.get(k) == nullptr);
+      REQUIRE(get_res == del_res);
+      REQUIRE(del_res != nullptr);
+      REQUIRE(*del_res == i);
+      delete del_res;
     }
   }
 
@@ -371,7 +393,6 @@ TEST_SUITE("art") {
     m.set("aaaaaaaba", &int4);
     m.set("aaaabaa", &int5);
     m.set("aaaabaaaaa", &int6);
-    std::cout << 1 << std::endl;
 
     /* The above statements construct the following tree:
      *
@@ -390,11 +411,9 @@ TEST_SUITE("art") {
     // iterator on ["aaaaaaaaaa",3]
     auto it = m.begin("aaaaaaaaaa");
 
-    std::cout << 1 << std::endl;
     // iterator on ["aaaabaaaaa",6]
     auto it_end = m.begin("aaaabaaaaa");
 
-    std::cout << 1 << std::endl;
     // 3
     REQUIRE(it != it_end);
     REQUIRE_EQ(&int3, *it);

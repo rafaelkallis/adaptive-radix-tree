@@ -29,7 +29,7 @@ static void art_insert_sparse(state &s) {
 PICOBENCH(art_insert_sparse);
 
 static void red_black_insert_sparse(state &s) {
-  std::map<key_type, int> m;
+  std::map<std::string, int> m;
   int v = 1;
   std::random_device rd;
   std::mt19937_64 g(rd());
@@ -40,7 +40,7 @@ static void red_black_insert_sparse(state &s) {
 PICOBENCH(red_black_insert_sparse);
 
 static void hashmap_insert_sparse(state &s) {
-  std::unordered_map<key_type, int> m;
+  std::unordered_map<std::string, int> m;
   int v = 1;
   std::random_device rd;
   std::mt19937_64 g(rd());

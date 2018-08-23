@@ -22,7 +22,7 @@ TEST_SUITE("node 4") {
 
   TEST_CASE("monte carlo insert") {
     /* set up */
-    array<partial_key_type, 256> partial_keys;
+    array<uint8_t, 256> partial_keys;
     array<node_0<void> *, 256> children;
 
     for (int i = 0; i < 256; i += 1) {
@@ -67,7 +67,7 @@ TEST_SUITE("node 4") {
       delete children[i];
     }
   }
-  
+
   TEST_CASE("delete child") {
     node_0<void> n0;
     node_0<void> n1;
@@ -91,7 +91,7 @@ TEST_SUITE("node 4") {
       REQUIRE(*subject.find_child(4) == &n4);
       REQUIRE(*subject.find_child(5) == &n5);
     }
-    
+
     SUBCASE("delete min (1)") {
       REQUIRE(subject.del_child(1) == &n1);
       REQUIRE(subject.find_child(1) == nullptr);
@@ -107,7 +107,7 @@ TEST_SUITE("node 4") {
       REQUIRE(*subject.find_child(4) == &n4);
       REQUIRE(*subject.find_child(5) == &n5);
     }
-    
+
     SUBCASE("delete child that doesn't exist (3)") {
       REQUIRE(subject.del_child(3) == nullptr);
       REQUIRE(*subject.find_child(1) == &n1);
@@ -131,7 +131,7 @@ TEST_SUITE("node 4") {
       REQUIRE(*subject.find_child(4) == &n4);
       REQUIRE(subject.find_child(5) == nullptr);
     }
-    
+
     SUBCASE("delete child that doesn't exist (6)") {
       REQUIRE(subject.del_child(6) == nullptr);
       REQUIRE(*subject.find_child(1) == &n1);
@@ -154,7 +154,6 @@ TEST_SUITE("node 4") {
       REQUIRE_THROWS_AS(n.next_partial_key(1), std::out_of_range);
     }
 
-
     SUBCASE("child at 255") {
       n.set_child(255, nullptr);
       REQUIRE_EQ(255, n.next_partial_key(0));
@@ -172,7 +171,7 @@ TEST_SUITE("node 4") {
       REQUIRE_EQ(3, n.next_partial_key(3));
       REQUIRE_THROWS_AS(n.next_partial_key(4), std::out_of_range);
     }
-    
+
     SUBCASE("sparse children") {
       n.set_child(0, nullptr);
       n.set_child(5, nullptr);
@@ -185,7 +184,7 @@ TEST_SUITE("node 4") {
       REQUIRE_THROWS_AS(n.next_partial_key(101), std::out_of_range);
     }
   }
-  
+
   TEST_CASE("previous partial key") {
     node_4<void> n;
 
@@ -198,7 +197,6 @@ TEST_SUITE("node 4") {
       REQUIRE_EQ(0, n.prev_partial_key(0));
       REQUIRE_EQ(0, n.prev_partial_key(255));
     }
-
 
     SUBCASE("child at 255") {
       n.set_child(255, nullptr);
@@ -218,7 +216,7 @@ TEST_SUITE("node 4") {
       REQUIRE_EQ(4, n.prev_partial_key(255));
       REQUIRE_THROWS_AS(n.prev_partial_key(0), std::out_of_range);
     }
-    
+
     SUBCASE("sparse children") {
       n.set_child(1, nullptr);
       n.set_child(5, nullptr);

@@ -27,9 +27,9 @@ add_library(picobench INTERFACE)
 target_include_directories(picobench INTERFACE ${PICOBENCH_INCLUDE_DIR})
 
 # zipf
-set(ZIPF_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/zipf/include)
-add_library(zipf INTERFACE)
-target_include_directories(zipf INTERFACE ${ZIPF_INCLUDE_DIR})
+set(ZIPF_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/zipf)
+add_library(zipf ${PROJECT_SOURCE_DIR}/third_party/zipf/zipf.cpp)
+target_include_directories(zipf PUBLIC ${ZIPF_INCLUDE_DIR})
 
 ### executables ###
 
@@ -41,7 +41,7 @@ target_link_libraries(main art zipf)
 # test executable
 file(GLOB TEST_SOURCES "${PROJECT_SOURCE_DIR}/test/*.cpp")
 add_executable(test ${TEST_SOURCES})
-target_link_libraries(test art doctest zipf)
+target_link_libraries(test art doctest)
 
 # bench executable
 file(GLOB BENCH_SOURCES "${PROJECT_SOURCE_DIR}/bench/*.cpp")

@@ -29,11 +29,10 @@ static void art_delete_sparse(state &s) {
     m.del(std::to_string(g2()));
   }
 }
-PICOBENCH(art_delete_sparse)
-    .iterations({1 << 10/*, 1 << 20*/});
+PICOBENCH(art_delete_sparse);
 
 static void red_black_delete_sparse(state &s) {
-  std::map<key_type, int> m;
+  std::map<std::string, int> m;
   int v = 1;
   std::mt19937_64 g1(0);
   for (auto _ : s) {
@@ -44,11 +43,10 @@ static void red_black_delete_sparse(state &s) {
     m.erase(m.find(std::to_string(g2())));
   }
 }
-PICOBENCH(red_black_delete_sparse)
-    .iterations({1 << 10/*, 1 << 20*/});
+PICOBENCH(red_black_delete_sparse);
 
 static void hashmap_delete_sparse(state &s) {
-  std::unordered_map<key_type, int> m;
+  std::unordered_map<std::string, int> m;
   int v = 1;
   std::mt19937_64 g1(0);
   for (auto _ : s) {
@@ -59,5 +57,4 @@ static void hashmap_delete_sparse(state &s) {
     m.erase(m.find(std::to_string(g2())));
   }
 }
-PICOBENCH(hashmap_delete_sparse)
-    .iterations({1 << 10/*, 1 << 20*/});
+PICOBENCH(hashmap_delete_sparse);

@@ -21,7 +21,7 @@ TEST_SUITE("node 16") {
 
   TEST_CASE("monte carlo") {
     /* set up */
-    array<partial_key_type, 256> partial_keys;
+    array<uint8_t, 256> partial_keys;
     array<node_0<void> *, 256> children;
 
     for (int i = 0; i < 256; i += 1) {

@@ -31,8 +31,8 @@ static void node_4_find_child(state &s) {
   n.set_child(170, &c2);
   n.set_child(255, &c3);
 
-  partial_key_type partial_keys[] = {0, 85, 170, 255};
-  node<void *> ** child = nullptr;
+  uint8_t partial_keys[] = {0, 85, 170, 255};
+  node<void *> **child = nullptr;
   for (auto _ : s) {
     child = n.find_child(partial_keys[rand() % 4]);
   }
@@ -42,7 +42,7 @@ PICOBENCH(node_4_find_child);
 static void node_4_set_child(state &s) {
   node_4<void *> *n = new node_4<void *>();
   node_0<void *> child;
-  partial_key_type partial_keys[] = {0, 85, 170, 255};
+  uint8_t partial_keys[] = {0, 85, 170, 255};
   for (auto _ : s) {
     if (n->is_full()) {
       delete n;

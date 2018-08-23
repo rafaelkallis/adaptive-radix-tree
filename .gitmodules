@@ -10,3 +10,6 @@
 [submodule "third_party/picobench"]
 	path = third_party/picobench
 	url = https://github.com/iboB/picobench.git
+[submodule "third_party/cryptopp"]
+	path = third_party/cryptopp
+	url = https://github.com/weidai11/cryptopp.git

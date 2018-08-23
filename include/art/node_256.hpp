@@ -112,9 +112,7 @@ uint8_t node_256<T>::prev_partial_key(uint8_t partial_key) const {
   }
 }
 
-template <class T> int node_256<T>::n_children() const {
-  return n_children_;
-}
+template <class T> int node_256<T>::n_children() const { return n_children_; }
 
 } // namespace art
 

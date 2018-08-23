@@ -17,7 +17,7 @@ void art_bench() {
   }
   file.close();
 
-  fast_zipf rng(n, 1.0, 0);
+  fast_zipf rng(n);
   art::art<int> m;
   /* std::map<art::key_type, int*> m; */
   /* std::unordered_map<art::key_type, int*> m; */
@@ -80,7 +80,8 @@ int main() {
   m.set("aaaaaaaba", &v);
   m.set("aaaabaa", &v);
   m.set("aaaabaaaaa", &v);
-  m.del("aaaabaaaaa");
+  std::cout << 1 << std::endl;
+  m.del("aaaaaaaaaaa");
   std::cout << 1 << std::endl;
 
   return 0;
