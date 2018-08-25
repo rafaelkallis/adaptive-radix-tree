@@ -8,14 +8,12 @@
 
 #include "node.hpp"
 #include <algorithm>
-#include <array>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
+#include <array>
 
 namespace art {
-
-using std::array;
 
 template <class T> class node_0;
 template <class T> class node_16;
@@ -38,8 +36,8 @@ public:
 
 private:
   uint8_t n_children_ = 0;
-  char keys_[4];
-  node<T> *children_[4];
+  std::array<char, 4> keys_;
+  std::array<node<T> *, 4> children_;
 };
 
 template <class T> node<T> **node_4<T>::find_child(char partial_key) {

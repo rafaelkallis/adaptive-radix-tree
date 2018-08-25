@@ -7,14 +7,12 @@
 #define ART_NODE_16_HPP
 
 #include "node.hpp"
-#include <array>
 #include <cstdlib>
 #include <stdexcept>
 #include <utility>
+#include <array>
 
 namespace art {
-
-using std::array;
 
 template <class T> class node_4;
 template <class T> class node_48;
@@ -37,8 +35,8 @@ public:
 
 private:
   uint8_t n_children_ = 0;
-  char keys_[16];
-  node<T> *children_[16];
+  std::array<char, 16> keys_;
+  std::array<node<T> *, 16> children_;
 };
 
 template <class T> node<T> **node_16<T>::find_child(char partial_key) {

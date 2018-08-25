@@ -12,9 +12,6 @@
 
 namespace art {
 
-using std::out_of_range;
-using std::runtime_error;
-
 template <class T> class node_48;
 
 template <class T> class node_256 : public node<T> {
@@ -40,12 +37,11 @@ private:
   std::array<node<T> *, 256> children_;
 };
 
-template <class T> node_256<T>::node_256() {
-  children_.fill(nullptr);
-}
+template <class T> node_256<T>::node_256() { children_.fill(nullptr); }
 
 template <class T> node<T> **node_256<T>::find_child(char partial_key) {
-  return children_[128 + partial_key] != nullptr ? &children_[128 + partial_key] : nullptr;
+  return children_[128 + partial_key] != nullptr ? &children_[128 + partial_key]
+                                                 : nullptr;
 }
 
 template <class T>
@@ -64,7 +60,7 @@ template <class T> node<T> *node_256<T>::del_child(char partial_key) {
 }
 
 template <class T> node<T> *node_256<T>::grow() {
-  throw runtime_error("node_256 cannot grow");
+  throw std::runtime_error("node_256 cannot grow");
 }
 
 template <class T> node<T> *node_256<T>::shrink() {
@@ -95,7 +91,7 @@ template <class T> char node_256<T>::next_partial_key(char partial_key) const {
       return partial_key;
     }
     if (partial_key == 127) {
-      throw out_of_range("provided partial key does not have a successor");
+      throw std::out_of_range("provided partial key does not have a successor");
     }
     ++partial_key;
   }
@@ -107,7 +103,8 @@ template <class T> char node_256<T>::prev_partial_key(char partial_key) const {
       return partial_key;
     }
     if (partial_key == -128) {
-      throw out_of_range("provided partial key does not have a predecessor");
+      throw std::out_of_range(
+          "provided partial key does not have a predecessor");
     }
     --partial_key;
   }

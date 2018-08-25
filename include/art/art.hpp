@@ -14,16 +14,8 @@
 #include <cstring>
 #include <iostream>
 #include <stack>
-#include <string>
 
 namespace art {
-
-using std::memcpy;
-using std::memmove;
-using std::min;
-using std::stack;
-using std::string;
-using std::strlen;
 
 template <class T> class art {
 public:
@@ -88,10 +80,11 @@ template <class T> art<T>::~art() {
   if (root_ == nullptr) {
     return;
   }
-  stack<node<T> *> node_stack;
+  std::stack<node<T> *> node_stack;
   node_stack.push(root_);
+  node<T> * cur;
   while (!node_stack.empty()) {
-    auto cur = node_stack.top();
+    cur = node_stack.top();
     node_stack.pop();
     auto child_it = cur->begin();
     auto child_it_end = cur->end();
@@ -106,7 +99,7 @@ template <class T> art<T>::~art() {
 }
 
 template <class T> T *art<T>::get(const char *key) const {
-  return get(key, strlen(key));
+  return get(key, std::strlen(key));
 }
 
 template <class T> T *art<T>::get(const char *key, int key_len) const {
@@ -131,14 +124,14 @@ template <class T> T *art<T>::get(const char *key, int key_len) const {
 }
 
 template <class T> T *art<T>::set(const char *key, T *value) {
-  return set(key, strlen(key), value);
+  return set(key, std::strlen(key), value);
 }
 
 template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
   if (root_ == nullptr) {
     root_ = new node_0<T>();
     root_->prefix_ = new char[key_len];
-    memcpy(root_->prefix_, key, key_len);
+    std::memcpy(root_->prefix_, key, key_len);
     root_->prefix_len_ = key_len;
     root_->value_ = value;
     return nullptr;
@@ -155,7 +148,7 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
 
     /* true if the current node's prefix matches with a part of the key */
     is_prefix_match =
-        (min<int>((**cur).prefix_len_, key_len - depth)) == prefix_match_len;
+        (std::min<int>((**cur).prefix_len_, key_len - depth)) == prefix_match_len;
 
     if (is_prefix_match && (**cur).prefix_len_ == key_len - depth) {
       /* exact match:
@@ -196,12 +189,12 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
       auto new_node = new node_4<T>();
       new_node->value_ = value;
       new_node->prefix_ = new char[prefix_match_len];
-      memcpy(new_node->prefix_, (**cur).prefix_, prefix_match_len);
+      std::memcpy(new_node->prefix_, (**cur).prefix_, prefix_match_len);
       new_node->prefix_len_ = prefix_match_len;
       new_node->set_child((**cur).prefix_[prefix_match_len], *cur);
 
-      // TODO(rafaelkallis): shrink?
-      /* memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1, */
+      // TODO(rafaelkallis): memmove?
+      /* std::memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1, */
       /*         (**cur).prefix_len_ - prefix_match_len - 1); */
       /* (**cur).prefix_len_ -= prefix_match_len + 1; */
 
@@ -209,7 +202,7 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
       auto old_prefix_len = (**cur).prefix_len_;
       (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
       (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
-      memcpy((**cur).prefix_, old_prefix + prefix_match_len + 1,
+      std::memcpy((**cur).prefix_, old_prefix + prefix_match_len + 1,
              old_prefix_len - prefix_match_len - 1);
       delete old_prefix;
 
@@ -236,7 +229,7 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
 
       auto new_parent = new node_4<T>();
       new_parent->prefix_ = new char[prefix_match_len];
-      memcpy(new_parent->prefix_, (**cur).prefix_, prefix_match_len);
+      std::memcpy(new_parent->prefix_, (**cur).prefix_, prefix_match_len);
       new_parent->prefix_len_ = prefix_match_len;
       new_parent->set_child((**cur).prefix_[prefix_match_len], *cur);
 
@@ -249,13 +242,13 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
       auto old_prefix_len = (**cur).prefix_len_;
       (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
       (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
-      memcpy((**cur).prefix_, old_prefix + prefix_match_len + 1,
+      std::memcpy((**cur).prefix_, old_prefix + prefix_match_len + 1,
              old_prefix_len - prefix_match_len - 1);
       delete old_prefix;
 
       auto new_node = new node_0<T>();
       new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];
-      memcpy(new_node->prefix_, key + depth + prefix_match_len + 1,
+      std::memcpy(new_node->prefix_, key + depth + prefix_match_len + 1,
              key_len - depth - prefix_match_len - 1);
       new_node->prefix_len_ = key_len - depth - prefix_match_len - 1;
       new_node->value_ = value;
@@ -286,7 +279,7 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
 
       auto new_node = new node_0<T>();
       new_node->prefix_ = new char[key_len - depth - (**cur).prefix_len_ - 1];
-      memcpy(new_node->prefix_, key + depth + (**cur).prefix_len_ + 1,
+      std::memcpy(new_node->prefix_, key + depth + (**cur).prefix_len_ + 1,
              key_len - depth - (**cur).prefix_len_ - 1);
       new_node->prefix_len_ = key_len - depth - (**cur).prefix_len_ - 1;
       new_node->value_ = value;
@@ -308,7 +301,7 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
 }
 
 template <class T> T *art<T>::del(const char *key) {
-  return del(key, strlen(key));
+  return del(key, std::strlen(key));
 }
 
 template <class T> T *art<T>::del(const char *key, int key_len) {
@@ -396,9 +389,9 @@ template <class T> T *art<T>::del(const char *key, int key_len) {
 
         sibling->prefix_ = new char[(**par).prefix_len_ + 1 + old_prefix_len];
         sibling->prefix_len_ = (**par).prefix_len_ + 1 + old_prefix_len;
-        memcpy(sibling->prefix_, (**par).prefix_, (**par).prefix_len_);
+        std::memcpy(sibling->prefix_, (**par).prefix_, (**par).prefix_len_);
         sibling->prefix_[(**par).prefix_len_] = sibling_partial_key;
-        memcpy(sibling->prefix_ + (**par).prefix_len_ + 1, old_prefix,
+        std::memcpy(sibling->prefix_ + (**par).prefix_len_ + 1, old_prefix,
                old_prefix_len);
         delete[] old_prefix;
 
@@ -453,9 +446,9 @@ template <class T> T *art<T>::del(const char *key, int key_len) {
 
         child->prefix_ = new char[(**cur).prefix_len_ + 1 + old_prefix_len];
         child->prefix_len_ = (**cur).prefix_len_ + 1 + old_prefix_len;
-        memcpy(child->prefix_, (**cur).prefix_, (**cur).prefix_len_);
+        std::memcpy(child->prefix_, (**cur).prefix_, (**cur).prefix_len_);
         child->prefix_[(**cur).prefix_len_] = child_partial_key;
-        memcpy(child->prefix_ + (**cur).prefix_len_ + 1, old_prefix,
+        std::memcpy(child->prefix_ + (**cur).prefix_len_ + 1, old_prefix,
                old_prefix_len);
         delete[] old_prefix;
 
@@ -481,7 +474,7 @@ template <class T> T *art<T>::del(const char *key, int key_len) {
 template <class T> tree_it<T> art<T>::begin() { return tree_it<T>(root_); }
 
 template <class T> tree_it<T> art<T>::begin(const char *key) {
-  return begin(key, strlen(key));
+  return begin(key, std::strlen(key));
 }
 
 template <class T> tree_it<T> art<T>::begin(const char *key, int key_len) {

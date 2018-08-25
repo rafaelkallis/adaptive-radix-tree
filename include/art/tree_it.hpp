@@ -10,12 +10,8 @@
 #include <iostream>
 #include <iterator>
 #include <stack>
-#include <string>
 
 namespace art {
-
-using std::stack;
-using std::string;
 
 template <class T> class node;
 
@@ -23,7 +19,7 @@ template <class T> class tree_it {
 public:
   tree_it() = default;
   explicit tree_it(node<T> *root);
-  explicit tree_it(stack<node<T> *> traversal_stack);
+  explicit tree_it(std::stack<node<T> *> traversal_stack);
 
   static tree_it<T> greater_equal(node<T> *root, const char *key, int key_len);
 
@@ -42,7 +38,7 @@ public:
   bool operator!=(const tree_it<T> &rhs) const;
 
 private:
-  stack<node<T> *> traversal_stack_;
+  std::stack<node<T> *> traversal_stack_;
 };
 
 template <class T> tree_it<T>::tree_it(node<T> *root) : traversal_stack_() {
@@ -53,7 +49,7 @@ template <class T> tree_it<T>::tree_it(node<T> *root) : traversal_stack_() {
 }
 
 template <class T>
-tree_it<T>::tree_it(stack<node<T> *> traversal_stack)
+tree_it<T>::tree_it(std::stack<node<T> *> traversal_stack)
     : traversal_stack_(traversal_stack) {
   /* preorder-traverse until node with value found or no nodes are left */
   while (!traversal_stack_.empty() &&
@@ -74,8 +70,8 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key,
     return tree_it<T>();
   }
 
-  stack<node<T> *> node_stack;
-  stack<int> depth_stack;
+  std::stack<node<T> *> node_stack;
+  std::stack<int> depth_stack;
   node_stack.push(root);
   depth_stack.push(0);
 
