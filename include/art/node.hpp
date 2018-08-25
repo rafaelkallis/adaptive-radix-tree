@@ -132,7 +132,7 @@ int node<T>::check_prefix(const char *key, int /* key_len */) const {
 template <class T> child_it<T> node<T>::begin() { return child_it<T>(this); }
 
 template <class T> std::reverse_iterator<child_it<T>> node<T>::rbegin() {
-  return std::make_reverse_iterator<child_it<T>>(end());
+  return std::reverse_iterator<child_it<T>>(end());
 }
 
 template <class T> child_it<T> node<T>::end() {
@@ -140,7 +140,7 @@ template <class T> child_it<T> node<T>::end() {
 }
 
 template <class T> std::reverse_iterator<child_it<T>> node<T>::rend() {
-  return std::make_reverse_iterator<child_it<T>>(begin());
+  return std::reverse_iterator<child_it<T>>(begin());
 }
 
 } // namespace art
