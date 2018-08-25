@@ -8,12 +8,9 @@
 
 #include "node.hpp"
 #include <stdexcept>
-#include <string>
 #include <utility>
 
 namespace art {
-
-using std::string;
 
 template <class T> class node_4;
 

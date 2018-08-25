@@ -145,7 +145,7 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
   }
 
   node<T> **cur = &root_, **child;
-  char cur_partial_key, child_partial_key;
+  char child_partial_key;
   int depth = 0, prefix_match_len;
   bool is_prefix_match;
 
@@ -201,9 +201,17 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
       new_node->set_child((**cur).prefix_[prefix_match_len], *cur);
 
       // TODO(rafaelkallis): shrink?
-      memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1,
-              (**cur).prefix_len_ - prefix_match_len - 1);
-      (**cur).prefix_len_ -= prefix_match_len + 1;
+      /* memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1, */
+      /*         (**cur).prefix_len_ - prefix_match_len - 1); */
+      /* (**cur).prefix_len_ -= prefix_match_len + 1; */
+
+      auto old_prefix = (**cur).prefix_;
+      auto old_prefix_len = (**cur).prefix_len_;
+      (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
+      (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
+      memcpy((**cur).prefix_, old_prefix + prefix_match_len + 1,
+             old_prefix_len - prefix_match_len - 1);
+      delete old_prefix;
 
       *cur = new_node;
       return nullptr;
@@ -233,9 +241,17 @@ template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
       new_parent->set_child((**cur).prefix_[prefix_match_len], *cur);
 
       // TODO(rafaelkallis): shrink?
-      memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1,
-              (**cur).prefix_len_ - prefix_match_len - 1);
-      (**cur).prefix_len_ -= prefix_match_len + 1;
+      /* memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1, */
+      /*         (**cur).prefix_len_ - prefix_match_len - 1); */
+      /* (**cur).prefix_len_ -= prefix_match_len + 1; */
+
+      auto old_prefix = (**cur).prefix_;
+      auto old_prefix_len = (**cur).prefix_len_;
+      (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
+      (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
+      memcpy((**cur).prefix_, old_prefix + prefix_match_len + 1,
+             old_prefix_len - prefix_match_len - 1);
+      delete old_prefix;
 
       auto new_node = new node_0<T>();
       new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];

@@ -55,7 +55,7 @@ static void art_mixed(state &s) {
     }
   }
 }
-PICOBENCH(art_mixed);
+/* PICOBENCH(art_mixed); */
 
 static void red_black_mixed(state &s) {
   ifstream file("dataset.txt");
@@ -84,7 +84,7 @@ static void red_black_mixed(state &s) {
     }
   }
 }
-PICOBENCH(red_black_mixed);
+/* PICOBENCH(red_black_mixed); */
 
 static void hashmap_mixed(state &s) {
   ifstream file("dataset.txt");
@@ -113,7 +113,7 @@ static void hashmap_mixed(state &s) {
     }
   }
 }
-PICOBENCH(hashmap_mixed);
+/* PICOBENCH(hashmap_mixed); */
 
 static void art_mixed_sparse(state &s) {
   art<int> m;

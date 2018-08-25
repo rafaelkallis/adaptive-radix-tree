@@ -119,7 +119,7 @@ public:
 };
 
 template <class T>
-int node<T>::check_prefix(const char *key, int key_len) const {
+int node<T>::check_prefix(const char *key, int /* key_len */) const {
   // TODO(rafaelkallis): && i < key_len ??
   for (int i = 0; i < prefix_len_; ++i) {
     if (prefix_[i] != key[i]) {

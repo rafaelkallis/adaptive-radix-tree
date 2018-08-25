@@ -6,6 +6,8 @@
 #include <random>
 #include <string>
 #include <unordered_map>
+#include <chrono>
+#include <thread>
 
 using std::string;
 
@@ -32,6 +34,30 @@ void art_bench() {
   }
 }
 
+void art_sparse_uniform() {
+  art::art<int> m;
+  int n = 1000;
+  int v = 1;
+  std::mt19937_64 rng1(0);
+  std::string k;
+  for (int i = 0; i < n; ++i) {
+    k = std::to_string(rng1());
+    m.set(k.c_str(), k.length(), &v);
+  }
+  
+  std::mt19937_64 rng2(0);
+  for (int i = 0; i < n; ++i) {
+    k = std::to_string(rng2());
+    m.get(k.c_str(), k.length());
+  }
+  
+  std::mt19937_64 rng3(0);
+  for (int i = 0; i < n; ++i) {
+    k = std::to_string(rng3());
+    m.del(k.c_str(), k.length());
+  }
+}
+
 /* void art_compressions() { */
 /*   art::art<int> m; */
 /*   int v = 1; */
@@ -55,36 +81,6 @@ void art_bench() {
 /* } */
 
 int main() {
-  int v = 2;
-  art::art<int> m;
-
-  /* The above statements construct the following tree:
-   *
-   *                (aa)->0
-   *                 |a
-   *                 |
-   *                (a)->1
-   *             a /   \ b
-   *              /     \
-   *        2<-(aa)     (aa)->5
-   *         a /  \ b    |a
-   *          /    \     |
-   *    3<-(aa) 4<-(a)  (aa)->6
-   */
-
-  m.set("aa", &v);
-  m.set("aaaa", &v);
-  m.set("aaaaaaa", &v);
-  m.set("aaaaaaaaaa", &v);
-  m.set("aaaaaaaaaaa", &v);
-  m.set("aaaaaaaaaab", &v);
-  m.set("aaaaaaaaaac", &v);
-  m.set("aaaaaaaba", &v);
-  m.set("aaaabaa", &v);
-  m.set("aaaabaaaaa", &v);
-  std::cout << 1 << std::endl;
-  m.del("aaaaaaaaaaa");
-  std::cout << 1 << std::endl;
-
+  art_sparse_uniform();
   return 0;
 }

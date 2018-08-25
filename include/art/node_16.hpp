@@ -8,6 +8,7 @@
 
 #include "node.hpp"
 #include <array>
+#include <cstdlib>
 #include <stdexcept>
 #include <utility>
 
@@ -41,12 +42,26 @@ private:
 };
 
 template <class T> node<T> **node_16<T>::find_child(char partial_key) {
-  for (int i = 0; i < n_children_; ++i) {
-    if (keys_[i] == partial_key) {
-      return &children_[i];
+  int lo, mid, hi;
+  lo = 0;
+  hi = n_children_;
+  while (lo < hi) {
+    mid = (lo + hi) / 2;
+    if (partial_key < keys_[mid]) {
+      hi = mid;
+    } else if (partial_key > keys_[mid]) {
+      lo = mid + 1;
+    } else {
+      return &children_[mid];
     }
   }
   return nullptr;
+  /* for (int i = 0; i < n_children_; ++i) { */
+  /*   if (keys_[i] == partial_key) { */
+  /*     return &children_[i]; */
+  /*   } */
+  /* } */
+  /* return nullptr; */
 }
 
 template <class T>
