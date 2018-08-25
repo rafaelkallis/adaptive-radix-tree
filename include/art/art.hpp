@@ -11,6 +11,7 @@
 #include "node_4.hpp"
 #include "tree_it.hpp"
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <stack>
 #include <string>
@@ -22,6 +23,7 @@ using std::memmove;
 using std::min;
 using std::stack;
 using std::string;
+using std::strlen;
 
 template <class T> class art {
 public:
@@ -33,8 +35,8 @@ public:
    * @param key - The key to find.
    * @return the value associated with the key or a nullptr.
    */
-  T *get(const string &key) const;
-  T *get(uint8_t *key, int key_len) const;
+  T *get(const char *key) const;
+  T *get(const char *key, int key_len) const;
 
   /**
    * Associates the given key with the given value.
@@ -46,8 +48,8 @@ public:
    * @return a nullptr if no other value is associated with they or the
    * previously associated value.
    */
-  T *set(const string &key, T *value);
-  T *set(uint8_t *key, int key_len, T *value);
+  T *set(const char *key, T *value);
+  T *set(const char *key, int key_len, T *value);
 
   /**
    * Deletes the given key and returns it's associated value.
@@ -58,8 +60,8 @@ public:
    * @param key - The key to delete.
    * @return the values assciated with they key or a nullptr otherwise.
    */
-  T *del(const string &key);
-  T *del(uint8_t *key, int key_len);
+  T *del(const char *key);
+  T *del(const char *key, int key_len);
 
   /**
    * Forward iterator that traverses the tree in lexicographic order.
@@ -70,7 +72,8 @@ public:
    * Forward iterator that traverses the tree in lexicographic order starting
    * from the provided key.
    */
-  tree_it<T> begin(const string &key);
+  tree_it<T> begin(const char *key);
+  tree_it<T> begin(const char *key, int key_len);
 
   /**
    * Iterator to the end of the lexicographic order.
@@ -102,11 +105,11 @@ template <class T> art<T>::~art() {
   }
 }
 
-template <class T> T *art<T>::get(const string &key) const {
-  return get((uint8_t *)key.c_str(), key.length());
+template <class T> T *art<T>::get(const char *key) const {
+  return get(key, strlen(key));
 }
 
-template <class T> T *art<T>::get(uint8_t *key, int key_len) const {
+template <class T> T *art<T>::get(const char *key, int key_len) const {
   node<T> *cur = root_, **child;
   int depth = 0;
   while (cur != nullptr) {
@@ -127,14 +130,14 @@ template <class T> T *art<T>::get(uint8_t *key, int key_len) const {
   return nullptr;
 }
 
-template <class T> T *art<T>::set(const string &key, T *value) {
-  return set((uint8_t *)key.c_str(), key.length(), value);
+template <class T> T *art<T>::set(const char *key, T *value) {
+  return set(key, strlen(key), value);
 }
 
-template <class T> T *art<T>::set(uint8_t *key, int key_len, T *value) {
+template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
   if (root_ == nullptr) {
     root_ = new node_0<T>();
-    root_->prefix_ = new uint8_t[key_len];
+    root_->prefix_ = new char[key_len];
     memcpy(root_->prefix_, key, key_len);
     root_->prefix_len_ = key_len;
     root_->value_ = value;
@@ -142,7 +145,7 @@ template <class T> T *art<T>::set(uint8_t *key, int key_len, T *value) {
   }
 
   node<T> **cur = &root_, **child;
-  uint8_t cur_partial_key, child_partial_key;
+  char cur_partial_key, child_partial_key;
   int depth = 0, prefix_match_len;
   bool is_prefix_match;
 
@@ -192,7 +195,7 @@ template <class T> T *art<T>::set(uint8_t *key, int key_len, T *value) {
 
       auto new_node = new node_4<T>();
       new_node->value_ = value;
-      new_node->prefix_ = new uint8_t[prefix_match_len];
+      new_node->prefix_ = new char[prefix_match_len];
       memcpy(new_node->prefix_, (**cur).prefix_, prefix_match_len);
       new_node->prefix_len_ = prefix_match_len;
       new_node->set_child((**cur).prefix_[prefix_match_len], *cur);
@@ -224,7 +227,7 @@ template <class T> T *art<T>::set(uint8_t *key, int key_len, T *value) {
        */
 
       auto new_parent = new node_4<T>();
-      new_parent->prefix_ = new uint8_t[prefix_match_len];
+      new_parent->prefix_ = new char[prefix_match_len];
       memcpy(new_parent->prefix_, (**cur).prefix_, prefix_match_len);
       new_parent->prefix_len_ = prefix_match_len;
       new_parent->set_child((**cur).prefix_[prefix_match_len], *cur);
@@ -235,7 +238,7 @@ template <class T> T *art<T>::set(uint8_t *key, int key_len, T *value) {
       (**cur).prefix_len_ -= prefix_match_len + 1;
 
       auto new_node = new node_0<T>();
-      new_node->prefix_ = new uint8_t[key_len - depth - prefix_match_len - 1];
+      new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];
       memcpy(new_node->prefix_, key + depth + prefix_match_len + 1,
              key_len - depth - prefix_match_len - 1);
       new_node->prefix_len_ = key_len - depth - prefix_match_len - 1;
@@ -266,8 +269,7 @@ template <class T> T *art<T>::set(uint8_t *key, int key_len, T *value) {
       }
 
       auto new_node = new node_0<T>();
-      new_node->prefix_ =
-          new uint8_t[key_len - depth - (**cur).prefix_len_ - 1];
+      new_node->prefix_ = new char[key_len - depth - (**cur).prefix_len_ - 1];
       memcpy(new_node->prefix_, key + depth + (**cur).prefix_len_ + 1,
              key_len - depth - (**cur).prefix_len_ - 1);
       new_node->prefix_len_ = key_len - depth - (**cur).prefix_len_ - 1;
@@ -289,11 +291,11 @@ template <class T> T *art<T>::set(uint8_t *key, int key_len, T *value) {
   }
 }
 
-template <class T> T *art<T>::del(const string &key) {
-  return del((uint8_t *)key.c_str(), key.length());
+template <class T> T *art<T>::del(const char *key) {
+  return del(key, strlen(key));
 }
 
-template <class T> T *art<T>::del(uint8_t *key, int key_len) {
+template <class T> T *art<T>::del(const char *key, int key_len) {
   if (root_ == nullptr) {
     return nullptr;
   }
@@ -302,7 +304,7 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
   node<T> **par = nullptr, **cur = &root_;
 
   /* partial key of current and child node */
-  uint8_t cur_partial_key;
+  char cur_partial_key;
 
   /* current key depth */
   int depth = 0;
@@ -376,8 +378,7 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
         auto old_prefix = sibling->prefix_;
         auto old_prefix_len = sibling->prefix_len_;
 
-        sibling->prefix_ =
-            new uint8_t[(**par).prefix_len_ + 1 + old_prefix_len];
+        sibling->prefix_ = new char[(**par).prefix_len_ + 1 + old_prefix_len];
         sibling->prefix_len_ = (**par).prefix_len_ + 1 + old_prefix_len;
         memcpy(sibling->prefix_, (**par).prefix_, (**par).prefix_len_);
         sibling->prefix_[(**par).prefix_len_] = sibling_partial_key;
@@ -434,7 +435,7 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
         auto old_prefix = child->prefix_;
         auto old_prefix_len = child->prefix_len_;
 
-        child->prefix_ = new uint8_t[(**cur).prefix_len_ + 1 + old_prefix_len];
+        child->prefix_ = new char[(**cur).prefix_len_ + 1 + old_prefix_len];
         child->prefix_len_ = (**cur).prefix_len_ + 1 + old_prefix_len;
         memcpy(child->prefix_, (**cur).prefix_, (**cur).prefix_len_);
         child->prefix_[(**cur).prefix_len_] = child_partial_key;
@@ -463,8 +464,12 @@ template <class T> T *art<T>::del(uint8_t *key, int key_len) {
 
 template <class T> tree_it<T> art<T>::begin() { return tree_it<T>(root_); }
 
-template <class T> tree_it<T> art<T>::begin(const string &key) {
-  return tree_it<T>::greater_equal(root_, key);
+template <class T> tree_it<T> art<T>::begin(const char *key) {
+  return begin(key, strlen(key));
+}
+
+template <class T> tree_it<T> art<T>::begin(const char *key, int key_len) {
+  return tree_it<T>::greater_equal(root_, key, key_len);
 }
 
 template <class T> tree_it<T> art<T>::end() { return tree_it<T>(); }

@@ -14,13 +14,13 @@
 using namespace art;
 
 using std::array;
+using std::hash;
 using std::mt19937;
+using std::mt19937_64;
 using std::random_device;
 using std::shuffle;
 using std::string;
 using std::to_string;
-using std::mt19937_64;
-using std::hash;
 
 TEST_SUITE("art") {
 
@@ -44,8 +44,8 @@ TEST_SUITE("art") {
     }
 
     SUBCASE("insert value s.t. existing value is a prefix") {
-      string prefix_key = "abc";
-      string key = "abcde";
+      const char * prefix_key = "abc";
+      const char * key = "abcde";
       trie.set(prefix_key, &dummy_value_1);
       trie.set(key, &dummy_value_2);
       REQUIRE_EQ(&dummy_value_1, trie.get(prefix_key));
@@ -60,8 +60,8 @@ TEST_SUITE("art") {
     }
 
     SUBCASE("insert key s.t. it mismatches existing key") {
-      string key1 = {'a', 'a', 'a', 'a', 'a'};
-      string key2 = {'a', 'a', 'b', 'a', 'a'};
+      const char *key1 = "aaaaa";
+      const char *key2 = "aabaa";
       trie.set(key1, &dummy_value_1);
       trie.set(key2, &dummy_value_2);
       REQUIRE_EQ(&dummy_value_1, trie.get(key1));
@@ -70,24 +70,23 @@ TEST_SUITE("art") {
 
     SUBCASE("monte carlo") {
       const int n = 1000;
-      array<string, n> keys;
-      array<int *, n> values;
+      string keys[n];
+      int *values[n];
       /* rng */
       mt19937_64 g(0);
       for (int experiment = 0; experiment < 10; experiment += 1) {
         for (int i = 0; i < n; i += 1) {
-          std::string random_num_str = to_string(g());
-          keys[i] = string(random_num_str.cbegin(), random_num_str.cend());
+          keys[i] = to_string(g());
           values[i] = new int();
         }
 
         art<int> m;
 
         for (int i = 0; i < n; i += 1) {
-          m.set(keys[i], values[i]);
+          m.set(keys[i].c_str(), keys[i].length(), values[i]);
 
           for (int j = 0; j < i; j += 1) {
-            REQUIRE_EQ(values[j], m.get(keys[j]));
+            REQUIRE_EQ(values[j], m.get(keys[j].c_str()));
           }
         }
 
@@ -100,26 +99,26 @@ TEST_SUITE("art") {
 
   TEST_CASE("delete value") {
 
-    string key0 = "aa";
-    int int0 = 0;
-    string key1 = "aaaa";
-    int int1 = 1;
-    string key2 = "aaaaaaa";
-    int int2 = 2;
-    string key3 = "aaaaaaaaaa";
-    int int3 = 3;
-    string key4 = "aaaaaaaba";
-    int int4 = 4;
-    string key5 = "aaaabaa";
-    int int5 = 5;
-    string key6 = "aaaabaaaaa";
-    int int6 = 6;
-    string key7 = "aaaaaaaaaaa";
-    int int7 = 7;
-    string key8 = "aaaaaaaaaab";
-    int int8 = 8;
-    string key9 = "aaaaaaaaaac";
-    int int9 = 9;
+    auto key0 = "aa";
+    auto int0 = 0;
+    auto key1 = "aaaa";
+    auto int1 = 1;
+    auto key2 = "aaaaaaa";
+    auto int2 = 2;
+    auto key3 = "aaaaaaaaaa";
+    auto int3 = 3;
+    auto key4 = "aaaaaaaba";
+    auto int4 = 4;
+    auto key5 = "aaaabaa";
+    auto int5 = 5;
+    auto key6 = "aaaabaaaaa";
+    auto int6 = 6;
+    auto key7 = "aaaaaaaaaaa";
+    auto int7 = 7;
+    auto key8 = "aaaaaaaaaab";
+    auto int8 = 8;
+    auto key9 = "aaaaaaaaaac";
+    auto int9 = 9;
 
     art<int> m;
 
@@ -281,15 +280,15 @@ TEST_SUITE("art") {
     hash<string> h;
     art<int> m;
     mt19937_64 rng1(0);
-    for(int i = 0; i < 1000000; ++i) {
+    for (int i = 0; i < 1000000; ++i) {
       auto k = to_string(rng1());
-      int *v = new int();
+      auto v = new int();
       *v = i;
-      REQUIRE(m.set(k, v) == nullptr);
+      REQUIRE(m.set(k.c_str(), k.length(), v) == nullptr);
     }
     mt19937_64 rng2(0);
-    for(int i = 0; i < 1000000; ++i) {
-      auto k = to_string(rng2());
+    for (int i = 0; i < 1000000; ++i) {
+      auto k = to_string(rng2()).c_str();
       auto get_res = m.get(k);
       auto del_res = m.del(k);
       REQUIRE(m.get(k) == nullptr);

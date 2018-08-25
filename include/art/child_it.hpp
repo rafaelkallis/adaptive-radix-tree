@@ -18,7 +18,7 @@ public:
   child_it(node<T> *n, int relative_index);
 
   using iterator_category = std::bidirectional_iterator_tag;
-  using value_type = const uint8_t;
+  using value_type = const char;
   using difference_type = int;
   using pointer = value_type *;
   using reference = value_type &;
@@ -38,7 +38,7 @@ public:
 
 private:
   node<T> *node_;
-  uint8_t cur_partial_key_;
+  char cur_partial_key_;
   int relative_index_;
 };
 
@@ -57,11 +57,11 @@ child_it<T>::child_it(node<T> *n, int relative_index)
   }
 
   if (relative_index_ == node_->n_children() - 1) {
-    cur_partial_key_ = node_->prev_partial_key(255);
+    cur_partial_key_ = node_->prev_partial_key(127);
     return;
   }
 
-  cur_partial_key_ = node_->next_partial_key(0);
+  cur_partial_key_ = node_->next_partial_key(-128);
   for (int i = 0; i < relative_index_; ++i) {
     cur_partial_key_ = node_->next_partial_key(cur_partial_key_ + 1);
   }
@@ -80,7 +80,7 @@ typename child_it<T>::pointer child_it<T>::operator->() const {
 template <class T> child_it<T> &child_it<T>::operator++() {
   ++relative_index_;
   if (relative_index_ == 0) {
-    cur_partial_key_ = node_->next_partial_key(0);
+    cur_partial_key_ = node_->next_partial_key(-128);
   } else if (relative_index_ < node_->n_children()) {
     cur_partial_key_ = node_->next_partial_key(cur_partial_key_ + 1);
   }
@@ -96,7 +96,7 @@ template <class T> child_it<T> child_it<T>::operator++(int) {
 template <class T> child_it<T> &child_it<T>::operator--() {
   --relative_index_;
   if (relative_index_ == node_->n_children() - 1) {
-    cur_partial_key_ = node_->prev_partial_key(255);
+    cur_partial_key_ = node_->prev_partial_key(127);
   } else if (relative_index_ >= 0) {
     cur_partial_key_ = node_->prev_partial_key(cur_partial_key_ - 1);
   }

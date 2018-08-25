@@ -46,8 +46,8 @@ static void art_mixed(state &s) {
 
   art<int> m;
   for (auto _ : s) {
-    string k = dataset[rng()];
-    int *val = m.get(k);
+    auto k = dataset[rng()].c_str();
+    auto val = m.get(k);
     if (val == nullptr) {
       m.set(k, &v);
     } else {
@@ -121,7 +121,7 @@ static void art_mixed_sparse(state &s) {
   hash<uint32_t> h;
   int v = 1;
   for (auto _ : s) {
-    auto k = to_string(h(rng()));
+    auto k = to_string(h(rng())).c_str();
     auto r = m.get(k);
     if (r == nullptr) {
       m.set(k, &v);

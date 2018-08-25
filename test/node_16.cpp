@@ -147,17 +147,20 @@ TEST_SUITE("node 16") {
       REQUIRE_THROWS_AS(n.next_partial_key(0), std::out_of_range);
     }
 
-    SUBCASE("child at 0") {
-      n.set_child(0, nullptr);
-      REQUIRE_EQ(0, n.next_partial_key(0));
-      REQUIRE_THROWS_AS(n.next_partial_key(1), std::out_of_range);
+    SUBCASE("child at -128") {
+      n.set_child(-128, nullptr);
+      REQUIRE_EQ(-128, n.next_partial_key(-128));
+      for (int i = 1; i < 256; ++i) {
+        REQUIRE_THROWS_AS(n.next_partial_key(i - 128), std::out_of_range);
+      }
     }
 
 
-    SUBCASE("child at 255") {
-      n.set_child(255, nullptr);
-      REQUIRE_EQ(255, n.next_partial_key(0));
-      REQUIRE_EQ(255, n.next_partial_key(255));
+    SUBCASE("child at 127") {
+      n.set_child(127, nullptr);
+      for (int i = 0; i < 256; ++i) {
+        REQUIRE_EQ(127, n.next_partial_key(i - 128));
+      }
     }
 
     SUBCASE("dense children") {
@@ -189,20 +192,23 @@ TEST_SUITE("node 16") {
     node_16<void> n;
 
     SUBCASE("completely empty node") {
-      REQUIRE_THROWS_AS(n.prev_partial_key(255), std::out_of_range);
+      REQUIRE_THROWS_AS(n.prev_partial_key(127), std::out_of_range);
     }
 
-    SUBCASE("child at 0") {
-      n.set_child(0, nullptr);
-      REQUIRE_EQ(0, n.prev_partial_key(0));
-      REQUIRE_EQ(0, n.prev_partial_key(255));
+    SUBCASE("child at -128") {
+      n.set_child(-128, nullptr);
+      for (int i = 0; i < 256; ++i) {
+        REQUIRE_EQ(-128, n.prev_partial_key(i - 128));
+      }
     }
 
 
-    SUBCASE("child at 255") {
-      n.set_child(255, nullptr);
-      REQUIRE_EQ(255, n.prev_partial_key(255));
-      REQUIRE_THROWS_AS(n.prev_partial_key(254), std::out_of_range);
+    SUBCASE("child at 127") {
+      n.set_child(127, nullptr);
+      REQUIRE_EQ(127, n.prev_partial_key(127));
+      for (int i = 0; i < 255; ++i) {
+        REQUIRE_THROWS_AS(n.prev_partial_key(i - 128), std::out_of_range);
+      }
     }
 
     SUBCASE("dense children") {
@@ -214,7 +220,7 @@ TEST_SUITE("node 16") {
       REQUIRE_EQ(2, n.prev_partial_key(2));
       REQUIRE_EQ(3, n.prev_partial_key(3));
       REQUIRE_EQ(4, n.prev_partial_key(4));
-      REQUIRE_EQ(4, n.prev_partial_key(255));
+      REQUIRE_EQ(4, n.prev_partial_key(127));
       REQUIRE_THROWS_AS(n.prev_partial_key(0), std::out_of_range);
     }
     
@@ -226,7 +232,7 @@ TEST_SUITE("node 16") {
       REQUIRE_EQ(1, n.prev_partial_key(4));
       REQUIRE_EQ(5, n.prev_partial_key(9));
       REQUIRE_EQ(10, n.prev_partial_key(99));
-      REQUIRE_EQ(100, n.prev_partial_key(255));
+      REQUIRE_EQ(100, n.prev_partial_key(127));
       REQUIRE_THROWS_AS(n.prev_partial_key(0), std::out_of_range);
     }
   }

@@ -31,11 +31,11 @@ static void art_query_sparse(state &s) {
   int v = 1;
   mt19937_64 rng1(0);
   for (auto _ : s) {
-    m.set(to_string(h(rng1())), &v);
+    m.set(to_string(h(rng1())).c_str(), &v);
   }
   mt19937_64 rng2(0);
   for (auto _ : s) {
-    m.get(to_string(h(rng2())));
+    m.get(to_string(h(rng2())).c_str());
   }
 }
 PICOBENCH(art_query_sparse);
@@ -46,11 +46,11 @@ static void art_query_sparse_zipf(state &s) {
   int v = 1;
   fast_zipf rng1(1000000);
   for (auto _ : s) {
-    m.set(to_string(h(rng1())), &v);
+    m.set(to_string(h(rng1())).c_str(), &v);
   }
   fast_zipf rng2(1000000);
   for (auto _ : s) {
-    m.get(to_string(h(rng2())));
+    m.get(to_string(h(rng2())).c_str());
   }
 }
 PICOBENCH(art_query_sparse_zipf);

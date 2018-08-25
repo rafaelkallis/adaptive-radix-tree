@@ -22,10 +22,10 @@ static void node_256_find_child(state &s) {
   node_256<void *> n;
   node_0<void *> child;
   for (int i = 0; i < 256; ++i) {
-    n.set_child(i, &child);
+    n.set_child(i - 128, &child);
   }
   for (auto _ : s) {
-    auto child = n.find_child(rand() % 256);
+    auto child = n.find_child((rand() % 256) - 128);
   }
 }
 PICOBENCH(node_256_find_child);
@@ -38,7 +38,7 @@ static void node_256_set_child(state &s) {
       delete n;
       n = new node_256<void *>();
     }
-    n->set_child(rand() % 256, &child);
+    n->set_child((rand() % 256) - 128, &child);
   }
 }
 PICOBENCH(node_256_set_child);
@@ -47,10 +47,10 @@ static void node_256_next_partial_key(state &s) {
   node_256<void *> n;
   node_0<void *> child;
   for (int i = 0; i < 256; ++i) {
-    n.set_child(i, &child);
+    n.set_child(i - 128, &child);
   }
   for (auto _ : s) {
-    auto next_partial_key = n.next_partial_key(rand() % 256);
+    auto next_partial_key = n.next_partial_key((rand() % 256) - 128);
   }
 }
 PICOBENCH(node_256_next_partial_key);
@@ -59,10 +59,10 @@ static void node_256_prev_partial_key(state &s) {
   node_256<void *> n;
   node_0<void *> child;
   for (int i = 0; i < 256; ++i) {
-    n.set_child(i, &child);
+    n.set_child(i - 128, &child);
   }
   for (auto _ : s) {
-    auto prev_partial_key = n.prev_partial_key(rand() % 256);
+    auto prev_partial_key = n.prev_partial_key((rand() % 256) - 128);
   }
 }
 PICOBENCH(node_256_prev_partial_key);

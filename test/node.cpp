@@ -32,18 +32,18 @@ TEST_SUITE("node") {
     string key = "000100001";
     string prefix = "0000";
 
-    node.prefix_ = (uint8_t *)prefix.c_str();
+    node.prefix_ = (char *) prefix.c_str();
     node.prefix_len_ = prefix.length();
 
-    CHECK_EQ(3, node.check_prefix((uint8_t *)key.c_str() + 0, key.length() - 0));
-    CHECK_EQ(2, node.check_prefix((uint8_t *)key.c_str() + 1, key.length() - 1));
-    CHECK_EQ(1, node.check_prefix((uint8_t *)key.c_str() + 2, key.length() - 2));
-    CHECK_EQ(0, node.check_prefix((uint8_t *)key.c_str() + 3, key.length() - 3));
-    CHECK_EQ(4, node.check_prefix((uint8_t *)key.c_str() + 4, key.length() - 4));
-    CHECK_EQ(3, node.check_prefix((uint8_t *)key.c_str() + 5, key.length() - 5));
-    CHECK_EQ(2, node.check_prefix((uint8_t *)key.c_str() + 6, key.length() - 6));
-    CHECK_EQ(1, node.check_prefix((uint8_t *)key.c_str() + 7, key.length() - 7));
-    CHECK_EQ(0, node.check_prefix((uint8_t *)key.c_str() + 8, key.length() - 8));
+    CHECK_EQ(3, node.check_prefix(key.c_str() + 0, key.length() - 0));
+    CHECK_EQ(2, node.check_prefix(key.c_str() + 1, key.length() - 1));
+    CHECK_EQ(1, node.check_prefix(key.c_str() + 2, key.length() - 2));
+    CHECK_EQ(0, node.check_prefix(key.c_str() + 3, key.length() - 3));
+    CHECK_EQ(4, node.check_prefix(key.c_str() + 4, key.length() - 4));
+    CHECK_EQ(3, node.check_prefix(key.c_str() + 5, key.length() - 5));
+    CHECK_EQ(2, node.check_prefix(key.c_str() + 6, key.length() - 6));
+    CHECK_EQ(1, node.check_prefix(key.c_str() + 7, key.length() - 7));
+    CHECK_EQ(0, node.check_prefix(key.c_str() + 8, key.length() - 8));
   }
 
   TEST_CASE("iteration") {
@@ -57,7 +57,7 @@ TEST_SUITE("node") {
     m.set_child(0, &n0);
     m.set_child(5, &n1);
     m.set_child(6, &n2);
-    m.set_child(255, &n3);
+    m.set_child(127, &n3);
 
     auto it = m.begin();
     auto it_end = m.end();
@@ -83,7 +83,7 @@ TEST_SUITE("node") {
     ++it;
     // 3
     REQUIRE(it < it_end);
-    REQUIRE_EQ(255, *it);
+    REQUIRE_EQ(127, *it);
 
     ++it;
     // 4 (overflow)
@@ -94,7 +94,7 @@ TEST_SUITE("node") {
     --it;
     // 3
     REQUIRE(it < it_end);
-    REQUIRE_EQ(255, *it);
+    REQUIRE_EQ(127, *it);
 
     --it;
     // 2
@@ -132,7 +132,7 @@ TEST_SUITE("node") {
     m.set_child(0, &n0);
     m.set_child(5, &n1);
     m.set_child(6, &n2);
-    m.set_child(255, &n3);
+    m.set_child(127, &n3);
 
     auto it = m.rbegin();
     auto it_end = m.rend();
@@ -143,7 +143,7 @@ TEST_SUITE("node") {
     REQUIRE(it_end > it);
     REQUIRE(it_end >= it);
     REQUIRE(it != it_end);
-    REQUIRE_EQ(255, *it);
+    REQUIRE_EQ(127, *it);
 
     ++it;
     // 1
@@ -185,7 +185,7 @@ TEST_SUITE("node") {
     --it;
     // 0
     REQUIRE(it < it_end);
-    REQUIRE_EQ(255, *it);
+    REQUIRE_EQ(127, *it);
 
     --it;
     // -1 (underflow)
@@ -194,6 +194,6 @@ TEST_SUITE("node") {
     ++it;
     // 0
     REQUIRE(it < it_end);
-    REQUIRE_EQ(255, *it);
+    REQUIRE_EQ(127, *it);
   }
 }

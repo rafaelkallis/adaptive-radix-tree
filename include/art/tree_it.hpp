@@ -25,7 +25,7 @@ public:
   explicit tree_it(node<T> *root);
   explicit tree_it(stack<node<T> *> traversal_stack);
 
-  static tree_it<T> greater_equal(node<T> *root, const string &key);
+  static tree_it<T> greater_equal(node<T> *root, const char *key, int key_len);
 
   using iterator_category = std::forward_iterator_tag;
   using value_type = T *;
@@ -46,7 +46,9 @@ private:
 };
 
 template <class T> tree_it<T>::tree_it(node<T> *root) : traversal_stack_() {
-  assert(root != nullptr);
+  if (root == nullptr) {
+    return;
+  }
   traversal_stack_.push(root);
 }
 
@@ -59,14 +61,15 @@ tree_it<T>::tree_it(stack<node<T> *> traversal_stack)
     auto par = traversal_stack_.top();
     traversal_stack_.pop();
     for (auto it = par->rbegin(), it_end = par->rend(); it != it_end; ++it) {
-      uint8_t child_partial_key = *it;
+      char child_partial_key = *it;
       traversal_stack_.push(*par->find_child(child_partial_key));
     }
   }
 }
 
 template <class T>
-tree_it<T> tree_it<T>::greater_equal(node<T> *root, const string &key) {
+tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key,
+                                     int key_len) {
   if (root == nullptr) {
     return tree_it<T>();
   }
@@ -83,7 +86,7 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const string &key) {
     depth = depth_stack.top();
 
     for (int i = 0; i < cur->prefix_len_; ++i) {
-      if (depth + i + 1 == key.length()) {
+      if (depth + i + 1 == key_len) {
         return tree_it<T>(node_stack);
       }
       if (cur->prefix_[i] < key[depth + i]) {
@@ -121,7 +124,7 @@ template <class T> tree_it<T> &tree_it<T>::operator++() {
     node<T> *prev = traversal_stack_.top();
     traversal_stack_.pop();
     for (auto it = prev->rbegin(), it_end = prev->rend(); it != it_end; ++it) {
-      uint8_t child_partial_key = *it;
+      char child_partial_key = *it;
       traversal_stack_.push(*prev->find_child(child_partial_key));
     }
     if (traversal_stack_.empty() || traversal_stack_.top() != nullptr) {

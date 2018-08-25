@@ -22,11 +22,11 @@ static void art_delete_sparse(state &s) {
   int v = 1;
   std::mt19937_64 g1(0);
   for (auto _ : s) {
-    m.set(std::to_string(g1()), &v);
+    m.set(std::to_string(g1()).c_str(), &v);
   }
   std::mt19937_64 g2(0);
   for (auto _ : s) {
-    m.del(std::to_string(g2()));
+    m.del(std::to_string(g2()).c_str());
   }
 }
 PICOBENCH(art_delete_sparse);
@@ -36,7 +36,7 @@ static void red_black_delete_sparse(state &s) {
   int v = 1;
   std::mt19937_64 g1(0);
   for (auto _ : s) {
-    m[std::to_string(g1())] = v;
+    m[std::to_string(g1()).c_str()] = v;
   }
   std::mt19937_64 g2(0);
   for (auto _ : s) {

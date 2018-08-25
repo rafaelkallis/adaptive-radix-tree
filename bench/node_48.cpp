@@ -23,10 +23,10 @@ static void node_48_find_child(state &s) {
   node_48<void *> n;
   node_0<void *> child;
   for (int i = 0; i < 48; ++i) {
-    n.set_child(std::floor(5.4468 * i), &child);
+    n.set_child(std::floor(5.4468 * i) - 128, &child);
   }
   for (auto _ : s) {
-    auto child = n.find_child(std::floor(5.4468 * (rand() % 48)));
+    auto child = n.find_child(std::floor(5.4468 * (rand() % 48)) - 128);
   }
 }
 PICOBENCH(node_48_find_child);
@@ -39,7 +39,7 @@ static void node_48_set_child(state &s) {
       delete n;
       n = new node_48<void *>();
     }
-    n->set_child(rand() % 256, &child);
+    n->set_child((rand() % 256) - 128, &child);
   }
 }
 PICOBENCH(node_48_set_child);
@@ -57,10 +57,10 @@ static void node_48_next_partial_key(state &s) {
   node_48<void *> n;
   node_0<void *> child;
   for (int i = 0; i < 48; ++i) {
-    n.set_child(std::floor(5.4468 * i), &child);
+    n.set_child(std::floor(5.4468 * i) - 128, &child);
   }
   for (auto _ : s) {
-    auto next_partial_key = n.next_partial_key(rand() % 256);
+    auto next_partial_key = n.next_partial_key((rand() % 256) - 128);
   }
 }
 PICOBENCH(node_48_next_partial_key);
@@ -69,10 +69,10 @@ static void node_48_prev_partial_key(state &s) {
   node_48<void *> n;
   node_0<void *> child;
   for (int i = 0; i < 48; ++i) {
-    n.set_child(std::floor(5.4468 * i), &child);
+    n.set_child(std::floor(5.4468 * i) - 128, &child);
   }
   for (auto _ : s) {
-    auto prev_partial_key = n.prev_partial_key(rand() % 256);
+    auto prev_partial_key = n.prev_partial_key((rand() % 256) - 128);
   }
 }
 PICOBENCH(node_48_prev_partial_key);

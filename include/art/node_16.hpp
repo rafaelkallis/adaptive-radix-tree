@@ -20,27 +20,27 @@ template <class T> class node_48;
 
 template <class T> class node_16 : public node<T> {
 public:
-  node<T> **find_child(uint8_t partial_key) override;
-  void set_child(uint8_t partial_key, node<T> *child) override;
-  node<T> *del_child(uint8_t partial_key) override;
+  node<T> **find_child(char partial_key) override;
+  void set_child(char partial_key, node<T> *child) override;
+  node<T> *del_child(char partial_key) override;
   node<T> *grow() override;
   node<T> *shrink() override;
   bool is_full() const override;
   bool is_underfull() const override;
 
-  uint8_t next_partial_key(uint8_t partial_key) const override;
+  char next_partial_key(char partial_key) const override;
 
-  uint8_t prev_partial_key(uint8_t partial_key) const override;
+  char prev_partial_key(char partial_key) const override;
 
   int n_children() const override;
 
 private:
   uint8_t n_children_ = 0;
-  array<uint8_t, 16> keys_;
-  array<node<T> *, 16> children_;
+  char keys_[16];
+  node<T> *children_[16];
 };
 
-template <class T> node<T> **node_16<T>::find_child(uint8_t partial_key) {
+template <class T> node<T> **node_16<T>::find_child(char partial_key) {
   for (int i = 0; i < n_children_; ++i) {
     if (keys_[i] == partial_key) {
       return &children_[i];
@@ -50,7 +50,7 @@ template <class T> node<T> **node_16<T>::find_child(uint8_t partial_key) {
 }
 
 template <class T>
-void node_16<T>::set_child(uint8_t partial_key, node<T> *child) {
+void node_16<T>::set_child(char partial_key, node<T> *child) {
   /* determine index for child */
   int child_i;
   for (int i = this->n_children_ - 1;; --i) {
@@ -69,7 +69,7 @@ void node_16<T>::set_child(uint8_t partial_key, node<T> *child) {
   ++n_children_;
 }
 
-template <class T> node<T> *node_16<T>::del_child(uint8_t partial_key) {
+template <class T> node<T> *node_16<T>::del_child(char partial_key) {
   node<T> *child_to_delete = nullptr;
   for (int i = 0; i < n_children_; ++i) {
     if (child_to_delete == nullptr && partial_key == keys_[i]) {
@@ -119,8 +119,7 @@ template <class T> bool node_16<T>::is_underfull() const {
   return n_children_ == 4;
 }
 
-template <class T>
-uint8_t node_16<T>::next_partial_key(uint8_t partial_key) const {
+template <class T> char node_16<T>::next_partial_key(char partial_key) const {
   for (int i = 0; i < n_children_; ++i) {
     if (keys_[i] >= partial_key) {
       return keys_[i];
@@ -129,8 +128,7 @@ uint8_t node_16<T>::next_partial_key(uint8_t partial_key) const {
   throw std::out_of_range("provided partial key does not have a successor");
 }
 
-template <class T>
-uint8_t node_16<T>::prev_partial_key(uint8_t partial_key) const {
+template <class T> char node_16<T>::prev_partial_key(char partial_key) const {
   for (int i = n_children_ - 1; i >= 0; --i) {
     if (keys_[i] <= partial_key) {
       return keys_[i];

@@ -7,13 +7,12 @@
 #define ART_NODE_48_HPP
 
 #include "node.hpp"
+#include <algorithm>
 #include <array>
 #include <stdexcept>
 #include <utility>
 
 namespace art {
-
-using std::array;
 
 template <class T> class node_16;
 template <class T> class node_256;
@@ -22,25 +21,25 @@ template <class T> class node_48 : public node<T> {
 public:
   node_48();
 
-  node<T> **find_child(uint8_t partial_key) override;
-  void set_child(uint8_t partial_key, node<T> *child) override;
-  node<T> *del_child(uint8_t partial_key) override;
+  node<T> **find_child(char partial_key) override;
+  void set_child(char partial_key, node<T> *child) override;
+  node<T> *del_child(char partial_key) override;
   node<T> *grow() override;
   node<T> *shrink() override;
   bool is_full() const override;
   bool is_underfull() const override;
 
-  uint8_t next_partial_key(uint8_t partial_key) const override;
-  uint8_t prev_partial_key(uint8_t partial_key) const override;
+  char next_partial_key(char partial_key) const override;
+  char prev_partial_key(char partial_key) const override;
 
   int n_children() const override;
 
 private:
-  static const uint8_t EMPTY;
+  static const char EMPTY;
 
   uint8_t n_children_ = 0;
-  array<uint8_t, 256> indexes_;
-  array<node<T> *, 48> children_;
+  std::array<char, 256> indexes_;
+  std::array<node<T> *, 48> children_;
 };
 
 template <class T> node_48<T>::node_48() {
@@ -48,14 +47,14 @@ template <class T> node_48<T>::node_48() {
   children_.fill(nullptr);
 }
 
-template <class T> node<T> **node_48<T>::find_child(uint8_t partial_key) {
+template <class T> node<T> **node_48<T>::find_child(char partial_key) {
   // TODO(rafaelkallis): direct lookup instead of temp save?
-  uint8_t index = indexes_[partial_key];
+  char index = indexes_[128 + partial_key];
   return node_48::EMPTY != index ? &children_[index] : nullptr;
 }
 
 template <class T>
-void node_48<T>::set_child(uint8_t partial_key, node<T> *child) {
+void node_48<T>::set_child(char partial_key, node<T> *child) {
 
   // TODO(rafaelkallis): pick random starting entry in order to increase
   // performance? i.e. for (int i = random([0,48)); i != (i-1) % 48; i = (i+1) %
@@ -63,8 +62,8 @@ void node_48<T>::set_child(uint8_t partial_key, node<T> *child) {
 
   /* find empty child entry */
   for (int i = 0; i < 48; ++i) {
-    if (nullptr == children_[i]) {
-      indexes_[partial_key] = i;
+    if (children_[i] == nullptr) {
+      indexes_[128 + partial_key] = i;
       children_[i] = child;
       break;
     }
@@ -72,12 +71,12 @@ void node_48<T>::set_child(uint8_t partial_key, node<T> *child) {
   ++n_children_;
 }
 
-template <class T> node<T> *node_48<T>::del_child(uint8_t partial_key) {
+template <class T> node<T> *node_48<T>::del_child(char partial_key) {
   node<T> *child_to_delete = nullptr;
-  uint8_t index = indexes_[partial_key];
+  char index = indexes_[128 + partial_key];
   if (index != node_48::EMPTY) {
-    indexes_[partial_key] = node_48::EMPTY;
     child_to_delete = children_[index];
+    indexes_[128 + partial_key] = node_48::EMPTY;
     children_[index] = nullptr;
     --n_children_;
   }
@@ -89,8 +88,9 @@ template <class T> node<T> *node_48<T>::grow() {
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
   new_node->value_ = this->value_;
-  for (int partial_key = 0; partial_key < 256; ++partial_key) {
-    uint8_t index = indexes_[partial_key];
+  char index;
+  for (int partial_key = -128; partial_key < 127; ++partial_key) {
+    index = indexes_[128 + partial_key];
     if (index != node_48::EMPTY) {
       new_node->set_child(partial_key, children_[index]);
     }
@@ -104,8 +104,9 @@ template <class T> node<T> *node_48<T>::shrink() {
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
   new_node->value_ = this->value_;
-  for (int partial_key = 0; partial_key < 256; ++partial_key) {
-    uint8_t index = indexes_[partial_key];
+  char index;
+  for (int partial_key = -128; partial_key < 127; ++partial_key) {
+    index = indexes_[128 + partial_key];
     if (index != node_48::EMPTY) {
       new_node->set_child(partial_key, children_[index]);
     }
@@ -122,30 +123,30 @@ template <class T> bool node_48<T>::is_underfull() const {
   return n_children_ == 16;
 }
 
-template <class T> const uint8_t node_48<T>::EMPTY = 48;
+template <class T> const char node_48<T>::EMPTY = 48;
 
-template <class T>
-uint8_t node_48<T>::next_partial_key(uint8_t partial_key) const {
-  for (int i = partial_key;; ++i) {
-    if (indexes_[i] != node_48<T>::EMPTY) {
-      return i;
+template <class T> char node_48<T>::next_partial_key(char partial_key) const {
+  while (true) {
+    if (indexes_[128 + partial_key] != node_48<T>::EMPTY) {
+      return partial_key;
     }
-    if (i == 255) {
+    if (partial_key == 127) {
       throw std::out_of_range("provided partial key does not have a successor");
     }
+    ++partial_key;
   }
 }
 
-template <class T>
-uint8_t node_48<T>::prev_partial_key(uint8_t partial_key) const {
-  for (int i = partial_key;; --i) {
-    if (indexes_[i] != node_48<T>::EMPTY) {
-      return i;
+template <class T> char node_48<T>::prev_partial_key(char partial_key) const {
+  while (true) {
+    if (indexes_[128 + partial_key] != node_48<T>::EMPTY) {
+      return partial_key;
     }
-    if (i == 0) {
+    if (partial_key == -128) {
       throw std::out_of_range(
           "provided partial key does not have a predecessor");
     }
+    --partial_key;
   }
 }
 

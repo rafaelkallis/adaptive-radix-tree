@@ -20,10 +20,9 @@ PICOBENCH_SUITE("insert");
 static void art_insert_sparse(state &s) {
   art<int> m;
   int v = 1;
-  std::random_device rd;
-  std::mt19937_64 g(rd());
+  std::mt19937_64 rng(0);
   for (auto _ : s) {
-    m.set(std::to_string(g()), &v);
+    m.set(std::to_string(rng()).c_str(), &v);
   }
 }
 PICOBENCH(art_insert_sparse);
@@ -31,10 +30,9 @@ PICOBENCH(art_insert_sparse);
 static void red_black_insert_sparse(state &s) {
   std::map<std::string, int> m;
   int v = 1;
-  std::random_device rd;
-  std::mt19937_64 g(rd());
+  std::mt19937_64 rng(0);
   for (auto _ : s) {
-    m[std::to_string(g())] = v;
+    m[std::to_string(rng())] = v;
   }
 }
 PICOBENCH(red_black_insert_sparse);

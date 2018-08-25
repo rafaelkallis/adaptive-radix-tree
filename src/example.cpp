@@ -7,11 +7,13 @@
 #include <string>
 #include <unordered_map>
 
+using std::string;
+
 void art_bench() {
   std::ifstream file("dataset.txt");
-  std::unordered_map<uint32_t, std::string> dataset;
+  std::unordered_map<uint32_t, string> dataset;
   uint32_t n = 0;
-  std::string line;
+  string line;
   while (std::getline(file, line)) {
     dataset[n++] = line;
   }
@@ -22,10 +24,10 @@ void art_bench() {
   /* std::map<art::key_type, int*> m; */
   /* std::unordered_map<art::key_type, int*> m; */
   int v = 1;
-  std::random_device rd;
-  std::mt19937_64 g(rd());
+  std::mt19937_64 g(0);
   for (uint32_t i = 0; i < 1000000; ++i) {
-    m.set(dataset[rng()], &v);
+    auto k = dataset[rng()];
+    m.set(k.c_str(), k.length(), &v);
     /* m[dataset[rng()]] = &v; */
   }
 }
