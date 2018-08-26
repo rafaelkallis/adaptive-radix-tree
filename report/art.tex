@@ -109,8 +109,8 @@
 \section{Introduction}
 
 Main-Memory Databases increasingly become a viable option for many applications
-due to the considerably faster access times of volatile memory 
-in comparison to secondary storage.
+due to the considerably faster access times and increasing capacities of 
+volatile memory in comparison to secondary storage.
 
 Leis et al.\ \cite{leis2013adaptive} propose the Adaptive Radix Tree (ART), an in-memory
 data structure which efficiently stores and retrieves data.
@@ -126,38 +126,43 @@ key deletion in \Cref{sec:algorithms}.
 Finally, a benchmark of ART, a red-black tree and a hashtable
 is presented in \Cref{sec:benchmarks}.
 
-\section{Preliminaries}
-\label{sec:preliminaries}
+\section{Preliminaries}\label{sec:preliminaries}
 
 A trie \cite{fredkin1960trie} is a hierarchical data structure which
 stores key-value pairs. Tries can answer both point and range queries 
 efficiently since keys are stored in lexicographic order.
-A node's key can be reconstructed from its path and therefore, when 
+Unlike a comparison-based search tree, a trie does not store keys in nodes.
+Rather, the digital representation of a search key is split into partial
+keys used to index the nodes. When 
 constructing a trie from a set of keys, all insertion orders result in the 
 same tree. Tries do not require rebalancing operations and therefore have 
 no notion of balance, unlike comparison based search trees.
 
-Keys are split into chunks of $s$ bits, where $s$ is called \textit{span}.
-Inner nodes have  $2^s$ child pointers (possibly \texttt{null}), 
-one for each possible $s$-bit sequence. During tree
-traversal, we propagate down to the child node identified by the $d$-th
-$s$-bit chunk of the key, where $d$ is the depth of the current node. 
-Using an array of $2^s$  pointers, this lookup can be done without any 
+Keys are split into partial keys of $s$ bits, where $s$ is called 
+\textit{span}. Inner nodes have  $2^s$ child pointers 
+(possibly \texttt{null}), one for each possible $s$-bit sequence. During tree
+traversal, we descend down to the child node identified by the $d$-th
+$s$-bit partial key of the search key, where $d$ is the depth of the current 
+node.  Using an array of $2^s$  pointers, this lookup can be done without any 
 additional comparison. 
 
 \Cref{fig:span} depicts tries storing the 
 8-bit keys ``$01000011$'', ``$01000110$'' and ``$01100100$'' with 
-$s=1,2$. Span $s$ is critical for the performance of the trie because $s$ 
+$s \in \{1,2\}$. Span $s$ is critical for the performance of the trie because $s$ 
 determines the height of the trie. We observe that by increasing the span, 
 we decrease the tree height. A trie
-storing $k$ bit keys has $\lceil \frac{k}{s} \rceil$ levels of inner nodes.
+storing $k$ bit keys has $\lceil \frac{k}{s} \rceil$ levels of nodes.
 As a consequence, point queries, insertions and deletions have 
 $O(k)$ complexity.
 
 Span $s$ also determines the space consumption of the tree.
 A node with span $s$ requires $2^s$ pointers. 
 An apparent trade off exists between tree height versus space efficiency that
-depends on $s$.
+depends on $s$. Increasing $s$ yields a decrease in the tree's height, 
+resulting in faster lookups because less nodes are traversed. On the other
+hand, by increasing $s$, nodes require to store more child pointers. Every
+increment in $s$ halves the height of the tree but (nearly) doubles the space consumed
+by each node.
 
 \begin{figure}[h]
   \centering
@@ -170,7 +175,7 @@ depends on $s$.
     \caption{$s=2$}
   \end{subfigure}
   \caption{
-    Tries with span $s=1,2$ storing keys ``$01000011$'', ``$01000110$''
+    Tries with span $s \in \{1,2\}$ storing keys ``$01000011$'', ``$01000110$''
     and ``$01100100$''.
   }
   \label{fig:span}
@@ -178,8 +183,7 @@ depends on $s$.
 
 \newpage
 
-\section{Adaptive Radix Tree (ART)}
-\label{sec:art}
+\section{Adaptive Radix Tree (ART)}\label{sec:art}
 
 The \textit{Adaptive Radix Tree} (ART) is a space efficient trie, which
 achieves its low memory consumption using \textit{vertical} and 
@@ -188,11 +192,12 @@ the tree height significantly by merging parent nodes with child nodes
 under certain circumstances. Horizontal compression reduces the amount
 of space required by each node depending on the number of child nodes.
 
-\subsection{Vertical (Prefix) Compression}
-\label{sec:vertical-compression}
+\subsection{Vertical (Prefix) Compression}\label{sec:vertical-compression}
 
 When storing long keys, chains of nodes start to form where each node only
-has a single child. As a consequence, a lot of space is wasted as many nodes
+has a single child. (e.g.\ the trie in \Cref{fig:span} stores ``01100100'',
+we see a chain of five nodes).
+As a consequence, a lot of space is wasted as many nodes
 with little actual content are kept and traversals are slowed down because
 many nodes are traversed. Space wasting is further amplified with sparse
 datasets or a small span.
@@ -203,16 +208,31 @@ each node with no siblings is merged with its parent, i.e.\ inner nodes
 are only created if they are required to distinguish at least two leaf nodes. 
 Doing so, chains caused by long keys are eliminated, which make tries 
 space-inefficient. Although Morrison's Patricia tree is a bitwise trie, i.e.\ 
-has a span $s=1$, the technique can be applied to tries with any span.
+has a span $s=1$, the technique can be applied to tries with any span,
+although it becomes less effective as span $s$ increases.
 We refer to this technique as \textit{vertical compression}.
 
-Vertical compression is implemented by storing an additional variable, called
-\textit{prefix}, inside each node. This variable stores the concatenation
-of partial keys of descendants that were eliminated because they had no 
-siblings. \Cref{fig:vertical-compression} depicts two tries, one with and one 
-without vertical compression. We observe that nodes with no siblings, color 
-coded red, are eliminated and their partial key is appended to the parent's 
-prefix. 
+Leis et al.\ mention three approaches to deal with vertical compression:
+\begin{itemize}
+  \item Pessimistic: We store an additional variable, called \texttt{prefix},
+    inside each node. This variable stores the concatenation of partial keys
+    of descendants that were eliminated because they had no siblings. During
+    lookup, \texttt{prefix} is compared to the search key before preceding to
+    the next child. \Cref{fig:vertical-compression} depicts two tries, one 
+    with and one without vertical compression. We observe that nodes with no 
+    siblings, color coded red, are eliminated and their partial key is 
+    appended to the parent's prefix.
+
+  \item Optimistic: Only the number of compressed nodes is stored. Lookups
+    just skip this number of partial keys without comparing them to the search
+    key. Keys are required to be stored on leaf nodes. When a lookup arrives
+    to a leaf node, its key must be compared to the search key. 
+
+  \item Hybrid: We store the number of compressed nodes and a static array
+    in order to store a part of the compressed path. If the number of
+    compressed nodes exceeds the size of the array, the optimistic strategy is
+    used instead.
+\end{itemize}
 
 \begin{figure}[h]
   \begin{footnotesize}
@@ -236,7 +256,7 @@ prefix.
               [,phantom]
               [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}
                 [,circle,draw,red, edge label={node[midway,right,font=\footnotesize]{$01$}}
-                  [,circle,draw,red, edge label={node[midway,right,font=\footnotesize]{$10$}}]
+                  [,circle,draw,red, edge label={node[midway,right,font=\footnotesize]{$00$}}]
                 ]
               ]
             ]
@@ -258,16 +278,16 @@ prefix.
                   node[anchor=west,gray]{11};
               }
               [,phantom]
-              [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}]{
+              [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$01$}}]{
                 \draw[gray] (.east)--++(0.5em,0em)
-                  node[anchor=west,gray]{01};
+                  node[anchor=west,gray]{10};
               }
             ]
             [,phantom]
             [,phantom]
             [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}]{
               \draw[gray] (.east)--++(0.5em,0em)
-                node[anchor=west,gray]{0110};
+                node[anchor=west,gray]{0100};
             }
           ]{
             \draw[gray] (.east)--++(0.5em,0em)
@@ -280,16 +300,17 @@ prefix.
   \end{footnotesize}
   \caption{
     Tries with span $s=2$ storing keys ``$01000011$'', ``$01000110$''
-    and ``$01100100$''. The trie on the right incorporates vertical 
-    compression. Red nodes indicate nodes which get eliminated under
+    and ``$01100100$''. The trie on the right incorporates (pessimistic)
+    vertical compression. Red nodes indicate nodes which get eliminated under
     vertical compression. Gray strings represent the value of the prefix 
     variable.
   }
   \label{fig:vertical-compression}
 \end{figure}
 
-\subsection{Horizontal Compression (Adaptive Nodes)}
-\label{sec:horizontal-compression}
+\newpage
+
+\subsection{Horizontal Compression (Adaptive Nodes)}\label{sec:horizontal-compression}
 
 With large values of span $s$, an excessive amount of space is sacrificed
 to achieve a smaller tree height. Space is allocated for pointers which keep
@@ -299,7 +320,7 @@ In order to reduce the space needed to keep
 such references, Leis et al.\ propose \textit{Adaptive Nodes} 
 \cite{leis2013adaptive}, which make use of dynamic data structures 
 instead of static arrays for child node bookkeeping. Doing so, we allocate 
-a minimal amount of space when the number of children is small and add more 
+less space when the number of children is small and add more 
 space if required, i.e.\ more children are added.
 We refer to this technique as \textit{horizontal compression}.
 Leis et al.\ fix the span $s=8$, i.e. partial keys are 1 byte
@@ -316,7 +337,7 @@ and \texttt{Node256}. All nodes have a header which stores the node type,
 the number of children and the prefix variable, which contains the compressed
 path (c.f.\ \Cref{sec:vertical-compression}).
 
-\begin{figure}[h]
+\begin{table}[h]
   \centering
   \begin{tabular}{ l|r|r } 
     Type & Children & Space (bytes) \\
@@ -328,25 +349,25 @@ path (c.f.\ \Cref{sec:vertical-compression}).
   \end{tabular}
   \caption{Space consumption for each inner node type. $h$ is equal to
     the size of the header.}
-  \label{fig:node-sizes}
-\end{figure}
+  \label{tbl:node-sizes}
+\end{table}
 
 We now describe the structure of each of the four configurations.
-\Cref{fig:node-sizes} shows the space consumption for each inner node type.
+\Cref{tbl:node-sizes} shows the space consumption for each inner node type.
 Note that $h$ is equal to the header's size.
 \Cref{fig:horizontal-compression} illustrates the state of a node
-for each node type,
-when storing the partial keys $65$, $82$, $84$ and pointers to their 
-corresponding child nodes $\alpha$, $\beta$, $\gamma$. 
-Note that $\varnothing$ represents a \texttt{null} pointer.
+for each node type, when storing the partial keys $65$ (``01000001''), 
+$82$ (``01010010''), $84$ (``01010100'') and pointers to their corresponding 
+child nodes $\alpha$, $\beta$, $\gamma$. Note that $\varnothing$ represents 
+a \texttt{null} pointer.
 
 A node of type \texttt{Node4} contains two 4-element arrays, one called
 ``partial keys'' and one called ``children''.
 The ``partial keys'' array, holds
 partial keys which identify children of that node. 
 The ``children'' array, holds pointers to the child nodes.
-Partial keys and pointers are stored at corresponding positions and
-the partial keys are sorted.
+Partial keys and pointers are stored at corresponding positions in their
+respective arrays and the partial keys are sorted.
 
 A node of type \texttt{Node16} is structured similarly
 to \texttt{Node4}, the only difference being the lengths of the two static 
@@ -357,15 +378,13 @@ An instance of \texttt{Node48} contains a 256-element array named
 Partial keys are stored implicitly in ``indexes'', i.e.\ 
 can be indexed with partial key bytes directly.
 As the name suggests, ``indexes'' stores the index of a child
-node inside the ``children'' array. This node can be compared to
-virtual memory, since the address space (256 addresses) is wider 
-than the actual available storage space (48 slots).
+node inside the ``children'' array.
 
 Finally, a node of type \texttt{Node256} contains an array of
 256 pointers which can be indexed with partial key bytes directly.
 Child nodes can be found with a single lookup.
 
-\begin{figure}[h!]
+\begin{figure}[H]
   \centering
   \includegraphics[height=20cm,trim={2.5cm 5cm 2.5cm 3.5cm},clip]{art_nodes_draw}
   \caption{
@@ -381,249 +400,233 @@ Child nodes can be found with a single lookup.
  \label{fig:horizontal-compression}
 \end{figure}
 
+\newpage
+
 \section{Algorithms}\label{sec:algorithms}
 
+\vspace{-1mm}
 We will now describe how two fundamental operations, namely
 point query and deletion are implemented in ART.
+Range queries and insertions are similar and are omitted for brevity.
 The algorithms mentioned below are based on the implementations presented by
-Leis et al.\ \cite{leis2013adaptive}. Note that our implementation uses
-\textit{single-value leaves} (c.f.\ Leis et al.\ \cite{leis2013adaptive}), 
+Leis et al. 
+
+Note that our implementation uses
+\textit{single-value leaves} (c.f.\ Leis et al.), 
 i.e.\ values are stored using an additional leaf node type, conveniently
 called \texttt{Node0}, which stores one value. Additionally, we utilize
-\textit{pessimistic} vertical compression, i.e.\ each inner node stores
-the entire compressed path inside the \texttt{prefix} variable using a variable length
-partial key vector. During traversal, \texttt{prefix} is compared to the search key.
+pessimistic vertical compression (c.f.\ \Cref{sec:vertical-compression}),
+i.e.\ each inner node stores the entire compressed path inside the 
+\texttt{prefix} variable using a variable length partial key array. 
 We present our implementations below.
 
+\vspace{-3mm}
 \subsection{Point Query}\label{sec:point-query}
 
-The code fragment in \Cref{algo:point-query} shows the implementation of a point query on ART in
-C++. Method \texttt{get} accepts a key as an argument and returns a pointer
-to the value associated with the given key, or \texttt{null} if the key is not found.
+The code fragment in \Cref{algo:point-query} shows the implementation of a 
+point query on ART in C++. Method \texttt{get} accepts a key and its length
+as an argument and returns a pointer to the value associated with the given 
+key, or \texttt{null} if the key is not found.
 
-In lines 7-8 we declare and initialize a pointer, \texttt{cur}, which references the
-current node during tree traversal, and an integer, \texttt{depth} which holds the depth
-of the current node.
+In lines 2-3 we declare and initialize a pointer, \texttt{cur}, which references
+the current node during tree traversal, \texttt{child} which references 
+\texttt{cur}'s child and \texttt{depth}, which holds the depth
+of the current node. We now enter a loop in which we check if \texttt{cur} 
+references \texttt{null} during the beginning of each iteration, and if so, 
+we return \texttt{null}.
 
-We now enter a loop in which we check if \texttt{cur} references \texttt{null}
-during the beginning of each iteration, and if so, we return \texttt{null}.
-
-In lines 11-16 we check if a prefix mismatch occurs. This step is required
+In lines 5-8 we check if a prefix mismatch occurs. This step is required
 because of vertical compression (c.f.\ \Cref{sec:vertical-compression}).
 Method \texttt{check\_prefix} is a member of the \texttt{node} class which
 determines the number of matching bytes between \texttt{cur}'s prefix
 and \texttt{key} w.r.t.\ the current depth. If a prefix mismatch is discovered,
 \texttt{null} is returned.
 
-Lines 17-21 check for an exact match of the key at the current node. If so,
+Lines 9-12 check for an exact match of the key at the current node. If so,
 we return the value of the current node.
 
 Finally, we traverse to the next child node. \texttt{depth} is increased to
 account for the nodes merged due to vertical compression.
 We lookup the next child node, which is assigned to \texttt{cur}.
+If no such child exists, the search key does not exist and \texttt{null} is
+returned.
 
 \begin{figure}[H]
   \begin{minted}[numbers=left,frame=single,fontsize=\scriptsize]{c++}
-template <class T> class art {
-public:
-  /**
-   * Finds the value associated with the given key.
-   */
-  T *get(const key_type &key) const {
-    node<T> *cur = root_;
-    int depth = 0;
-
-    while (cur != nullptr) {
-      const int prefix_len = cur->get_prefix().length();
-      const bool is_prefix_match = prefix_len == cur->check_prefix(key, depth);
-
-      if (!is_prefix_match) {
-        return nullptr;
-      }
-      const bool is_exact_match = prefix_len == key.length() - depth;
-
-      if (is_exact_match) {
-        return cur->get_value();
-      }
-      depth += prefix_len;
-      node<T> **next = cur->find_child(key[depth]);
-      cur = next != nullptr ? *next : nullptr;
-      ++depth;
+template <class T> T * art<T>::get(const char *key, const int key_len) const {
+  node<T> *cur = root_, **child = nullptr;
+  int depth = 0;
+  while (cur != nullptr) {
+    if (cur->prefix_len_ != cur->check_prefix(key + depth, key_len - depth)) {
+      /* prefix mismatch */
+      return nullptr;
     }
-    return nullptr;
+    if (cur->prefix_len_ == key_len - depth) {
+      /* exact match */
+      return cur->value_;
+    }
+    child = cur->find_child(key[depth + cur->prefix_len_]);
+    cur = child != nullptr ? *child : nullptr;
+    depth += cur->prefix_len_ + 1;
   }
-
-  /* ... */
-private:
-  node<T> *root_ = nullptr;
+  return nullptr;
 }
   \end{minted}
+  \vspace{-5mm}
   \caption{Point query implemented in C++.}
   \label{algo:point-query}
 \end{figure}
 
-\subsection{Deletion}
-\label{sec:deletion}
+\subsection{Deletion}\label{sec:deletion}
 
 \Cref{algo:deletion} presents our implementation of key deletion on ART in C++.
 During deletion, the leaf node is removed from an inner node, which is shrunk
 if necessary. If the leaf to remove only has one sibling, vertical
-compression is applied to the parent, effectively deleting it.
+compression is applied. We assume all leaf nodes are of type \texttt{Node0}.
 
-In lines 7-11, we declare and initialize two pointers, \texttt{cur} and
+In lines 3-5, we declare and initialize two pointers, \texttt{cur} and
 \texttt{par} which reference the current and parent node during tree traversal.
 Variable \texttt{cur\_partial\_key} holds the partial key which indexes the
 current node in the parent's child lookup table.
-Variables \texttt{depth} and \texttt{key\_len} hold the depth of the current
-node and length of the key, respectively.
+Variable \texttt{depth} holds the depth of the current node.
 
-Next, we loop until \texttt{cur} is a \texttt{null} pointer. During each
-iteration we define the following variables:
+Next, we loop until \texttt{cur} references either the right leaf node or
+\texttt{null}. For the latter, \texttt{null} is returned.
+
+Line 12 checks if \texttt{cur} is a leaf node, i.e.\ the node that contains 
+the search key has been found. If that is not the case, we
+continue descending down (lines 57-60). Given \texttt{cur} is a leaf, one
+of three cases is possible depending on \texttt{cur}'s siblings:
+
 \begin{itemize}
-  \item \texttt{prefix} compressed path of the current node.
-  \item \texttt{prefix\_len} length of the compressed path, i.e.\ the number
-    of nodes vertically compressed.
-  \item \texttt{is\_prefix\_match} evaluates to true iff \texttt{prefix} is a
-    prefix of the search key, starting from position \texttt{depth}
-    (e.g.\ if \texttt{prefix} = ``aa'' and \texttt{key} = ``aaa'', then
-    $\texttt{is\_prefix\_match} \iff \texttt{depth} > 0 \land \texttt{depth} < 2$).
-  \item \texttt{is\_exact\_match} evaluates to true iff \texttt{prefix} matches
-    the search key, starting from position \texttt{depth}.
-    (e.g.\ if \texttt{prefix} = ``aa'' and \texttt{key} = ``aaa'', then
-    $\texttt{is\_exact\_match} \iff \texttt{depth} = 1$).
+  \item If \texttt{cur} has \textit{no siblings} (lines 18-24), \texttt{cur}
+    must be the root. We delete \texttt{cur} and set the root to \texttt{null}.
+
+  \item If \texttt{cur} has \textit{one sibling} (lines 24-48), vertical
+    compression is applied, effectively removing both \texttt{cur} and its
+    parent \texttt{par}. During this process, \texttt{par}'s \texttt{prefix},
+    as well as the sibling's partial key, are prepended to the sibling's
+    \texttt{prefix}.
+
+  \item If \texttt{cur} has \textit{more than one sibling} (lines 48-54),
+    we simply remove \texttt{cur} from its parent \texttt{par} and shrink
+    \texttt{par} if needed (c.f.\ \Cref{sec:horizontal-compression}).
 \end{itemize}
 
-If there is a prefix mismatch, i.e.\ \texttt{is\_prefix\_match} evaluates to
-false, the search key is not found and a \texttt{null} pointer is returned.
-If there is a exact match i.e.\ \texttt{is\_exact\_match} evaluates to true,
-we found the node to delete, otherwise we continue traversing down the tree.
-
-After the node to delete has been found, we first extract its associated value
-and determine its number of siblings. It must have at least one sibling, 
-unless the node to delete is the root node.
-
-If the node to delete has exactly one sibling (lines 27-41), we replace the 
-parent node with the sibling, append to the sibling's prefix the parent's
-prefix and the sibling's partial key and then delete the \texttt{cur} and
-\texttt{par}. We also delete \texttt{par} because of vertical compression.
-
-If the node to delete has more than one sibling (lines 41-43), then no additional action
-is required besides deleting \texttt{cur}.
-
-Lines 45-47 check if the parent node is undefull, i.e.\ requires shrinking
-(c.f.\ \Cref{sec:horizontal-compression}).
-
-Finally, the value associated with the deleted node is returned (in case the
-procedure callee has to free resources).
+Finally, the value associated with the search key is returned (in case the
+method callee has to free resources).
 
 \begin{figure}[H]
   \begin{minted}[numbers=left,frame=single,fontsize=\scriptsize]{c++}
-template <class T> class art {
-public:
-  /**
-   * Deletes the the given key and returns its associated value.
-   */
-  T *del(const key_type &key) {
-    node<T> **cur = &root_;
-    partial_key_type cur_partial_key = 0;
-    node<T> **par = nullptr;
-    int depth = 0;
-    const int key_len = key.length();
+template <class T> T *art<T>::del(const char *key, const int key_len) {
+  if (root_ == nullptr) { return nullptr; }
+  node<T> **par = nullptr, **cur = &root_;
+  char cur_partial_key;
+  int depth = 0;
 
-    while (*cur != nullptr) {
-      const key_type prefix = (*cur)->get_prefix();
-      const int prefix_len = prefix.length();
-      const bool is_prefix_match = prefix_len == (*cur)->check_prefix(key, depth);
-
-      if (!is_prefix_match) {
-        return nullptr;
-      }
-      const bool is_exact_match = prefix_len == key_len - depth;
-
-      if (is_exact_match) {
-        T *value = (*cur)->get_value();
-        const int n_siblings = par != nullptr ? (*par)->get_n_children() - 1 : 0;
-
-        if (n_siblings == 1) {
-          /* find sibling and compress */
-          partial_key_type sibling_partial_key = (*par)->next_partial_key(0);
-          if (sibling_partial_key == cur_partial_key) {
-            sibling_partial_key = (*par)->next_partial_key(cur_partial_key + 1);
-          }
-          node<T> *sibling = *(*par)->find_child(sibling_partial_key);
-          const key_type new_sibling_prefix = (*par)->get_prefix() +
-                                              key_type(1, sibling_partial_key) +
-                                              sibling->get_prefix();
-          sibling->set_prefix(new_sibling_prefix);
-          delete (*par);
-          *par = sibling;
-
-        } else if (n_siblings > 1) {
-          (*par)->del_child(cur_partial_key);
-        } 
-
-        if (par != nullptr && (*par)->is_underfull()) {
-          *par = (*par)->shrink();
-        }
-        delete(*cur);
-        *cur = nullptr;
-        return value;
-      }
-      cur_partial_key = key[depth + prefix_len];
-      par = cur;
-      cur = (*cur)->find_child(cur_partial_key);
-      depth += prefix_len + 1;
+  while (cur != nullptr) {
+    if ((**cur).prefix_len_ != (**cur).check_prefix(key + depth, key_len - depth)) {
+      /* prefix mismatch */
+      return nullptr;
     }
-    return nullptr;
-  }
+    if (key_len == depth + (**cur).prefix_len_) {
+      /* exact match */
+      T *value = (**cur).value_;
+      (**cur).value_ = nullptr;
+      int n_siblings = par != nullptr ? (**par).n_children() - 1 : 0;
 
-  /* ... */
-private:
-  node<T> *root_ = nullptr;
+      if (n_siblings == 0) {
+        /* cur is root */
+        if ((**cur).prefix_ != nullptr) { delete[](**cur).prefix_; }
+        delete (*cur);
+        *cur = nullptr;
+
+      } else if (n_siblings == 1) {
+        /* find sibling and apply vertical compression */
+        char sibling_partial_key = (**par).next_partial_key(0);
+        if (sibling_partial_key == cur_partial_key) {
+          sibling_partial_key = (**par).next_partial_key(cur_partial_key + 1);
+        }
+        node<T> *sibling = *(**par).find_child(sibling_partial_key);
+        char *old_prefix = sibling->prefix_;
+        int old_prefix_len = sibling->prefix_len_;
+        /* compute new prefix of sibling */
+        sibling->prefix_ = new char[(**par).prefix_len_ + 1 + old_prefix_len];
+        sibling->prefix_len_ = (**par).prefix_len_ + 1 + old_prefix_len;
+        std::memcpy(sibling->prefix_, (**par).prefix_, (**par).prefix_len_);
+        sibling->prefix_[(**par).prefix_len_] = sibling_partial_key;
+        std::memcpy(sibling->prefix_ + (**par).prefix_len_ + 1, old_prefix,
+               old_prefix_len);
+        if (old_prefix != nullptr) { delete[] old_prefix; }
+        /* remove cur and par */
+        if ((**cur).prefix_ != nullptr) { delete[](**cur).prefix_; }
+        delete (*cur);
+        if ((**par).prefix_ != nullptr) { delete[](**par).prefix_; }
+        delete (*par);
+        *par = sibling;
+
+      } else if (n_siblings > 1) {
+        /* remove cur */
+        if ((**cur).prefix_ != nullptr) { delete[](**cur).prefix_; }
+        delete (*cur);
+        (**par).del_child(cur_partial_key);
+        if ((**par).is_underfull()) { *par = (**par).shrink(); }
+      }
+      return value;
+    }
+    cur_partial_key = key[depth + (**cur).prefix_len_];
+    depth += (**cur).prefix_len_ + 1;
+    par = cur;
+    cur = (**cur).find_child(cur_partial_key);
+  }
+  return nullptr;
 }
   \end{minted}
   \caption{Key deletion implemented in C++.}
-  \label{algo:deletion}
+ \label{algo:deletion}
 \end{figure}
 
 \newpage
 
-\section{Benchmarks}
-\label{sec:benchmarks}
+\section{Benchmarks}\label{sec:benchmarks}
 
-In this section we compare the performance of ART against red-black trees
-and hashtables. We use C++ standard library containers 
+\vspace{-2mm}
+In this section we compare the performance of ART against the two text book
+data structures red-black tree (RBT) and chained hash table (HT).
+We chose RBT to compete against ART because, like ART, RBT is a hierarchical
+data structure with sorted keys, and supports answering both point and range
+queries efficiently. HT do answer point queries faster but lack support for
+efficient range queries. We use C++ standard library containers 
 \texttt{std::map} and \texttt{std::unordered\_map}\footnote{https://en.cppreference.com/w/cpp/container}
-which are implementations of the two other data structures mentioned above.
+which are implementations of RBT and HT, respectively.
+We would like to see ART outperforming RBT but do not expect ART performing
+better than HT. 
 
 We first conduct a series of microbenchmarks in order to assess lookup,
-insertion and deletion performance. Then we run a mixed workload benchmarks
+insertion and deletion performance. Then we run a mixed workload benchmark
 on the three data structures and finally we conduct an experiment in order
-to measure how ofter vertical compression in applied on ART.
+to measure how often vertical compression is applied on ART. There are two 
+datasets, i.e.\ set of keys, used for the benchmarks, a sparse
+and a dense dataset. A set of keys is dense (sparse) if many (few) members
+share common prefixes.
 
-\subsection{Microbenchmarks}
-\label{sec:microbenchmarks}
+\vspace{-3mm}
+\subsection{Microbenchmarks}\label{sec:microbenchmarks}
 
+\vspace{-1mm}
 During the lookup microbenchmark, we execute point queries on an instance
-of each of the three data structures (ART, red-black tree, hashtable)
+of each of the three data structures (ART, RBT, HT)
 containing the same four million keys. The keys are sparse (i.e.\ uniformly
 distributed), 64-bit integers. Each key is queried exactly once.
-\Cref{fig:lookup-microbenchmark}
-shows the lookup performance of the three data structures. ART can handle
-as many transactions per time unit as a hashtable. The red-black tree does
-not perform as good as its competitors.
+The insertion microbenchmark inserts the same four million sparse 64-bit keys
+used previously. Finally, the deletion microbenchmark, structured similar to 
+the lookup microbenchmark, attempts to delete every stored key from the data 
+structure.
 
-The insertion microbenchmark inserts the same four million sparse 64-bitkeys
-used previously. \Cref{fig:insertion-microbenchmark} shows that ART was 
-significantly faster than the red-black tree but the hashtable outperformed ART.
-
-Finally, the deletion microbenchmark, structured similar to the lookup
-microbenchmark, attempts to delete every stored key from the data structure.
-Keys are again sparse 64-bit integers. \Cref{fig:deletion-microbenchmark} 
-depicts the results of the
-deletion microbenchmark which are unsuprisingly similar to the ones shown
-previously. ART outperforms red-black trees whilst hastables outperform
-ART.
+\Cref{fig:lookup-microbenchmark,fig:insertion-microbenchmark,fig:deletion-microbenchmark}
+show the results of the three microbenchmarks. ART is positioned in between 
+both its competitors in the lookup and insertion microbenchmarks. In contrast, 
+both RBT and HT outperform ART in the deletion microbenchmark.
 
 \begin{figure}[H]
   \centering
@@ -632,11 +635,13 @@ ART.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ylabel=transactions/second,
+        ylabel=operations/second,
+        ymax = 6000000,
+        ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,1715000) (RBT,917000) (HT,2583000)};
+        \addplot coordinates {(ART,3155911.8) (RBT,2471577.4) (HT,5501451.5)};
       \end{axis}
     \end{tikzpicture}
     \caption{Lookup}
@@ -647,10 +652,12 @@ ART.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
+        ymax = 6000000,
+        ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,1441000) (RBT,695000) (HT,1467000)};
+        \addplot coordinates {(ART,2132464.3) (RBT,2010422.3) (HT,3618333.0)};
       \end{axis}
     \end{tikzpicture}
     \caption{Insertion}
@@ -661,17 +668,19 @@ ART.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
+        ymax = 6000000,
+        ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,1064000) (RBT,725000) (HT,1939000)};
+        \addplot coordinates {(ART,1292128.7) (RBT,1718313.7) (HT,3072309.1)};
       \end{axis}
     \end{tikzpicture}
     \caption{Deletion}
     \label{fig:deletion-microbenchmark}
   \end{subfigure}
   \caption{Lookup, insertion and deletion performance of ART,
-  red-black trees and hashtables.}
+  red-black trees (RBT) and hashtables (HT).}
   \label{fig:microbenchmark}
 \end{figure}
 

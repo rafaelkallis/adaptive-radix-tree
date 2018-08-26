@@ -28,7 +28,7 @@ public:
    * @return the value associated with the key or a nullptr.
    */
   T *get(const char *key) const;
-  T *get(const char *key, int key_len) const;
+  T *get(const char *key, const int key_len) const;
 
   /**
    * Associates the given key with the given value.
@@ -41,7 +41,7 @@ public:
    * previously associated value.
    */
   T *set(const char *key, T *value);
-  T *set(const char *key, int key_len, T *value);
+  T *set(const char *key, const int key_len, T *value);
 
   /**
    * Deletes the given key and returns it's associated value.
@@ -53,7 +53,7 @@ public:
    * @return the values assciated with they key or a nullptr otherwise.
    */
   T *del(const char *key);
-  T *del(const char *key, int key_len);
+  T *del(const char *key, const int key_len);
 
   /**
    * Forward iterator that traverses the tree in lexicographic order.
@@ -65,7 +65,7 @@ public:
    * from the provided key.
    */
   tree_it<T> begin(const char *key);
-  tree_it<T> begin(const char *key, int key_len);
+  tree_it<T> begin(const char *key, const int key_len);
 
   /**
    * Iterator to the end of the lexicographic order.
@@ -102,11 +102,10 @@ template <class T> T *art<T>::get(const char *key) const {
   return get(key, std::strlen(key));
 }
 
-template <class T> T *art<T>::get(const char *key, int key_len) const {
+template <class T> T *art<T>::get(const char *key, const int key_len) const {
   node<T> *cur = root_, **child;
   int depth = 0;
   while (cur != nullptr) {
-    /* prefix mismatch */
     if (cur->prefix_len_ != cur->check_prefix(key + depth, key_len - depth)) {
       /* prefix mismatch */
       return nullptr;
@@ -127,7 +126,7 @@ template <class T> T *art<T>::set(const char *key, T *value) {
   return set(key, std::strlen(key), value);
 }
 
-template <class T> T *art<T>::set(const char *key, int key_len, T *value) {
+template <class T> T *art<T>::set(const char *key, const int key_len, T *value) {
   if (root_ == nullptr) {
     root_ = new node_0<T>();
     root_->prefix_ = new char[key_len];
@@ -304,7 +303,7 @@ template <class T> T *art<T>::del(const char *key) {
   return del(key, std::strlen(key));
 }
 
-template <class T> T *art<T>::del(const char *key, int key_len) {
+template <class T> T *art<T>::del(const char *key, const int key_len) {
   if (root_ == nullptr) {
     return nullptr;
   }
@@ -393,8 +392,9 @@ template <class T> T *art<T>::del(const char *key, int key_len) {
         sibling->prefix_[(**par).prefix_len_] = sibling_partial_key;
         std::memcpy(sibling->prefix_ + (**par).prefix_len_ + 1, old_prefix,
                old_prefix_len);
-        delete[] old_prefix;
-
+        if (old_prefix != nullptr) {
+          delete[] old_prefix;
+        }
         if ((**cur).prefix_ != nullptr) {
           delete[](**cur).prefix_;
         }
@@ -450,7 +450,9 @@ template <class T> T *art<T>::del(const char *key, int key_len) {
         child->prefix_[(**cur).prefix_len_] = child_partial_key;
         std::memcpy(child->prefix_ + (**cur).prefix_len_ + 1, old_prefix,
                old_prefix_len);
-        delete[] old_prefix;
+        if (old_prefix != nullptr) {
+          delete[] old_prefix;
+        }
 
         if ((**cur).prefix_ != nullptr) {
           delete[](**cur).prefix_;
