@@ -692,14 +692,16 @@ a well defined workload applied on each of the three data structures.
 
 The more than twelve million keys used during the benchmark have structure
 and do resemble paths of a hierarchy (e.g.\ ``\texttt{/a}'', ``\texttt{/a/b}'',
-``\texttt{/a/c}'', etc.). The keys are ordered in reverse level order and
-during each transaction we draw a key under the Zipf distribution.
+``\texttt{/a/c}'', etc.). The dataset is based on DELL's website [?].
+The keys are ordered in reverse level order and during each transaction we
+draw a key under the Zipf distribution (skew $s=1$).
 
 We query against the randomly drawn key, and if the query returns no results,
 i.e.\ the key does not exist, we insert the key, otherwise we delete it.
+Transactions are executed in sequential order.
 
-As \Cref{fig:main-benchmark} shows, ART performs as good as the red-black tree and the
-hashtable clearly outperforms its competitors.
+As \Cref{fig:main-benchmark} shows, ART performs as good as RBT and HT clearly
+outperforms its competitors.
 
 \begin{figure}[H]
   \centering
@@ -708,14 +710,15 @@ hashtable clearly outperforms its competitors.
       ybar,
       symbolic x coords={ART,RBT,HT},
       ylabel=transactions/second,
+      ymin=0,
       width=6cm,
       height=6cm,
       ]
-      \addplot coordinates {(ART,358000) (RBT,364000) (HT,782000)};
+      \addplot coordinates {(ART,560488.0) (RBT,481390.2) (HT,982706.9)};
     \end{axis}
   \end{tikzpicture}
   \caption{Transactional throughput of ART,
-    red-black trees and hashtables over a skewed worload with
+    red-black trees and hashtables over a skewed workload with
     mixed reads and writes.}
   \label{fig:main-benchmark}
 \end{figure}
@@ -730,12 +733,12 @@ a single sibling, the sibling is compressed, i.e.\ merged with its parent.
 If each transaction only deletes one existing key, the number of compressions
 cannot exceed the number of transactions. The number of compressions
 depends on span $s$. If $s=1$, every node must have exactly one sibling,
-and therefore $\text{\#compressions}=\text{\#transactions}-1$. Deleting the
-root node during the last step requires no compression. ART has a span of $s=8$
-and we therefore do not expect a compression for every deletion.
+and therefore every deletion requires a compression, unless the root is
+deleted. ART has a span of $s=8$ and we therefore do not expect a compression 
+for every deletion.
 
 Results should also vary depending if keys are sparse or dense. Dense keys
-likely share common substrings and as a result tries require less nodes to 
+likely share common prefixes and as a result tries require less nodes to 
 store the keys. We expect that having dense keys imply smaller number
 of compressions due to the smaller number of nodes.
 
@@ -744,15 +747,17 @@ compressions over number of transactions for sparse and dense keys.
 We observe a linear relation between the two variables. As expected, 
 dense keys require less compressions compared to sparse keys. That is because 
 less nodes are needed to store dense keys, thus path compression is applied
-fewer.
+fewer times.
 
 \begin{figure}[H]
   \centering
   \begin{subfigure}[b]{0.49\textwidth}
     \begin{tikzpicture}
       \begin{axis}[
+        xmax=11000000,
+        ymax=4500000,
         xlabel=transactions,
-        ylabel=compressions,
+        ylabel=\#compressions,
         height=7cm,
         width=7cm,
         ]
@@ -765,8 +770,10 @@ fewer.
   \begin{subfigure}[b]{0.49\textwidth}
     \begin{tikzpicture}
       \begin{axis}[
+        xmax=11000000,
+        ymax=4500000,
         xlabel=transactions,
-        ylabel=compressions,
+        ylabel=\#compressions,
         height=7cm,
         width=7cm,
         ]
@@ -783,7 +790,8 @@ fewer.
 \section{Future Work}
 \label{sec:future-work}
 
-In this project we achieved correctness but left potential for improvements.
+In this project we implemented all basic functionalities of ART, but left 
+potential for performance improvements.
 
 Our implementation uses C++ dynamic arrays, i.e. \texttt{std::vector} in order
 to store compressed paths, which requires $24 + n$ bytes, where $n$ is the
