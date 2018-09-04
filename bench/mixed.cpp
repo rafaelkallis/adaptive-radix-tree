@@ -15,7 +15,6 @@
 #include <string>
 #include <unordered_map>
 
-using namespace art;
 using picobench::state;
 using std::getline;
 using std::hash;
@@ -29,7 +28,7 @@ using std::unordered_map;
 PICOBENCH_SUITE("mixed");
 
 static void art_mixed_sparse(state &s) {
-  art<int> m;
+  art::art<int> m;
   fast_zipf rng(10000000);
   hash<uint32_t> h;
   string k;

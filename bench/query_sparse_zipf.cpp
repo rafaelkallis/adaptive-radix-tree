@@ -14,7 +14,6 @@
 #include <unordered_map>
 #include <utility>
 
-using namespace art;
 using picobench::state;
 using std::string;
 using std::to_string;
@@ -26,7 +25,7 @@ using std::unordered_map;
 PICOBENCH_SUITE("query sparse zipf");
 
 static void art_q_s_z(state &s) {
-  art<int> m;
+  art::art<int> m;
   hash<uint32_t> h;
   int v = 1;
   fast_zipf rng1(1000000);

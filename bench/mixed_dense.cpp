@@ -15,7 +15,6 @@
 #include <string>
 #include <unordered_map>
 
-using namespace art;
 using picobench::state;
 using std::getline;
 using std::hash;
@@ -44,7 +43,7 @@ static void art_mixed(state &s) {
   int v = 1;
   fast_zipf rng(n);
 
-  art<int> m;
+  art::art<int> m;
   string k;
   int *val;
   for (auto _ : s) {

@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-using namespace art;
-
 using std::array;
 using std::hash;
 using std::mt19937;
@@ -26,7 +24,7 @@ TEST_SUITE("art") {
 
   TEST_CASE("set") {
 
-    art<int> trie;
+    art::art<int> trie;
 
     int dummy_value_1;
     int dummy_value_2;
@@ -80,7 +78,7 @@ TEST_SUITE("art") {
           values[i] = new int();
         }
 
-        art<int> m;
+        art::art<int> m;
 
         for (int i = 0; i < n; i += 1) {
           m.set(keys[i].c_str(), keys[i].length(), values[i]);
@@ -120,7 +118,7 @@ TEST_SUITE("art") {
     auto key9 = "aaaaaaaaaac";
     auto int9 = 9;
 
-    art<int> m;
+    art::art<int> m;
 
     m.set(key0, &int0);
     m.set(key1, &int1);
@@ -277,8 +275,7 @@ TEST_SUITE("art") {
   }
 
   TEST_CASE("monte carlo delete") {
-    hash<string> h;
-    art<int> m;
+    art::art<int> m;
     mt19937_64 rng1(0);
     for (int i = 0; i < 1000000; ++i) {
       auto k = to_string(rng1());
@@ -288,10 +285,10 @@ TEST_SUITE("art") {
     }
     mt19937_64 rng2(0);
     for (int i = 0; i < 1000000; ++i) {
-      auto k = to_string(rng2()).c_str();
-      auto get_res = m.get(k);
-      auto del_res = m.del(k);
-      REQUIRE(m.get(k) == nullptr);
+      auto k = to_string(rng2());
+      auto get_res = m.get(k.c_str(), k.length());
+      auto del_res = m.del(k.c_str(), k.length());
+      REQUIRE(m.get(k.c_str(), k.length()) == nullptr);
       REQUIRE(get_res == del_res);
       REQUIRE(del_res != nullptr);
       REQUIRE(*del_res == i);
@@ -308,7 +305,7 @@ TEST_SUITE("art") {
     int int5 = 5;
     int int6 = 6;
 
-    art<int> m;
+    art::art<int> m;
 
     m.set("aa", &int0);
     m.set("aaaa", &int1);
@@ -383,7 +380,7 @@ TEST_SUITE("art") {
     int int5 = 5;
     int int6 = 6;
 
-    art<int> m;
+    art::art<int> m;
 
     m.set("aa", &int0);
     m.set("aaaa", &int1);

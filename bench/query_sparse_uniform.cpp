@@ -13,7 +13,6 @@
 #include <unordered_map>
 #include <utility>
 
-using namespace art;
 using picobench::state;
 using std::string;
 using std::to_string;
@@ -25,7 +24,7 @@ using std::unordered_map;
 PICOBENCH_SUITE("query sparse uniform");
 
 static void art_q_s_u(state &s) {
-  art<int> m;
+  art::art<int> m;
   hash<uint32_t> h;
   int v = 1;
   mt19937_64 rng1(0);

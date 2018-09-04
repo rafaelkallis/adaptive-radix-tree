@@ -12,13 +12,12 @@
 #include <unordered_map>
 #include <queue>
 
-using namespace art;
 using picobench::state;
 
 PICOBENCH_SUITE("insert");
 
 static void art_insert_sparse(state &s) {
-  art<int> m;
+  art::art<int> m;
   int v = 1;
   std::mt19937_64 rng(0);
   for (auto _ : s) {
