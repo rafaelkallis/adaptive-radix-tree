@@ -590,7 +590,7 @@ template <class T> T *art<T>::del(const char *key, const int key_len) {
 
 \section{Benchmarks}\label{sec:benchmarks}
 
-\vspace{-2mm}
+% \vspace{-2mm}
 In this section we compare the performance of ART against the two text book
 data structures red-black tree (RBT) and chained hash table (HT).
 We chose RBT to compete against ART because, like ART, RBT is a hierarchical
@@ -613,7 +613,7 @@ share common prefixes.
 \vspace{-3mm}
 \subsection{Microbenchmarks}\label{sec:microbenchmarks}
 
-\vspace{-1mm}
+% \vspace{-1mm}
 During the lookup microbenchmark, we execute point queries on an instance
 of each of the three data structures (ART, RBT, HT)
 containing the same four million keys. The keys are sparse (i.e.\ uniformly
@@ -625,8 +625,7 @@ structure.
 
 \Cref{fig:lookup-microbenchmark,fig:insertion-microbenchmark,fig:deletion-microbenchmark}
 show the results of the three microbenchmarks. ART is positioned in between 
-both its competitors in the lookup and insertion microbenchmarks. In contrast, 
-both RBT and HT outperform ART in the deletion microbenchmark.
+its competitors in all three microbenchmarks.
 
 \begin{figure}[H]
   \centering
@@ -636,12 +635,12 @@ both RBT and HT outperform ART in the deletion microbenchmark.
         ybar,
         symbolic x coords={ART,RBT,HT},
         ylabel=operations/second,
-        ymax = 6000000,
+        ymax = 10000000,
         ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,3155911.8) (RBT,2471577.4) (HT,5501451.5)};
+        \addplot coordinates {(ART,4770407.4) (RBT,2977984.9) (HT,9121391.1)};
       \end{axis}
     \end{tikzpicture}
     \caption{Lookup}
@@ -652,12 +651,12 @@ both RBT and HT outperform ART in the deletion microbenchmark.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ymax = 6000000,
+        ymax = 10000000,
         ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,2132464.3) (RBT,2010422.3) (HT,3618333.0)};
+        \addplot coordinates {(ART,3261996.2) (RBT,2709735.5) (HT,5519037.3)};
       \end{axis}
     \end{tikzpicture}
     \caption{Insertion}
@@ -668,12 +667,12 @@ both RBT and HT outperform ART in the deletion microbenchmark.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ymax = 6000000,
+        ymax = 10000000,
         ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,1292128.7) (RBT,1718313.7) (HT,3072309.1)};
+        \addplot coordinates {(ART,3428993.2) (RBT,2901381.0) (HT,5993132.1)};
       \end{axis}
     \end{tikzpicture}
     \caption{Deletion}
@@ -692,7 +691,8 @@ a well defined workload applied on each of the three data structures.
 
 The more than twelve million keys used during the benchmark have structure
 and do resemble paths of a hierarchy (e.g.\ ``\texttt{/a}'', ``\texttt{/a/b}'',
-``\texttt{/a/c}'', etc.). The dataset is based on DELL's website [?].
+``\texttt{/a/c}'', etc.). The dataset is based on DELL's 
+website~\cite{wellenzohn2017wapi}.
 The keys are ordered in reverse level order and during each transaction we
 draw a key under the Zipf distribution (skew $s=1$).
 
@@ -714,7 +714,7 @@ outperforms its competitors.
       width=6cm,
       height=6cm,
       ]
-      \addplot coordinates {(ART,560488.0) (RBT,481390.2) (HT,982706.9)};
+      \addplot coordinates {(ART,736969.0) (RBT,701690.0) (HT,1604170.3)};
     \end{axis}
   \end{tikzpicture}
   \caption{Transactional throughput of ART,
