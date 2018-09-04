@@ -19,7 +19,6 @@ namespace art {
 
 template <class T> class art {
 public:
-  int compression_count = 0;
   ~art();
 
   /**
@@ -115,10 +114,9 @@ template <class T> T *art<T>::get(const char *key, const int key_len) const {
       /* exact match */
       return cur->value_;
     }
-    depth += cur->prefix_len_;
-    child = cur->find_child(key[depth]);
+    child = cur->find_child(key[depth + cur->prefix_len_]);
     cur = child != nullptr ? *child : nullptr;
-    ++depth;
+    depth += cur->prefix_len_ + 1;
   }
   return nullptr;
 }
@@ -376,7 +374,6 @@ template <class T> T *art<T>::del(const char *key, const int key_len) {
          *  (aa)->v1 *()->v2             (aaaaa)->v1
          *  /|\
          */
-        ++compression_count;
 
         /* find sibling */
         auto sibling_partial_key = (**par).next_partial_key(0);
