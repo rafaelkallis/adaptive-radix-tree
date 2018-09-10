@@ -616,9 +616,9 @@ share common prefixes.
 % \vspace{-1mm}
 During the lookup microbenchmark, we execute point queries on an instance
 of each of the three data structures (ART, RBT, HT)
-containing the same four million keys. The keys are sparse (i.e.\ uniformly
+containing the same sixteen million keys. The keys are sparse (i.e.\ uniformly
 distributed), 64-bit integers. Each key is queried exactly once.
-The insertion microbenchmark inserts the same four million sparse 64-bit keys
+The insertion microbenchmark inserts the same sixteen million sparse 64-bit keys
 used previously. Finally, the deletion microbenchmark, structured similar to 
 the lookup microbenchmark, attempts to delete every stored key from the data 
 structure.
@@ -634,13 +634,13 @@ its competitors in all three microbenchmarks.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ylabel=operations/second,
-        ymax = 10000000,
+        ylabel=Operations/second {[M]},
+        ymax = 4,
         ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,4770407.4) (RBT,2977984.9) (HT,9121391.1)};
+        \addplot coordinates {(ART,1.8100282) (RBT,0.8763096) (HT,3.9497637)};
       \end{axis}
     \end{tikzpicture}
     \caption{Lookup}
@@ -651,12 +651,12 @@ its competitors in all three microbenchmarks.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ymax = 10000000,
+        ymax = 4,
         ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,3537978.9) (RBT,2642926.8) (HT,5384934.8)};
+        \addplot coordinates {(ART,1.7570827) (RBT,0.7479445) (HT,1.8366757)};
       \end{axis}
     \end{tikzpicture}
     \caption{Insertion}
@@ -667,19 +667,19 @@ its competitors in all three microbenchmarks.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ymax = 10000000,
+        ymax = 4,
         ymin = 0,
         width=5cm,
         height=6cm,
         ]
-        \addplot coordinates {(ART,3430847.9) (RBT,2362525.6) (HT,5610399.1)};
+        \addplot coordinates {(ART,1.4992408) (RBT,0.6993710) (HT,2.8705743)};
       \end{axis}
     \end{tikzpicture}
     \caption{Deletion}
     \label{fig:deletion-microbenchmark}
   \end{subfigure}
   \caption{Lookup, insertion and deletion performance of ART,
-  red-black trees (RBT) and hashtables (HT).}
+  red-black trees (RBT) and hashtables (HT) over the sparse dataset.}
   \label{fig:microbenchmark}
 \end{figure}
 
@@ -709,12 +709,12 @@ outperforms its competitors.
     \begin{axis}[
       ybar,
       symbolic x coords={ART,RBT,HT},
-      ylabel=transactions/second,
+      ylabel=Transactions/second {[M]},
       ymin=0,
       width=6cm,
       height=6cm,
       ]
-      \addplot coordinates {(ART,995467.8) (RBT,704264.2) (HT,1598781.4)};
+      \addplot coordinates {(ART,0.9954678) (RBT,0.7042642) (HT,1.5987814)};
     \end{axis}
   \end{tikzpicture}
   \caption{Transactional throughput of ART,
