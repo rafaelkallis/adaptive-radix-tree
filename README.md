@@ -7,7 +7,21 @@
 
 using namespace art;
 
-art<int> tree;
+int main() {
+  art<int> m;
+
+  int v = 2;
+  // set k to v
+  m.set("k", &v);
+
+  // get value of k
+  int * v_ptr = m.get("k");
+
+  // delete k
+  m.del("k");
+
+  return 0;
+}
 ```
 
 ## Test
