@@ -210,10 +210,10 @@ datasets or a small span.
 
 Morrison introduced \textit{Patricia}~\cite{morrison1968patricia}. 
 Patricia is a space-optimized trie in which
-each node with no siblings is merged with its parent, i.e.\ inner nodes
+each node with no siblings is merged with its parent, i.e., inner nodes
 are only created if they are required to distinguish at least two leaf nodes. 
 Doing so, chains caused by long keys are eliminated, which make tries 
-space-inefficient. Although Morrison's Patricia tree is a bitwise trie, i.e.\ 
+space-inefficient. Although Morrison's Patricia tree is a bitwise trie, i.e.,
 has a span $s=1$, the technique can be applied to tries with any span,
 although it becomes less effective as span $s$ increases.
 We refer to this technique as \textit{vertical compression}.
@@ -223,21 +223,26 @@ Leis et al.\ mention three approaches to deal with vertical compression:
   \item Pessimistic: We store an additional variable, called \texttt{prefix},
     inside each node. This variable stores the concatenation of partial keys
     of descendants that were eliminated because they had no siblings. During
-    lookup, \texttt{prefix} is compared to the search key before preceding to
-    the next child. \Cref{fig:vertical-compression} depicts two tries, one 
-    with and one without vertical compression. We observe that nodes with no 
-    siblings, color coded red, are eliminated and their partial key is 
-    appended to the parent's prefix.
+    lookup, \texttt{prefix} is compared to the search key before proceding to
+    the next child. If a mismatch occurs, then the key is not contained and
+    the search terminates returning \texttt{null}.
+    \Cref{fig:vertical-compression} depicts two tries, one 
+    with and one without vertical compression using the pessimistic approach.
+    We observe that nodes with no siblings, color coded red, are eliminated 
+    and their partial key is appended to the parent's prefix (highlighted in
+    gray).
 
   \item Optimistic: Only the number of compressed nodes is stored. Lookups
     just skip this number of partial keys without comparing them to the search
-    key. Keys are required to be stored on leaf nodes. When a lookup arrives
-    to a leaf node, its key must be compared to the search key. 
+    key. Full keys are required to be stored on leaf nodes. When a lookup 
+    arrives to a leaf node, its key must be compared to the search key.
+    In case of a mismatch, the is not contained and the search is terminated
+    returning \texttt{null}.
 
-  \item Hybrid: We store the number of compressed nodes and a static array
-    in order to store a part of the compressed path. If the number of
-    compressed nodes exceeds the size of the array, the optimistic strategy is
-    used instead.
+  \item Hybrid: We store the number of compressed nodes and a static, 
+    fixed-size array in order to store a part of the compressed path. If the 
+    number of compressed nodes exceeds the size of the array, the optimistic 
+    strategy is used instead.
 \end{itemize}
 
 \begin{figure}[h]
@@ -251,18 +256,18 @@ Leis et al.\ mention three approaches to deal with vertical compression:
             [,circle,draw,red, edge label={node[midway,right,font=\footnotesize]{$01$}}
               [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$00$}}
                 [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$00$}}
-                  [,circle,draw,red, edge label={node[midway,left,font=\footnotesize]{$11$}}]
+                  [\texttt{\$},circle,draw,red,inner sep=0,edge label={node[midway,left,font=\footnotesize]{$11$}}]
                 ]
                 [,phantom]
                 [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$01$}}
-                  [,circle,draw,red, edge label={node[midway,right,font=\footnotesize]{$10$}}]
+                  [\texttt{\$},circle,draw,red,inner sep=0,edge label={node[midway,right,font=\footnotesize]{$10$}}]
                 ]
               ]
               [,phantom]
               [,phantom]
               [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}
                 [,circle,draw,red, edge label={node[midway,right,font=\footnotesize]{$01$}}
-                  [,circle,draw,red, edge label={node[midway,right,font=\footnotesize]{$00$}}]
+                  [\texttt{\$},circle,draw,red,inner sep=0,edge label={node[midway,right,font=\footnotesize]{$00$}}]
                 ]
               ]
             ]
@@ -279,19 +284,19 @@ Leis et al.\ mention three approaches to deal with vertical compression:
         \begin{forest}
           [,circle,draw
             [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$00$}}
-              [,circle,draw, edge label={node[midway,left,font=\footnotesize]{$00$}}]{
+              [\texttt{\$},circle,draw,inner sep=0,edge label={node[midway,left,font=\footnotesize]{$00$}}]{
                 \draw[gray] (.east)--++(0.5em,0em)
                   node[anchor=west,gray]{11};
               }
               [,phantom]
-              [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$01$}}]{
+              [\texttt{\$},circle,draw,inner sep=0,edge label={node[midway,right,font=\footnotesize]{$01$}}]{
                 \draw[gray] (.east)--++(0.5em,0em)
                   node[anchor=west,gray]{10};
               }
             ]
             [,phantom]
             [,phantom]
-            [,circle,draw, edge label={node[midway,right,font=\footnotesize]{$10$}}]{
+            [\texttt{\$},circle,draw,inner sep=0,edge label={node[midway,right,font=\footnotesize]{$10$}}]{
               \draw[gray] (.east)--++(0.5em,0em)
                 node[anchor=west,gray]{0100};
             }
@@ -319,8 +324,8 @@ Leis et al.\ mention three approaches to deal with vertical compression:
 \subsection{Horizontal Compression (Adaptive Nodes)}\label{sec:horizontal-compression}
 
 With large values of span $s$, an excessive amount of space is sacrificed
-to achieve a smaller tree height. Space is allocated for pointers which keep
-references to child nodes, even if they are unused.
+to achieve a smaller tree height. Larger nodes means space is allocated for 
+pointers which keep references to child nodes, even if they are unused.
 
 In order to reduce the space needed to keep
 such references, Leis et al.\ propose \textit{Adaptive Nodes} 
@@ -369,8 +374,7 @@ a \texttt{null} pointer.
 
 A node of type \texttt{Node4} contains two 4-element arrays, one called
 ``partial keys'' and one called ``children''.
-The ``partial keys'' array, holds
-partial keys which identify children of that node. 
+The ``partial keys'' array holds partial keys of the child nodes. 
 The ``children'' array, holds pointers to the child nodes.
 Partial keys and pointers are stored at corresponding positions in their
 respective arrays and the partial keys are sorted.
@@ -384,7 +388,9 @@ An instance of \texttt{Node48} contains a 256-element array named
 Partial keys are stored implicitly in ``indexes'', i.e.\ 
 can be indexed with partial key bytes directly.
 As the name suggests, ``indexes'' stores the index of a child
-node inside the ``children'' array.
+node inside the ``children'' array. Value $48$ is a special value in the
+indexes array and is used to signal that a child with that partial key
+does not exist.
 
 Finally, a node of type \texttt{Node256} contains an array of
 256 pointers which can be indexed with partial key bytes directly.
@@ -414,13 +420,12 @@ Child nodes can be found with a single lookup.
 We will now describe how two fundamental operations, namely
 point query and deletion are implemented in ART.
 Range queries and insertions are similar and are omitted for brevity.
-The algorithms mentioned below are based on the implementations presented by
-Leis et al. 
 
 Note that our implementation uses
 \textit{single-value leaves} (c.f.\ Leis et al.), 
 i.e.\ values are stored using an additional leaf node type, conveniently
-called \texttt{Node0}, which stores one value. Additionally, we utilize
+called \texttt{Node0}, which stores one value. \texttt{Node0} is equivalent to
+a terminator node mentioned in \Cref{sec:preliminaries}. Additionally, we utilize
 pessimistic vertical compression (c.f.\ \Cref{sec:vertical-compression}),
 i.e.\ each inner node stores the entire compressed path inside the 
 \texttt{prefix} variable using a variable length partial key array. 
@@ -439,14 +444,18 @@ the current node during tree traversal, \texttt{child} which references
 \texttt{cur}'s child and \texttt{depth}, which holds the depth
 of the current node. We now enter a loop in which we check if \texttt{cur} 
 references \texttt{null} during the beginning of each iteration, and if so, 
-we return \texttt{null}.
+the search key is not contained and we return \texttt{null}.
 
 In lines 5-8 we check if a prefix mismatch occurs. This step is required
 because of vertical compression (c.f.\ \Cref{sec:vertical-compression}).
-Method \texttt{check\_prefix} is a member of the \texttt{node} class which
+If a prefix mismatch is discovered, \texttt{null} is returned. Method 
+\texttt{check\_prefix} is a member of the \texttt{node} class which
 determines the number of matching bytes between \texttt{cur}'s prefix
-and \texttt{key} w.r.t.\ the current depth. If a prefix mismatch is discovered,
-\texttt{null} is returned.
+and \texttt{key} w.r.t.\ the current depth. e.g., given a node with \texttt{prefix}
+``\texttt{abbd}'', a search key ``\texttt{aaabbbccc}'' and depth $2$, then
+\texttt{check\_prefix} returns $4$, since the $4$-th byte of \texttt{prefix}
+(`\texttt{d}'), does not match the (depth + $4$)-th byte of the search key
+(`\texttt{b}').
 
 Lines 9-12 check for an exact match of the key at the current node. If so,
 we return the value of the current node.
@@ -641,7 +650,7 @@ its competitors in all three microbenchmarks.
         ybar,
         symbolic x coords={ART,RBT,HT},
         ylabel=Operations/second {[M]},
-        ymax = 4,
+        ymax = 4.5,
         ymin = 0,
         width=5cm,
         height=6cm,
@@ -657,7 +666,7 @@ its competitors in all three microbenchmarks.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ymax = 4,
+        ymax = 4.5,
         ymin = 0,
         width=5cm,
         height=6cm,
@@ -673,7 +682,7 @@ its competitors in all three microbenchmarks.
       \begin{axis}[
         ybar,
         symbolic x coords={ART,RBT,HT},
-        ymax = 4,
+        ymax = 4.5,
         ymin = 0,
         width=5cm,
         height=6cm,
@@ -697,7 +706,7 @@ a well defined workload applied on each of the three data structures.
 
 The more than twelve million keys used during the benchmark have structure
 and do resemble paths of a hierarchy (e.g.\ ``\texttt{/a}'', ``\texttt{/a/b}'',
-``\texttt{/a/c}'', etc.). The dataset is based on DELL's 
+``\texttt{/a/c}'', etc.). The dataset is based on Dell's 
 website~\cite{wellenzohn2017wapi}.
 The keys are ordered in reverse level order and during each transaction we
 draw a key under the Zipf distribution (skew $s=1$).
@@ -757,15 +766,15 @@ fewer times.
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.49\textwidth}
+  \begin{subfigure}[b]{0.30\textwidth}
     \begin{tikzpicture}
       \begin{axis}[
-        xmax=11000000,
-        ymax=4500000,
-        xlabel=transactions,
-        ylabel=\#compressions,
+        xmax=11,
+        ymax=4.5,
+        xlabel={Transactions [M]},
+        ylabel=Compressions {[M]},
         height=7cm,
-        width=7cm,
+        width=5cm,
         ]
         \addplot table {compressions_sparse.dat};
       \end{axis}
@@ -773,17 +782,31 @@ fewer times.
     \caption{Sparse Keys}
     \label{fig:compressions-sparse}
   \end{subfigure}
-  \begin{subfigure}[b]{0.49\textwidth}
+  \begin{subfigure}[b]{0.30\textwidth}
     \begin{tikzpicture}
       \begin{axis}[
-        xmax=11000000,
-        ymax=4500000,
-        xlabel=transactions,
-        ylabel=\#compressions,
+        xmax=11,
+        ymax=4.5,
+        xlabel={Transactions [M]},
         height=7cm,
-        width=7cm,
+        width=5cm,
         ]
         \addplot table {compressions_paths.dat};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Dell Dataset}
+    \label{fig:compressions-paths}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.30\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+        xmax=11,
+        ymax=4.5,
+        xlabel={Transactions [M]},
+        height=7cm,
+        width=5cm,
+        ]
+        \addplot table {compressions_dense.dat};
       \end{axis}
     \end{tikzpicture}
     \caption{Dense Keys}

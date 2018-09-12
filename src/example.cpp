@@ -58,6 +58,36 @@ void art_sparse_uniform() {
   }
 }
 
+std::string pad(const std::string &s, char ch, int n) {
+  if (s.length() >= n) {
+    return s;
+  }
+  std::string new_s(n, ch);
+  for (int i = s.length() - 1; i > -1; --i) {
+    new_s[n - i - 1] = s[i];
+  }
+  return new_s;
+}
+
+/* void art_compressions_dense() { */
+/*   art::art<int> m; */
+/*   int v = 1; */
+/*   std::string k; */
+/*   int i; */
+/*   for (i = 0; i < 10000000; ++i) { */
+/*     k = pad(std::to_string(i), '0', 7); */
+/*     m.set(k.c_str(), k.length(), &v); */
+/*   } */
+/*   for (i = 0; i < 10000000; ++i) { */
+/*     if (i % 1000000 == 0) { */
+/*       std::cout << i << " " << m.n_compress << std::endl; */
+/*     } */
+/*     k = pad(std::to_string(i), '0', 7); */
+/*     m.del(k.c_str(), k.length()); */
+/*   } */
+/*   std::cout << i << " " << m.n_compress << std::endl; */
+/* } */
+
 /* void art_compressions_paths() { */
 /*   art::art<int> m; */
 /*   int v = 1; */
@@ -104,5 +134,6 @@ void art_sparse_uniform() {
 int main() {
   /* art_sparse_uniform(); */
   /* art_compressions_sparse(); */
+  /* art_compressions_dense(); */
   return 0;
 }
