@@ -114,8 +114,10 @@ volatile memory in comparison to secondary storage.
 
 Leis et al.\ \cite{leis2013adaptive} propose the Adaptive Radix Tree (ART), an in-memory
 data structure which efficiently stores and retrieves data.
-As we will see later, ART achieves its performance, and space
+ART, which is a trie based data structure, achieves its performance, and space
 efficiency, by compressing the tree both vertically and horizontally.
+Vertical compression reduces the tree height and horizontal compression
+a node's size.
 
 The goal of this project is to study and implement ART, as proposed by 
 \cite{leis2013adaptive}. 
@@ -135,8 +137,8 @@ Unlike a comparison-based search tree, a trie does not store keys in nodes.
 Rather, the digital representation of a search key is split into partial
 keys used to index the nodes. When 
 constructing a trie from a set of keys, all insertion orders result in the 
-same tree. Tries do not require rebalancing operations and therefore have 
-no notion of balance, unlike comparison based search trees.
+same tree. Tries have no notion of balance and therefore do not require 
+rebalancing operations.
 
 Keys are split into partial keys of $s$ bits, where $s$ is called 
 \textit{span}. Inner nodes have  $2^s$ child pointers 
@@ -148,12 +150,15 @@ additional comparison.
 
 \Cref{fig:span} depicts tries storing the 
 8-bit keys ``$01000011$'', ``$01000110$'' and ``$01100100$'' with 
-$s \in \{1,2\}$. Span $s$ is critical for the performance of the trie because $s$ 
-determines the height of the trie. We observe that by increasing the span, 
-we decrease the tree height. A trie
-storing $k$ bit keys has $\lceil \frac{k}{s} \rceil$ levels of nodes.
+$s \in \{1,2\}$. Nodes with \texttt{\$} are terminator nodes and they are used
+to indicate the end of a key. Span $s$ is critical for the performance of the 
+trie because $s$ determines the height of the trie. When a trie's height
+increases, performance deteriorates as more nodes have to be traversed during
+a search. We observe that by increasing the span, we decrease the tree height. 
+A trie storing $k$ bit keys has $\lceil \frac{k}{s} \rceil$ levels of nodes.
 As a consequence, point queries, insertions and deletions have 
-$O(k)$ complexity.
+$O(k)$ complexity because a trie cannot have a height greater than the length
+of keys it stores.
 
 Span $s$ also determines the space consumption of the tree.
 A node with span $s$ requires $2^s$ pointers. 
@@ -161,8 +166,9 @@ An apparent trade off exists between tree height versus space efficiency that
 depends on $s$. Increasing $s$ yields a decrease in the tree's height, 
 resulting in faster lookups because less nodes are traversed. On the other
 hand, by increasing $s$, nodes require to store more child pointers. Every
-increment in $s$ halves the height of the tree but (nearly) doubles the space consumed
-by each node.
+increment in $s$ halves the height of the tree but doubles the amount of 
+child pointers of each node. Generally, increasing $s$ yields an increase to
+the space consumption of a trie.
 
 \begin{figure}[h]
   \centering
