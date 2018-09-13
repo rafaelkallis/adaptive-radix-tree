@@ -34,42 +34,57 @@ void art_bench() {
   }
 }
 
-void art_sparse_uniform() {
-  art::art<int> m;
-  int n = 1000;
-  int v = 1;
-  std::mt19937_64 rng1(0);
-  std::string k;
-  for (int i = 0; i < n; ++i) {
-    k = std::to_string(rng1());
-    m.set(k.c_str(), k.length(), &v);
-  }
+/* void art_sparse_uniform() { */
+/*   art::art<int> m; */
+/*   int n = 1000; */
+/*   int v = 1; */
+/*   std::mt19937_64 rng1(0); */
+/*   std::string k; */
+/*   for (int i = 0; i < n; ++i) { */
+/*     k = std::to_string(rng1()); */
+/*     m.set(k.c_str(), k.length(), &v); */
+/*   } */
   
-  std::mt19937_64 rng2(0);
-  for (int i = 0; i < n; ++i) {
-    k = std::to_string(rng2());
-    m.get(k.c_str(), k.length());
-  }
+/*   std::mt19937_64 rng2(0); */
+/*   for (int i = 0; i < n; ++i) { */
+/*     k = std::to_string(rng2()); */
+/*     m.get(k.c_str(), k.length()); */
+/*   } */
   
-  std::mt19937_64 rng3(0);
-  for (int i = 0; i < n; ++i) {
-    k = std::to_string(rng3());
-    m.del(k.c_str(), k.length());
-  }
-}
+/*   std::mt19937_64 rng3(0); */
+/*   for (int i = 0; i < n; ++i) { */
+/*     k = std::to_string(rng3()); */
+/*     m.del(k.c_str(), k.length()); */
+/*   } */
+/* } */
 
-std::string pad(const std::string &s, char ch, int n) {
-  if (s.length() >= n) {
-    return s;
-  }
-  std::string new_s(n, ch);
-  for (int i = s.length() - 1; i > -1; --i) {
-    new_s[n - i - 1] = s[i];
-  }
-  return new_s;
-}
+/* std::string pad(const std::string &s, char ch, int n) { */
+/*   if (s.length() >= n) { */
+/*     return s; */
+/*   } */
+/*   std::string new_s(n, ch); */
+/*   for (int i = s.length() - 1; i > -1; --i) { */
+/*     new_s[n - i - 1] = s[i]; */
+/*   } */
+/*   return new_s; */
+/* } */
 
-/* void art_compressions_dense() { */
+/* void art_compressions_dense_insert() { */
+/*   art::art<int> m; */
+/*   int v = 1; */
+/*   std::string k; */
+/*   int i; */
+/*   for (i = 0; i < 10000000; ++i) { */
+/*     if (i % 1000000 == 0) { */
+/*       std::cout << i << " " << m.n_compress << std::endl; */
+/*     } */
+/*     k = pad(std::to_string(i), '0', 7); */
+/*     m.set(k.c_str(), k.length(), &v); */
+/*   } */
+/*   std::cout << i << " " << m.n_compress << std::endl; */
+/* } */
+
+/* void art_compressions_dense_delete() { */
 /*   art::art<int> m; */
 /*   int v = 1; */
 /*   std::string k; */
@@ -78,6 +93,7 @@ std::string pad(const std::string &s, char ch, int n) {
 /*     k = pad(std::to_string(i), '0', 7); */
 /*     m.set(k.c_str(), k.length(), &v); */
 /*   } */
+/*   m.n_compress = 0; */
 /*   for (i = 0; i < 10000000; ++i) { */
 /*     if (i % 1000000 == 0) { */
 /*       std::cout << i << " " << m.n_compress << std::endl; */
@@ -88,7 +104,24 @@ std::string pad(const std::string &s, char ch, int n) {
 /*   std::cout << i << " " << m.n_compress << std::endl; */
 /* } */
 
-/* void art_compressions_paths() { */
+/* void art_compressions_paths_insert() { */
+/*   art::art<int> m; */
+/*   int v = 1; */
+/*   auto file = std::ifstream("dataset.txt"); */
+/*   std::string line; */
+/*   int i = 0; */
+/*   while (std::getline(file, line)) { */
+/*     if (i % 1000000 == 0) { */
+/*       std::cout << i << " " << m.n_compress << std::endl; */
+/*     } */
+/*     m.set(line.c_str(), line.length(), &v); */
+/*     ++i; */
+/*   } */
+/*   file.close(); */
+/*   std::cout << i << " " << m.n_compress << std::endl; */
+/* } */
+
+/* void art_compressions_paths_delete() { */
 /*   art::art<int> m; */
 /*   int v = 1; */
 /*   auto file = std::ifstream("dataset.txt"); */
@@ -98,19 +131,36 @@ std::string pad(const std::string &s, char ch, int n) {
 /*   } */
 /*   file.close(); */
 /*   file = std::ifstream("dataset.txt"); */
+/*   m.n_compress = 0; */
 /*   int i = 0; */
 /*   while (std::getline(file, line)) { */
 /*     if (i % 1000000 == 0) { */
-/*       std::cout << i << " " << m.compression_count << std::endl; */
+/*       std::cout << i << " " << m.n_compress << std::endl; */
 /*     } */
 /*     m.del(line.c_str(), line.length()); */
 /*     ++i; */
 /*   } */
 /*   file.close(); */
-/*   std::cout << i << " " << m.compression_count << std::endl; */
+/*   std::cout << i << " " << m.n_compress << std::endl; */
 /* } */
 
-/* void art_compressions_sparse() { */
+/* void art_compressions_sparse_insert() { */
+/*   art::art<int> m; */
+/*   int v = 1; */
+/*   std::mt19937_64 rng1(0); */
+/*   std::string k; */
+/*   int i; */
+/*   for (i = 0; i < 10000000; ++i) { */
+/*     if (i % 1000000 == 0) { */
+/*       std::cout << i << " " << m.n_compress << std::endl; */
+/*     } */
+/*     k = std::to_string(rng1()); */
+/*     m.set(k.c_str(), k.length(), &v); */
+/*   } */
+/*   std::cout << i << " " << m.n_compress << std::endl; */
+/* } */
+
+/* void art_compressions_sparse_delete() { */
 /*   art::art<int> m; */
 /*   int v = 1; */
 /*   std::mt19937_64 rng1(0); */
@@ -119,21 +169,49 @@ std::string pad(const std::string &s, char ch, int n) {
 /*     k = std::to_string(rng1()); */
 /*     m.set(k.c_str(), k.length(), &v); */
 /*   } */
+/*   m.n_compress = 0; */
 /*   std::mt19937_64 rng2(0); */
 /*   int i = 0; */
 /*   for (; i < 10000000; ++i) { */
 /*     if (i % 1000000 == 0) { */
-/*       std::cout << i << " " << m.compression_count << std::endl; */
+/*       std::cout << i << " " << m.n_compress << std::endl; */
 /*     } */
 /*     k = std::to_string(rng2()); */
 /*     m.del(k.c_str(), k.length()); */
 /*   } */
-/*   std::cout << i << " " << m.compression_count << std::endl; */
+/*   std::cout << i << " " << m.n_compress << std::endl; */
 /* } */
 
+void casual_stress_test(int n) {
+  art::art<int> m;
+  int v = 1;
+  std::mt19937_64 rng1(0);
+  std::string k;
+  int i;
+  for (i = 0; i < n; ++i) {
+    k = std::to_string(rng1());
+    m.set(k.c_str(), k.length(), &v);
+    if ((i % (1<<20)) == 0) {
+      std::cout << i << std::endl;
+    }
+  }
+  std::cout << i << std::endl;
+}
+
 int main() {
-  /* art_sparse_uniform(); */
-  /* art_compressions_sparse(); */
-  /* art_compressions_dense(); */
+  /* std::cout << "sparse insert" << std::endl; */
+  /* art_compressions_sparse_insert(); */
+  /* std::cout << "sparse delete" << std::endl; */
+  /* art_compressions_sparse_delete(); */
+  /* std::cout << "paths insert" << std::endl; */
+  /* art_compressions_paths_insert(); */
+  /* std::cout << "paths delete" << std::endl; */
+  /* art_compressions_paths_delete(); */
+  /* std::cout << "dense insert" << std::endl; */
+  /* art_compressions_dense_insert(); */
+  /* std::cout << "dense delete" << std::endl; */
+  /* art_compressions_dense_delete(); */
+
+  /* casual_stress_test(16 * 1000 * 1000); */
   return 0;
 }
