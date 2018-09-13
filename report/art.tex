@@ -117,7 +117,7 @@ data structure which efficiently stores and retrieves data.
 ART, which is a trie based data structure, achieves its performance, and space
 efficiency, by compressing the tree both vertically and horizontally.
 Vertical compression reduces the tree height and horizontal compression
-a node's size.
+decreases a node's size.
 
 The goal of this project is to study and implement ART, as proposed by 
 \cite{leis2013adaptive}. 
@@ -150,7 +150,7 @@ additional comparison.
 
 \Cref{fig:span} depicts tries storing the 
 8-bit keys ``$01000011$'', ``$01000110$'' and ``$01100100$'' with 
-$s \in \{1,2\}$. Nodes with \texttt{\$} are terminator nodes and they are used
+$s \in \{1,2\}$. Nodes with \texttt{\$} are terminator nodes and are used
 to indicate the end of a key. Span $s$ is critical for the performance of the 
 trie because $s$ determines the height of the trie. When a trie's height
 increases, performance deteriorates as more nodes have to be traversed during
@@ -213,8 +213,8 @@ Patricia is a space-optimized trie in which
 each node with no siblings is merged with its parent, i.e., inner nodes
 are only created if they are required to distinguish at least two leaf nodes. 
 Doing so, chains caused by long keys are eliminated, which make tries 
-space-inefficient. Although Morrison's Patricia tree is a bitwise trie, i.e.,
-has a span $s=1$, the technique can be applied to tries with any span,
+space-inefficient. Morrison's Patricia tree is a bitwise trie, i.e.,
+has a span $s=1$, but the technique can be applied to tries with any span,
 although it becomes less effective as span $s$ increases.
 We refer to this technique as \textit{vertical compression}.
 
@@ -327,14 +327,14 @@ With large values of span $s$, an excessive amount of space is sacrificed
 to achieve a smaller tree height. Larger nodes means space is allocated for 
 pointers which keep references to child nodes, even if they are unused.
 
-In order to reduce the space needed to keep
+In order to reduce space needed to keep
 such references, Leis et al.\ propose \textit{Adaptive Nodes} 
 \cite{leis2013adaptive}, which make use of dynamic data structures 
 instead of static arrays for child node bookkeeping. Doing so, we allocate 
 less space when the number of children is small and add more 
-space if required, i.e.\ more children are added.
+space if required, i.e., more children are added.
 We refer to this technique as \textit{horizontal compression}.
-Leis et al.\ fix the span $s=8$, i.e. partial keys are 1 byte
+Leis et al.\ fix the span $s=8$, i.e., partial keys are 1 byte
 long and therefore each node can have up to $2^8 = 256$ children.
 
 When applying horizontal compression, a node is in one of four configurations, 
@@ -385,7 +385,7 @@ arrays, which are 16 each.
 
 An instance of \texttt{Node48} contains a 256-element array named 
 ``indexes'' and a 48-element array called ``children''.
-Partial keys are stored implicitly in ``indexes'', i.e.\ 
+Partial keys are stored implicitly in ``indexes'', i.e., 
 can be indexed with partial key bytes directly.
 As the name suggests, ``indexes'' stores the index of a child
 node inside the ``children'' array. Value $48$ is a special value in the
@@ -423,11 +423,11 @@ Range queries and insertions are similar and are omitted for brevity.
 
 Note that our implementation uses
 \textit{single-value leaves} (c.f.\ Leis et al.), 
-i.e.\ values are stored using an additional leaf node type, conveniently
+i.e., values are stored using an additional leaf node type, conveniently
 called \texttt{Node0}, which stores one value. \texttt{Node0} is equivalent to
 a terminator node mentioned in \Cref{sec:preliminaries}. Additionally, we utilize
 pessimistic vertical compression (c.f.\ \Cref{sec:vertical-compression}),
-i.e.\ each inner node stores the entire compressed path inside the 
+i.e., each inner node stores the entire compressed path inside the 
 \texttt{prefix} variable using a variable length partial key array. 
 We present our implementations below.
 
@@ -452,18 +452,18 @@ because of vertical compression (c.f.\ \Cref{sec:vertical-compression}).
 If a prefix mismatch is discovered, \texttt{null} is returned. Method 
 \texttt{check\_prefix} is a member of the \texttt{node} class which
 determines the number of matching bytes between \texttt{cur}'s prefix
-and \texttt{key} w.r.t.\ the current depth. e.g., given a node with \texttt{prefix}
+and \texttt{key} w.r.t.\ the current depth, e.g., given a node with prefix
 ``\texttt{abbd}'', a search key ``\texttt{aaabbbccc}'' and depth $2$, then
-\texttt{check\_prefix} returns $4$, since the $4$-th byte of \texttt{prefix}
+\texttt{check\_prefix} returns $4$, since the $4$-th byte of the prefix
 (`\texttt{d}'), does not match the (depth + $4$)-th byte of the search key
 (`\texttt{b}').
 
 Lines 9-12 check for an exact match of the key at the current node. If so,
 we return the value of the current node. Finally, we traverse to the next child
-node. \texttt{depth} is increased to account for the nodes merged due to 
-vertical compression. We lookup the next child node, which is assigned to 
-\texttt{cur}. If no such child exists, the search key does not exist and 
-\texttt{null} is returned.
+node. Variable \texttt{depth} is adjusted according to the number of nodes 
+merged due to vertical compression. We lookup the next child node, which is 
+assigned to \texttt{cur}. If no such child exists, the search key does not 
+exist and \texttt{null} is returned.
 
 \vspace{-2mm}
 
@@ -486,7 +486,7 @@ template <class T> T * art<T>::get(const char *key, const int key_len) const {
   return nullptr;
 }
   \end{minted}
-  \vspace{-5mm}
+  \vspace{-6mm}
   \caption{Point query implemented in C++.}
   \label{algo:point-query}
   \vspace{-7mm}
@@ -506,8 +506,7 @@ In lines 3-5, we declare and initialize two pointers, \texttt{cur} and
 Variable \texttt{cur\_partial\_key} holds the partial key which indexes the
 current node in the parent's child lookup table.
 Variable \texttt{depth} holds the depth of the current node.
-
-Next, we loop until \texttt{cur} references either the right leaf node or
+We loop until \texttt{cur} references either the right leaf node or
 \texttt{null}. In the latter case, the is not contained and \texttt{null} is 
 returned.
 
@@ -522,16 +521,16 @@ of three cases is possible depending on \texttt{cur}'s siblings:
 
   \item If \texttt{cur} has \textit{one sibling} (lines 24-48), vertical
     compression is applied, effectively removing both \texttt{cur} and its
-    parent \texttt{par}. During this process, \texttt{par}'s \texttt{prefix},
+    parent \texttt{par}. During this process, \texttt{par}'s prefix,
     as well as the sibling's partial key, are prepended to the sibling's
-    \texttt{prefix}.
+    prefix.
 
     Lines 26-30 search for \texttt{cur}'s sibling. Next, lines 34-39 assign 
-    the concatenation of 1) \texttt{par}'s prefix, 2) \texttt{sibling}'s 
-    partial key and 3) \texttt{sibling}'s prefix, to \texttt{sibling}'s prefix.
+    the concatenation of: 1) \texttt{par}'s prefix, 2) the sibling's 
+    partial key and 3) the sibling's old prefix, to the sibling's new prefix.
 
     Lines 40-45 perform cleanup operations, freeing memory previously allocated
-    by \texttt{sibling}'s old prefix, \texttt{cur}, \texttt{cur}'s prefix,
+    by the sibling's old prefix, \texttt{cur}, \texttt{cur}'s prefix,
     \texttt{par} and \texttt{par}'s prefix. 
     
     Finally, \texttt{sibling} replaces the parent (line 46).
@@ -633,7 +632,7 @@ $\mathcal{O}(\log{}n)$ and $\mathcal{O}(1)$,\footnote{amortized
 $\mathcal{O}(1)$ during insertion and deletion.} respectively, 
 during lookup, insertion and deletion. $\mathcal{O}(k)$ and 
 $\mathcal{O}(\log{}n)$ are incomparable and we therefore cannot easily 
-estimate if ART outperforms RBT, or vice versa. HT, with an average case 
+estimate if ART will outperform RBT, or vice versa. HT, with an average case 
 complexity of $\mathcal{O}(1)$, should outperform ART and RBT.
 
 We first conduct a series of microbenchmarks in order to assess lookup,
@@ -641,11 +640,11 @@ insertion and deletion performance. Then we run a mixed workload benchmark
 on the three data structures and finally we conduct an experiment in order
 to measure how often vertical compression is applied on ART. 
 
-There are three datasets, i.e.\ set of keys, used for the benchmarks, a sparse
-dataset, a dense dataset and a real-world dataset, called the Dell
+There are three datasets, i.e., set of keys, used for the benchmarks: a sparse
+dataset, a dense dataset and a mixed dataset, called the Dell
 dataset~\cite{wellenzohn2017wapi}, with sparse and dense regions which
-will be described below in \Cref{sec:main-benchmark}. A dataset is dense 
-(sparse) if many (few) keys share common prefixes. 
+will be described in more detail below in \Cref{sec:main-benchmark}. 
+A dataset is dense (sparse) if many (few) keys share common prefixes. 
 
 A sparse dataset of size $n$ can be constructed by drawing $n$ uniformly 
 distributed 64-bit integers. A dense dataset of size $n$ can be constructed 
@@ -668,16 +667,15 @@ structure.
 \Cref{fig:lookup-microbenchmark,fig:insertion-microbenchmark,fig:deletion-microbenchmark}
 show the results of the three microbenchmarks. ART is positioned in between 
 its competitors in all three microbenchmarks.
-
 We observe that HT is faster than its competitors. As mentioned earlier, HT's
 average case complexity is constant, whereas ART and RBT have an average case
 complexity of $\mathcal{O}(k)$ and $\mathcal{O}(\log{}n)$, respectively.
 
 We also observe that HT performs at least double as fast compared to its
 competitors during the lookup microbenchmark, but takes a significant
-performance hit in the other microbenchmarks. We believe this happens because
-during insertion and deletion, HT requires a table resize and full rehash
-occasionally.
+performance hit in the other two microbenchmarks. We believe this happens 
+because during insertion and deletion, HT occasionally requires a table resize 
+and full rehash.
 
 \begin{figure}[H]
   \centering
@@ -747,13 +745,13 @@ each of the three index structures.
 The more than twelve million keys used during the benchmark have structure
 and do resemble paths of a hierarchy (e.g.\ ``\texttt{/a}'', ``\texttt{/a/b}'',
 ``\texttt{/a/c}'', etc.). The dataset has both sparse and dense regions, and
-is based on Dell's website~\cite{wellenzohn2017wapi}, hence it's called Dell's
-dataset. The keys are ordered in reverse level order and during each 
+is based on Dell's website~\cite{wellenzohn2017wapi}. 
+The keys are ordered in reverse level order and during each 
 transaction we draw a key under the Zipf distribution (skew $s=1$).
 
 The synthetic workload ``toggles'' a randomly drawn key from the dataset.
 In other words, we query against the randomly drawn key, and if the query 
-returns no results, i.e.\ the key is not contained, we insert the key, 
+returns no results, i.e., the key is not contained, we insert the key, 
 otherwise we delete it. Transactions are executed in sequential order.
 
 As \Cref{fig:main-benchmark} shows, ART performs as good as RBT and HT clearly
@@ -776,7 +774,7 @@ outperforms both its competitors during the benchmark.
       ylabel=Transactions/second {[M]},
       ymin=0,
       width=6cm,
-      height=8cm,
+      height=7cm,
       ]
       \addplot coordinates {(ART,0.9954678) (RBT,0.7042642) (HT,1.5987814)};
     \end{axis}
@@ -793,28 +791,25 @@ outperforms both its competitors during the benchmark.
 Vertical compression is an expensive operation, as it involves structural index
 modifications when applied. Such structural index modifications can be
 difficult for concurrency control because synchronization of concurrent
-transactions is required~\cite{wellenzohn2017wapi}.
+transactions is required during such operations~\cite{wellenzohn2017wapi}.
 Our last experiment measures how often vertical compression is applied
-when we store keys from the sparse, dense and the Dell dataset.
-As mentioned in \Cref{sec:vertical-compression} when deleting a node with
-a single sibling, the sibling is compressed, i.e.\ merged with its parent.
+when we store keys from the sparse, dense and Dell dataset.
+As mentioned in \Cref{sec:vertical-compression}, when deleting a node with
+a single sibling, the sibling is compressed, i.e., merged with its parent.
 
 Analogously, when inserting a key, if a leaf is encountered or the search key
-differs from the compressed path, expansion is applied, i.e., a new inner node
-is created above the current node and the compressed paths are adjusted
-accordingly. We only measure the number of vertical compressions during
-deletion for brevity, as the number of times compression is applied during
-deletion equals the number of times expansion is applied during insertion.
-In other words, when inserting a set of keys and then consecutively deleting
-them, expansions happen as often as compressions do.
+differs from the compressed path, \textit{expansion} is applied, i.e., a new 
+inner node is created above the current node and the compressed paths are 
+adjusted accordingly. We only measure the number of vertical compressions during
+deletion for brevity, as the number of compressions during deletion equals the 
+number of expansions during insertion.
 
-If each transaction only deletes one existing key, the number of compressions
+If each transaction only deletes one key at a time, the number of compressions
 cannot exceed the number of transactions. The number of compressions
 depends on span $s$. If $s=1$, every node must have exactly one sibling,
 and therefore every deletion requires a compression, unless the root is
 deleted. ART has a span of $s=8$ and we therefore do not expect a compression 
-for every deletion. A node with $s=8$ can have at most $254$ 
-children removed before it is merged with its parent.
+for every deletion.
 
 Results should vary depending if keys are sparse or dense. Dense keys
 likely share common prefixes and as a result tries require less nodes to 
@@ -823,8 +818,8 @@ of compressions due to the smaller number of nodes.
 
 \Cref{fig:compressions-sparse,fig:compressions-paths,fig:compressions-dense} 
 depict number of vertical
-compressions over number of transactions for sparse and dense keys. 
-We observe a linear relation between the two variables. As expected, 
+compressions over number of transactions for the sparse, Dell and dense 
+dataset. We observe a linear relation between the two variables. As expected,
 dense keys require less compressions compared to sparse keys. That is because 
 less nodes are needed to store dense keys, thus path compression is applied
 fewer times.
@@ -844,7 +839,7 @@ fewer times.
         \addplot table {compressions_sparse.dat};
       \end{axis}
     \end{tikzpicture}
-    \caption{Sparse Keys}
+    \caption{Sparse Dataset}
     \label{fig:compressions-sparse}
   \end{subfigure}
   \begin{subfigure}[b]{0.30\textwidth}
@@ -874,7 +869,7 @@ fewer times.
         \addplot table {compressions_dense.dat};
       \end{axis}
     \end{tikzpicture}
-    \caption{Dense Keys}
+    \caption{Dense Dataset}
     \label{fig:compressions-dense}
   \end{subfigure}
   \caption{Number of compressions over number of transactions. Each transaction
@@ -888,15 +883,16 @@ fewer times.
 In this project we implemented all basic functionalities of ART, but left 
 potential for performance improvements.
 
-We plan to optimize ART's sequential performance with extensive CPU call-stack
-profiling. Performance can also be improved by utilizing Single Instruction
+We plan to optimize ART's sequential transactional throughput with the help of
+extensive profiling (e.g., call history, instructions executed, etc.).
+Performance can also be improved by utilizing Single Instruction
 Multiple Data (SIMD) instructions as mentioned in~\cite{leis2013adaptive}.
 A memory profile analysis would be interesting for the purpose of comparing
 ART's space utilization against red-black trees and hashtables w.r.t.\ sparse
 and dense datasets.
 
 Leis et al.\ use hybrid vertical compression in their implementation, 
-i.e.\ only store the 8 first bytes of the compressed path in a static array 
+i.e., only store the 8 first bytes of the compressed path in a static array 
 and the number of compressed nodes. We use pessimistic vertical compression, 
 which stores the entire compressed path.
 Their approach leverages on-CPU caches better compared to the pessimistic
