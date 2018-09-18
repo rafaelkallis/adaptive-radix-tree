@@ -46,7 +46,7 @@
     \scriptsize Matrikelnummer: 14-708-887\\[-5pt]
     \scriptsize Email: \texttt{rk@rafaelkallis.com}
 }
-\date{\vspace*{2cm}September 1, 2018}
+\date{\vspace*{2cm}September 18, 2018}
 \publishers{
     \small supervised by Prof.\ Dr.\ Michael\ Böhlen and Kevin\ Wellenzohn \\[5cm]
     \begin{tikzpicture}[overlay]
@@ -117,7 +117,7 @@ The goal of this project is to study and implement the Adaptive Radix Tree
 % ART is an in-memory data structure which efficiently stores and retrieves data.
 ART, which is a trie based data structure, achieves its performance, and space
 efficiency, by compressing the tree both vertically, i.e., if a node has no 
-siblings it is merged with its parent, and horizontally, i.e., use an array
+siblings it is merged with its parent, and horizontally, i.e., uses an array
 which grows as the number of children increases.
 Vertical compression reduces the tree height and horizontal compression
 decreases a node's size.
@@ -633,15 +633,15 @@ efficient range queries. We use C++ standard library containers
 which are implementations of RBT and HT, respectively.
 
 Let $k$ be the length of the keys and $n$ be the size of the dataset, then
-ART, RBT and HT have an average case complexity of $\mathcal{O}(k)$, 
-$\mathcal{O}(\log{}n)$ and $\mathcal{O}(1)$,\footnote{amortized
-$\mathcal{O}(1)$ during insertion and deletion.} respectively, 
-during lookup, insertion and deletion. ART's and RBT's big O complexities are
+ART, RBT and HT have an average case complexity of $O(k)$, 
+$O(\log{}n)$ and $O(1)$,\footnote{amortized
+$O(1)$ during insertion and deletion.} respectively, 
+for point queries, insertion and deletion. ART's and RBT's big-O complexities are
 incomparable, as one depends on the length of the keys and the other on the 
 size of the dataset $n$. HT, with an average case 
-complexity of $\mathcal{O}(1)$, should outperform ART and RBT.
+complexity of $O(1)$, should outperform ART and RBT.
 
-We first conduct a series of microbenchmarks in order to assess lookup,
+We first conduct a series of microbenchmarks in order to assess point query,
 insertion and deletion performance and then conduct an experiment in order
 to measure how often vertical compression is applied on ART. 
 
@@ -650,8 +650,8 @@ dataset, a dense dataset and a mixed dataset, called the Dell
 dataset~\cite{wellenzohn2017wapi}, with sparse and dense regions. 
 A dataset is dense (sparse) if many (few) keys share common prefixes. 
 
-A sparse dataset of size $n$ can be constructed by drawing $n$ uniformly 
-distributed 64-bit integers. A dense dataset of size $n$ can be constructed 
+The dataset of size $n = 16$ million is constructed by drawing $n$ uniformly 
+distributed 64-bit integers. The dense dataset of size $n$ is constructed 
 by picking 64-bit integers from $0$ to $n - 1$ (leading bits are filled with 
 zeroes).
 
@@ -659,7 +659,7 @@ zeroes).
 
 During the lookup microbenchmark, we execute point queries on an instance
 of each of the three data structures (ART, RBT, HT)
-containing the same sixteen million keys. The keys are sparse (i.e., uniformly
+containing the same $n=16$ million keys. The keys are sparse (i.e., uniformly
 distributed), 64-bit integers. Each key is queried exactly once.
 The insertion microbenchmark inserts the same sixteen million sparse 64-bit keys
 used previously. Finally, the deletion microbenchmark, structured similar to 
@@ -669,16 +669,16 @@ structure.
 \Cref{fig:lookup-microbenchmark,fig:insertion-microbenchmark,fig:deletion-microbenchmark}
 show the results of the three microbenchmarks. ART is positioned in between 
 its competitors in all three microbenchmarks and shows a robust performance.
-ART depends on key length $k$, but HT does not, which explains why ART is
-slower than HT. Although ART's and RBT's big O complexities are incomparable
-as the one depends on the key length $k$ and the other on the size of the 
-dataset $n$, ART seems to outperform RBT in practice during lookup, insertion
-and deletion.
+ART's performance depends on key length $k$, but HT does not (constant), which 
+explains why ART is slower than HT. Although ART's and RBT's big-O complexities 
+are incomparable as the one depends on the key length $k$ and the other on the 
+size of the dataset $n$, ART seems to outperform RBT in practice for point 
+queries, insertion and deletion.
 % We observe that HT is faster than its competitors. As mentioned earlier, HT's
 % average case complexity is constant, whereas ART and RBT have an average case
 % complexity of $\mathcal{O}(k)$ and $\mathcal{O}(\log{}n)$, respectively.
 
-We also observe that ART performs twice as slow compared to HT during the 
+We also observe that ART performs half as fast compared to HT during the 
 lookup microbenchmark, but is as fast as HT during insertion.
 We believe this happens because during insertion, HT occasionally 
 requires a table resize and full rehash.
@@ -777,7 +777,7 @@ depict number of vertical
 compressions over number of transactions for the sparse, Dell and dense 
 dataset. We observe a linear relation between the two variables. As expected,
 dense keys require less compressions compared to sparse keys. That is because
-the dense dataset has a higher fanout. If a node has many children, more
+with the dense dataset, ART nodes have a higher fanout. If a node has many children, more
 deletions are required until compression is applied.
 We also observe that the Dell dataset lies between the sparse and dense
 dataset in terms of compressions per operation but tends towards the 
