@@ -108,19 +108,22 @@
 \newpage
 \section{Introduction}
 
-Main-Memory Databases increasingly become a viable option for many applications
-due to the considerably faster access times and increasing capacities of 
-volatile memory in comparison to secondary storage.
+% Main-Memory Databases increasingly become a viable option for many applications
+% due to the considerably faster access times and increasing capacities of 
+% volatile memory in comparison to secondary storage.
 
-Leis et al.\ \cite{leis2013adaptive} propose the Adaptive Radix Tree (ART), an in-memory
-data structure which efficiently stores and retrieves data.
+The goal of this project is to study and implement the Adaptive Radix Tree 
+(ART), as proposed by Leis et al.\ \cite{leis2013adaptive}.
+% ART is an in-memory data structure which efficiently stores and retrieves data.
 ART, which is a trie based data structure, achieves its performance, and space
-efficiency, by compressing the tree both vertically and horizontally.
+efficiency, by compressing the tree both vertically, i.e., if a node has no 
+siblings it is merged with its parent, and horizontally, i.e., use an array
+which grows as the number of children increases.
 Vertical compression reduces the tree height and horizontal compression
 decreases a node's size.
 
-The goal of this project is to study and implement ART, as proposed by 
-\cite{leis2013adaptive}. 
+% The goal of this project is to study and implement ART, as proposed by 
+% \cite{leis2013adaptive}. 
 In \Cref{sec:art} we describe how ART is constructed by applying 
 vertical and horizontal compression to a trie.
 Next, we describe the point query procedure, as well as 
@@ -128,7 +131,7 @@ key deletion in \Cref{sec:algorithms}.
 Finally, a benchmark of ART, a red-black tree and a hashtable
 is presented in \Cref{sec:benchmarks}.
 
-\section{Preliminaries}\label{sec:preliminaries}
+\section{Background - Tries}\label{sec:preliminaries}
 
 A trie \cite{fredkin1960trie} is a hierarchical data structure which
 stores key-value pairs. Tries can answer both point and range queries 
@@ -140,7 +143,7 @@ constructing a trie from a set of keys, all insertion orders result in the
 same tree. Tries have no notion of balance and therefore do not require 
 rebalancing operations.
 
-Keys are split into partial keys of $s$ bits, where $s$ is called 
+Keys are split into partial keys of $s$ bits each, where $s$ is called 
 \textit{span}. Inner nodes have  $2^s$ child pointers 
 (possibly \texttt{null}), one for each possible $s$-bit sequence. During tree
 traversal, we descend down to the child node identified by the $d$-th
@@ -148,7 +151,7 @@ $s$-bit partial key of the search key, where $d$ is the depth of the current
 node.  Using an array of $2^s$  pointers, this lookup can be done without any 
 additional comparison. 
 
-\Cref{fig:span} depicts tries storing the 
+\Cref{fig:span1,fig:span2} depict tries storing the 
 8-bit keys ``$01000011$'', ``$01000110$'' and ``$01100100$'' with 
 $s \in \{1,2\}$. Nodes with \texttt{\$} are terminator nodes and are used
 to indicate the end of a key. Span $s$ is critical for the performance of the 
@@ -175,16 +178,17 @@ the space consumption of a trie.
   \begin{subfigure}[b]{0.4\textwidth}
     \includegraphics[height=10cm,trim={2cm 17.5cm 2.5cm 1.5cm},clip]{trie_s1_draw}
     \caption{$s=1$}
+    \label{fig:span1}
   \end{subfigure}
   \begin{subfigure}[b]{0.55\textwidth}
     \includegraphics[height=10cm,trim={2cm 18.5cm 2.5cm 0.5cm},clip]{trie_s2_draw}
     \caption{$s=2$}
+    \label{fig:span2}
   \end{subfigure}
   \caption{
     Tries with span $s \in \{1,2\}$ storing keys ``$01000011$'', ``$01000110$''
     and ``$01100100$''.
   }
-  \label{fig:span}
 \end{figure}
 
 \newpage
@@ -201,9 +205,9 @@ of space required by each node depending on the number of child nodes.
 \subsection{Vertical (Prefix) Compression}\label{sec:vertical-compression}
 
 When storing long keys, chains of nodes start to form where each node only
-has a single child. (e.g.\ the trie in \Cref{fig:span} stores ``01100100'',
+has a single child. (e.g.\ the trie in \Cref{fig:span1} stores ``01100100'',
 we see a chain of five nodes).
-As a consequence, a lot of space is wasted as many nodes
+As a consequence, space is wasted as many nodes
 with little actual content are kept and traversals are slowed down because
 many nodes are traversed. Space wasting is further amplified with sparse
 datasets or a small span.
@@ -233,11 +237,11 @@ Leis et al.\ mention three approaches to deal with vertical compression:
     gray).
 
   \item Optimistic: Only the number of compressed nodes is stored. Lookups
-    just skip this number of partial keys without comparing them to the search
+    skip this number of partial keys without comparing them to the search
     key. Full keys are required to be stored on leaf nodes. When a lookup 
     arrives to a leaf node, its key must be compared to the search key.
-    In case of a mismatch, the is not contained and the search is terminated
-    returning \texttt{null}.
+    In case of a mismatch, the search key is not contained and the search is 
+    terminated returning \texttt{null}.
 
   \item Hybrid: We store the number of compressed nodes and a static, 
     fixed-size array in order to store a part of the compressed path. If the 
@@ -384,12 +388,13 @@ to \texttt{Node4}, the only difference being the lengths of the two static
 arrays, which are 16 each.
 
 An instance of \texttt{Node48} contains a 256-element array named 
-``indexes'' and a 48-element array called ``children''.
+``indexes'' ($256$ bytes) and a 48-element array called ``children''
+($48 \cdot 8$ bytes).
 Partial keys are stored implicitly in ``indexes'', i.e., 
 can be indexed with partial key bytes directly.
 As the name suggests, ``indexes'' stores the index of a child
-node inside the ``children'' array. Value $48$ is a special value in the
-indexes array and is used to signal that a child with that partial key
+node inside the ``children'' array. $48$ is a special value in the
+``indexes'' array and is used to signal that the partial key
 does not exist.
 
 Finally, a node of type \texttt{Node256} contains an array of
@@ -454,7 +459,7 @@ If a prefix mismatch is discovered, \texttt{null} is returned. Method
 determines the number of matching bytes between \texttt{cur}'s prefix
 and \texttt{key} w.r.t.\ the current depth, e.g., given a node with prefix
 ``\texttt{abbd}'', a search key ``\texttt{aaabbbccc}'' and depth $2$, then
-\texttt{check\_prefix} returns $4$, since the $4$-th byte of the prefix
+\texttt{check\_prefix} returns $3$, since the $4$-th byte of the prefix
 (`\texttt{d}'), does not match the (depth + $4$)-th byte of the search key
 (`\texttt{b}').
 
@@ -497,8 +502,9 @@ template <class T> T * art<T>::get(const char *key, const int key_len) const {
 \subsection{Deletion}\label{sec:deletion}
 
 \Cref{algo:deletion} presents our implementation of key deletion on ART in C++.
-During deletion, the leaf node is removed from an inner node, which is shrunk
-if necessary. If the leaf to remove only has one sibling, vertical
+During deletion, the leaf node identified by the search key is removed from an
+inner node, which is shrunk if necessary. 
+If the leaf to remove only has one sibling, vertical
 compression is applied. We assume all leaf nodes are of type \texttt{Node0}.
 
 In lines 3-5, we declare and initialize two pointers, \texttt{cur} and
@@ -617,33 +623,31 @@ template <class T> T *art<T>::del(const char *key, const int key_len) {
 
 \section{Benchmarks}\label{sec:benchmarks}
 
-% \vspace{-2mm}
 In this section we compare the performance of ART against the two textbook
 data structures red-black tree (RBT) and chained hash table (HT).
 We chose RBT to compete against ART because, like ART, RBT is a hierarchical
 data structure with sorted keys, and supports answering both point and range
-queries efficiently. HT do answer point queries faster but lack support for
+queries efficiently. HT does answer point queries faster but lacks support for
 efficient range queries. We use C++ standard library containers 
 \texttt{std::map} and \texttt{std::unordered\_map}\footnote{https://en.cppreference.com/w/cpp/container}
 which are implementations of RBT and HT, respectively.
 
+Let $k$ be the length of the keys and $n$ be the size of the dataset, then
 ART, RBT and HT have an average case complexity of $\mathcal{O}(k)$, 
 $\mathcal{O}(\log{}n)$ and $\mathcal{O}(1)$,\footnote{amortized
 $\mathcal{O}(1)$ during insertion and deletion.} respectively, 
-during lookup, insertion and deletion. $\mathcal{O}(k)$ and 
-$\mathcal{O}(\log{}n)$ are incomparable and we therefore cannot easily 
-estimate if ART will outperform RBT, or vice versa. HT, with an average case 
+during lookup, insertion and deletion. ART's and RBT's big O complexities are
+incomparable, as one depends on the length of the keys and the other on the 
+size of the dataset $n$. HT, with an average case 
 complexity of $\mathcal{O}(1)$, should outperform ART and RBT.
 
 We first conduct a series of microbenchmarks in order to assess lookup,
-insertion and deletion performance. Then we run a mixed workload benchmark
-on the three data structures and finally we conduct an experiment in order
+insertion and deletion performance and then conduct an experiment in order
 to measure how often vertical compression is applied on ART. 
 
 There are three datasets, i.e., set of keys, used for the benchmarks: a sparse
 dataset, a dense dataset and a mixed dataset, called the Dell
-dataset~\cite{wellenzohn2017wapi}, with sparse and dense regions which
-will be described in more detail below in \Cref{sec:main-benchmark}. 
+dataset~\cite{wellenzohn2017wapi}, with sparse and dense regions. 
 A dataset is dense (sparse) if many (few) keys share common prefixes. 
 
 A sparse dataset of size $n$ can be constructed by drawing $n$ uniformly 
@@ -651,10 +655,8 @@ distributed 64-bit integers. A dense dataset of size $n$ can be constructed
 by picking 64-bit integers from $0$ to $n - 1$ (leading bits are filled with 
 zeroes).
 
-\vspace{-3mm}
 \subsection{Microbenchmarks}\label{sec:microbenchmarks}
 
-% \vspace{-1mm}
 During the lookup microbenchmark, we execute point queries on an instance
 of each of the three data structures (ART, RBT, HT)
 containing the same sixteen million keys. The keys are sparse (i.e., uniformly
@@ -666,16 +668,20 @@ structure.
 
 \Cref{fig:lookup-microbenchmark,fig:insertion-microbenchmark,fig:deletion-microbenchmark}
 show the results of the three microbenchmarks. ART is positioned in between 
-its competitors in all three microbenchmarks.
-We observe that HT is faster than its competitors. As mentioned earlier, HT's
-average case complexity is constant, whereas ART and RBT have an average case
-complexity of $\mathcal{O}(k)$ and $\mathcal{O}(\log{}n)$, respectively.
+its competitors in all three microbenchmarks and shows a robust performance.
+ART depends on key length $k$, but HT does not, which explains why ART is
+slower than HT. Although ART's and RBT's big O complexities are incomparable
+as the one depends on the key length $k$ and the other on the size of the 
+dataset $n$, ART seems to outperform RBT in practice during lookup, insertion
+and deletion.
+% We observe that HT is faster than its competitors. As mentioned earlier, HT's
+% average case complexity is constant, whereas ART and RBT have an average case
+% complexity of $\mathcal{O}(k)$ and $\mathcal{O}(\log{}n)$, respectively.
 
-We also observe that HT performs at least double as fast compared to its
-competitors during the lookup microbenchmark, but takes a significant
-performance hit in the other two microbenchmarks. We believe this happens 
-because during insertion and deletion, HT occasionally requires a table resize 
-and full rehash.
+We also observe that ART performs twice as slow compared to HT during the 
+lookup microbenchmark, but is as fast as HT during insertion.
+We believe this happens because during insertion, HT occasionally 
+requires a table resize and full rehash.
 
 \begin{figure}[H]
   \centering
@@ -735,62 +741,13 @@ and full rehash.
 
 \vspace{-5mm}
 
-\subsection{Main Benchmark}
-\label{sec:main-benchmark}
-
-We now conduct a benchmark which assesses the transactional throughput of 
-a synthetic workload based on that in \cite{wellenzohn2017wapi} applied on 
-each of the three index structures.
-
-The more than twelve million keys used during the benchmark have structure
-and do resemble paths of a hierarchy (e.g.\ ``\texttt{/a}'', ``\texttt{/a/b}'',
-``\texttt{/a/c}'', etc.). The dataset has both sparse and dense regions, and
-is based on Dell's website~\cite{wellenzohn2017wapi}. 
-The keys are ordered in reverse level order and during each 
-transaction we draw a key under the Zipf distribution (skew $s=1$).
-
-The synthetic workload ``toggles'' a randomly drawn key from the dataset.
-In other words, we query against the randomly drawn key, and if the query 
-returns no results, i.e., the key is not contained, we insert the key, 
-otherwise we delete it. Transactions are executed in sequential order.
-
-As \Cref{fig:main-benchmark} shows, ART performs as good as RBT and HT clearly
-outperforms its competitors. As described in \Cref{sec:microbenchmarks}, ART,
-RBT and HT have an average case complexity of $\mathcal{O}(k)$, 
-$\mathcal{O}(\log{}n)$ and $\mathcal{O}(1)$, respectively. ART's
-$\mathcal{O}(k)$ and RBT's $\mathcal{O}(\log{}n)$ are incomparable, but
-ART outperforms RBT in practice. HT's constant average case complexity grows
-slower than $\mathcal{O}(k)$ and $\mathcal{O}(\log{}n)$, which is why HT
-outperforms both its competitors during the benchmark.
-
-\vspace{-9mm}
-
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[
-      ybar,
-      symbolic x coords={ART,RBT,HT},
-      ylabel=Transactions/second {[M]},
-      ymin=0,
-      width=6cm,
-      height=7cm,
-      ]
-      \addplot coordinates {(ART,0.9954678) (RBT,0.7042642) (HT,1.5987814)};
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Transactional throughput of ART,
-    red-black trees and hashtables over a skewed workload with
-    mixed reads and writes.}
-  \label{fig:main-benchmark}
-\end{figure}
-
 \subsection{Vertical Compression}
 \label{sec:compression-benchmark}
 
 Vertical compression is an expensive operation, as it involves structural index
 modifications when applied. Such structural index modifications can be
-difficult for concurrency control because synchronization of concurrent
+difficult to implement efficiently for concurrency control because 
+synchronization of concurrent
 transactions is required during such operations~\cite{wellenzohn2017wapi}.
 Our last experiment measures how often vertical compression is applied
 when we store keys from the sparse, dense and Dell dataset.
@@ -800,29 +757,31 @@ a single sibling, the sibling is compressed, i.e., merged with its parent.
 Analogously, when inserting a key, if a leaf is encountered or the search key
 differs from the compressed path, \textit{expansion} is applied, i.e., a new 
 inner node is created above the current node and the compressed paths are 
-adjusted accordingly. We only measure the number of vertical compressions during
-deletion for brevity, as the number of compressions during deletion equals the 
+adjusted accordingly. We report only the number of vertical compressions during
+deletion, but found that the number of compressions during deletion equals the 
 number of expansions during insertion.
 
-If each transaction only deletes one key at a time, the number of compressions
-cannot exceed the number of transactions. The number of compressions
+The number of compressions
 depends on span $s$. If $s=1$, every node must have exactly one sibling,
 and therefore every deletion requires a compression, unless the root is
 deleted. ART has a span of $s=8$ and we therefore do not expect a compression 
 for every deletion.
 
 Results should vary depending if keys are sparse or dense. Dense keys
-likely share common prefixes and as a result tries require less nodes to 
-store the keys. We expect that having dense keys imply smaller number
-of compressions due to the smaller number of nodes.
+yield a higher node fanout which causes fewer compressions.
+We therefore expect that having dense keys implies a smaller number
+of compressions.
 
 \Cref{fig:compressions-sparse,fig:compressions-paths,fig:compressions-dense} 
 depict number of vertical
 compressions over number of transactions for the sparse, Dell and dense 
 dataset. We observe a linear relation between the two variables. As expected,
-dense keys require less compressions compared to sparse keys. That is because 
-less nodes are needed to store dense keys, thus path compression is applied
-fewer times.
+dense keys require less compressions compared to sparse keys. That is because
+the dense dataset has a higher fanout. If a node has many children, more
+deletions are required until compression is applied.
+We also observe that the Dell dataset lies between the sparse and dense
+dataset in terms of compressions per operation but tends towards the 
+dense dataset.
 
 \begin{figure}[H]
   \centering
@@ -831,7 +790,7 @@ fewer times.
       \begin{axis}[
         xmax=11,
         ymax=4.5,
-        xlabel={Transactions [M]},
+        xlabel={Operations [M]},
         ylabel=Compressions {[M]},
         height=7cm,
         width=5cm,
@@ -847,7 +806,7 @@ fewer times.
       \begin{axis}[
         xmax=11,
         ymax=4.5,
-        xlabel={Transactions [M]},
+        xlabel={Operations [M]},
         height=7cm,
         width=5cm,
         ]
@@ -862,7 +821,7 @@ fewer times.
       \begin{axis}[
         xmax=11,
         ymax=4.5,
-        xlabel={Transactions [M]},
+        xlabel={Operations [M]},
         height=7cm,
         width=5cm,
         ]
@@ -872,8 +831,7 @@ fewer times.
     \caption{Dense Dataset}
     \label{fig:compressions-dense}
   \end{subfigure}
-  \caption{Number of compressions over number of transactions. Each transaction
-  deletes a random key.}
+  \caption{Number of compressions over number of operations.}
 \end{figure}
 
 \vspace{-5mm}
