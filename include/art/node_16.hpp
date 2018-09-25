@@ -7,10 +7,14 @@
 #define ART_NODE_16_HPP
 
 #include "node.hpp"
+#include <array>
 #include <cstdlib>
 #include <stdexcept>
 #include <utility>
-#include <array>
+
+#if defined(__i386__) || defined(__amd64__)
+#include <emmintrin.h>
+#endif
 
 namespace art {
 
@@ -35,11 +39,18 @@ public:
 
 private:
   uint8_t n_children_ = 0;
-  std::array<char, 16> keys_;
-  std::array<node<T> *, 16> children_;
+  char keys_[16];
+  node<T> *children_[16];
 };
 
 template <class T> node<T> **node_16<T>::find_child(char partial_key) {
+#if defined(__i386__) || defined(__amd64__)
+  int bitfield =
+      _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_set1_epi8(partial_key),
+                                       _mm_loadu_si128((__m128i *)keys_))) &
+      ((1 << n_children_) - 1);
+  return (bool)bitfield ? &children_[__builtin_ctz(bitfield)] : nullptr;
+#else
   int lo, mid, hi;
   lo = 0;
   hi = n_children_;
@@ -54,12 +65,7 @@ template <class T> node<T> **node_16<T>::find_child(char partial_key) {
     }
   }
   return nullptr;
-  /* for (int i = 0; i < n_children_; ++i) { */
-  /*   if (keys_[i] == partial_key) { */
-  /*     return &children_[i]; */
-  /*   } */
-  /* } */
-  /* return nullptr; */
+#endif
 }
 
 template <class T>

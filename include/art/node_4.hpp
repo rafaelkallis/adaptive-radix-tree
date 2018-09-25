@@ -8,10 +8,10 @@
 
 #include "node.hpp"
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
-#include <array>
 
 namespace art {
 
@@ -36,8 +36,8 @@ public:
 
 private:
   uint8_t n_children_ = 0;
-  std::array<char, 4> keys_;
-  std::array<node<T> *, 4> children_;
+  char keys_[4];
+  node<T> *children_[4];
 };
 
 template <class T> node<T> **node_4<T>::find_child(char partial_key) {
@@ -51,20 +51,15 @@ template <class T> node<T> **node_4<T>::find_child(char partial_key) {
 
 template <class T> void node_4<T>::set_child(char partial_key, node<T> *child) {
   /* determine index for child */
-  int child_i;
-  for (int i = n_children_ - 1;; --i) {
-    if (i >= 0 && partial_key < keys_[i]) {
-      /* move existing sibling to the right */
-      keys_[i + 1] = keys_[i];
-      children_[i + 1] = children_[i];
-    } else {
-      child_i = i + 1;
-      break;
-    }
+  int c_i;
+  for (c_i = 0; c_i < n_children_ && partial_key >= keys_[c_i]; ++c_i) {
   }
+  std::memmove(keys_ + c_i + 1, keys_ + c_i, n_children_ - c_i);
+  std::memmove(children_ + c_i + 1, children_ + c_i,
+               (n_children_ - c_i) * sizeof(void *));
 
-  keys_[child_i] = partial_key;
-  children_[child_i] = child;
+  keys_[c_i] = partial_key;
+  children_[c_i] = child;
   ++n_children_;
 }
 
