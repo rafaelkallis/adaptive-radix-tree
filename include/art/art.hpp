@@ -115,8 +115,8 @@ template <class T> T *art<T>::get(const char *key, const int key_len) const {
       return cur->value_;
     }
     child = cur->find_child(key[depth + cur->prefix_len_]);
+    depth += (cur->prefix_len_ + 1);
     cur = child != nullptr ? *child : nullptr;
-    depth += cur->prefix_len_ + 1;
   }
   return nullptr;
 }
