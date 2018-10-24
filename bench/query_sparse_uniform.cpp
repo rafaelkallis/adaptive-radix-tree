@@ -37,7 +37,7 @@ static void art_q_s_u(state &s) {
   }
 }
 PICOBENCH(art_q_s_u)
-  .iterations({4000000})
+  /* .iterations({4000000}) */
   ;
 
 static void red_black_q_s_u(state &s) {
@@ -54,7 +54,7 @@ static void red_black_q_s_u(state &s) {
   }
 }
 PICOBENCH(red_black_q_s_u)
-  .iterations({4000000})
+  /* .iterations({4000000}) */
   ;
 
 static void hashmap_q_s_u(state &s) {
@@ -71,5 +71,5 @@ static void hashmap_q_s_u(state &s) {
   }
 }
 PICOBENCH(hashmap_q_s_u)
-  .iterations({4000000})
+  /* .iterations({4000000}) */
   ;
