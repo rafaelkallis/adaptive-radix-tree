@@ -18,6 +18,9 @@ template <class T> class node_16;
 template <class T> class node_256;
 
 template <class T> class node_48 : public node<T> {
+  friend class node_16<T>;
+  friend class node_256<T>;
+
 public:
   node_48();
 
@@ -38,13 +41,13 @@ private:
   static const char EMPTY;
 
   uint8_t n_children_ = 0;
-  std::array<char, 256> indexes_;
-  std::array<node<T> *, 48> children_;
+  char indexes_[256];
+  node<T> *children_[48];
 };
 
 template <class T> node_48<T>::node_48() {
-  indexes_.fill(node_48::EMPTY);
-  children_.fill(nullptr);
+  std::fill(this->indexes_, this->indexes_ + 256,node_48::EMPTY);
+  std::fill(this->children_, this->children_ + 48, nullptr);
 }
 
 template <class T> node<T> **node_48<T>::find_child(char partial_key) {

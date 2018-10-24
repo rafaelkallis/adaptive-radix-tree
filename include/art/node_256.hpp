@@ -15,6 +15,7 @@ namespace art {
 template <class T> class node_48;
 
 template <class T> class node_256 : public node<T> {
+friend class node_48<T>;
 public:
   node_256();
 

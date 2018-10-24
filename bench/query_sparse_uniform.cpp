@@ -36,7 +36,9 @@ static void art_q_s_u(state &s) {
     m.get(to_string(h(rng2())).c_str());
   }
 }
-PICOBENCH(art_q_s_u);
+PICOBENCH(art_q_s_u)
+  .iterations({4000000})
+  ;
 
 static void red_black_q_s_u(state &s) {
   map<string, int> m;
@@ -51,7 +53,9 @@ static void red_black_q_s_u(state &s) {
     auto v = m[to_string(h(rng2()))];
   }
 }
-PICOBENCH(red_black_q_s_u);
+PICOBENCH(red_black_q_s_u)
+  .iterations({4000000})
+  ;
 
 static void hashmap_q_s_u(state &s) {
   unordered_map<string, int> m;
@@ -66,4 +70,6 @@ static void hashmap_q_s_u(state &s) {
     auto v = m[to_string(h(rng2()))];
   }
 }
-PICOBENCH(hashmap_q_s_u);
+PICOBENCH(hashmap_q_s_u)
+  .iterations({4000000})
+  ;

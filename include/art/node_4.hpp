@@ -19,6 +19,9 @@ template <class T> class node_0;
 template <class T> class node_16;
 
 template <class T> class node_4 : public node<T> {
+  friend class node_0<T>;
+  friend class node_16<T>;
+
 public:
   node<T> **find_child(char partial_key) override;
   void set_child(char partial_key, node<T> *child) override;
@@ -86,9 +89,9 @@ template <class T> node<T> *node_4<T>::grow() {
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
   new_node->value_ = this->value_;
-  for (int i = 0; i < n_children_; ++i) {
-    new_node->set_child(keys_[i], children_[i]);
-  }
+  new_node->n_children_ = this->n_children_;
+  std::copy(this->keys_, this->keys_ + this->n_children_, new_node->keys_);
+  std::copy(this->children_, this->children_ + this->n_children_, new_node->children_);
   delete this;
   return new_node;
 }
