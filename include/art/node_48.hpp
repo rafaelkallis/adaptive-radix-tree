@@ -6,7 +6,7 @@
 #ifndef ART_NODE_48_HPP
 #define ART_NODE_48_HPP
 
-#include "node.hpp"
+#include "inner_node.hpp"
 #include <algorithm>
 #include <array>
 #include <stdexcept>
@@ -17,7 +17,7 @@ namespace art {
 template <class T> class node_16;
 template <class T> class node_256;
 
-template <class T> class node_48 : public node<T> {
+template <class T> class node_48 : public inner_node<T> {
   friend class node_16<T>;
   friend class node_256<T>;
 
@@ -27,8 +27,8 @@ public:
   node<T> **find_child(char partial_key) override;
   void set_child(char partial_key, node<T> *child) override;
   node<T> *del_child(char partial_key) override;
-  node<T> *grow() override;
-  node<T> *shrink() override;
+  inner_node<T> *grow() override;
+  inner_node<T> *shrink() override;
   bool is_full() const override;
   bool is_underfull() const override;
 
@@ -86,11 +86,10 @@ template <class T> node<T> *node_48<T>::del_child(char partial_key) {
   return child_to_delete;
 }
 
-template <class T> node<T> *node_48<T>::grow() {
+template <class T> inner_node<T> *node_48<T>::grow() {
   auto new_node = new node_256<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  new_node->value_ = this->value_;
   char index;
   for (int partial_key = -128; partial_key < 127; ++partial_key) {
     index = indexes_[128 + partial_key];
@@ -102,11 +101,10 @@ template <class T> node<T> *node_48<T>::grow() {
   return new_node;
 }
 
-template <class T> node<T> *node_48<T>::shrink() {
+template <class T> inner_node<T> *node_48<T>::shrink() {
   auto new_node = new node_16<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  new_node->value_ = this->value_;
   char index;
   for (int partial_key = -128; partial_key < 127; ++partial_key) {
     index = indexes_[128 + partial_key];

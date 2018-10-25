@@ -6,7 +6,7 @@
 #ifndef ART_NODE_4_HPP
 #define ART_NODE_4_HPP
 
-#include "node.hpp"
+#include "inner_node.hpp"
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -18,7 +18,7 @@ namespace art {
 template <class T> class node_0;
 template <class T> class node_16;
 
-template <class T> class node_4 : public node<T> {
+template <class T> class node_4 : public inner_node<T> {
   friend class node_0<T>;
   friend class node_16<T>;
 
@@ -26,8 +26,8 @@ public:
   node<T> **find_child(char partial_key) override;
   void set_child(char partial_key, node<T> *child) override;
   node<T> *del_child(char partial_key) override;
-  node<T> *grow() override;
-  node<T> *shrink() override;
+  inner_node<T> *grow() override;
+  inner_node<T> *shrink() override;
   bool is_full() const override;
   bool is_underfull() const override;
 
@@ -84,11 +84,10 @@ template <class T> node<T> *node_4<T>::del_child(char partial_key) {
   return child_to_delete;
 }
 
-template <class T> node<T> *node_4<T>::grow() {
+template <class T> inner_node<T> *node_4<T>::grow() {
   auto new_node = new node_16<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  new_node->value_ = this->value_;
   new_node->n_children_ = this->n_children_;
   std::copy(this->keys_, this->keys_ + this->n_children_, new_node->keys_);
   std::copy(this->children_, this->children_ + this->n_children_, new_node->children_);
@@ -96,19 +95,14 @@ template <class T> node<T> *node_4<T>::grow() {
   return new_node;
 }
 
-template <class T> node<T> *node_4<T>::shrink() {
-  auto new_node = new node_0<T>();
-  new_node->prefix_ = this->prefix_;
-  new_node->prefix_len_ = this->prefix_len_;
-  new_node->value_ = this->value_;
-  delete this;
-  return new_node;
+template <class T> inner_node<T> *node_4<T>::shrink() {
+  throw std::runtime_error("node_4 cannot shrink");
 }
 
 template <class T> bool node_4<T>::is_full() const { return n_children_ == 4; }
 
 template <class T> bool node_4<T>::is_underfull() const {
-  return n_children_ == 0;
+  return false;
 }
 
 template <class T> char node_4<T>::next_partial_key(char partial_key) const {

@@ -13,18 +13,18 @@ PICOBENCH_SUITE("node_4");
 
 static void node_4_constructor(state &s) {
   for (auto _ : s) {
-    node_4<void *> n;
+    node_4<int> n;
   }
 }
 PICOBENCH(node_4_constructor);
 
 static void node_4_find_child(state &s) {
-  node_4<void *> n;
+  node_4<int> n;
 
-  node_0<void *> c0;
-  node_0<void *> c1;
-  node_0<void *> c2;
-  node_0<void *> c3;
+  leaf_node<int> c0(nullptr);
+  leaf_node<int> c1(nullptr);
+  leaf_node<int> c2(nullptr);
+  leaf_node<int> c3(nullptr);
 
   n.set_child(-128, &c0);
   n.set_child(-43, &c1);
@@ -32,7 +32,7 @@ static void node_4_find_child(state &s) {
   n.set_child(127, &c3);
 
   char partial_keys[] = {-128, -43, 42, 127};
-  node<void *> **child = nullptr;
+  node<int> **child = nullptr;
   for (auto _ : s) {
     child = n.find_child(partial_keys[rand() % 4]);
   }
@@ -40,13 +40,13 @@ static void node_4_find_child(state &s) {
 PICOBENCH(node_4_find_child);
 
 static void node_4_set_child(state &s) {
-  node_4<void *> *n = new node_4<void *>();
-  node_0<void *> child;
+  auto n = new node_4<int>();
+  leaf_node<int> child(nullptr);
   char partial_keys[] = {-128, -43, 42, 127};
   for (auto _ : s) {
     if (n->is_full()) {
       delete n;
-      n = new node_4<void *>();
+      n = new node_4<int>();
     }
 
     n->set_child(partial_keys[rand() % 4], &child);
@@ -55,10 +55,10 @@ static void node_4_set_child(state &s) {
 PICOBENCH(node_4_set_child);
 
 static void node_4_grow(state &s) {
-  node<void *> *n = nullptr;
-  node<void *> *new_n = nullptr;
+  inner_node<int> *n = nullptr;
+  inner_node<int> *new_n = nullptr;
   for (auto _ : s) {
-    n = new node_4<void *>();
+    n = new node_4<int>();
     new_n = n->grow();
     delete new_n;
   }
@@ -66,12 +66,12 @@ static void node_4_grow(state &s) {
 PICOBENCH(node_4_grow);
 
 static void node_4_next_partial_key(state &s) {
-  node_4<void *> n;
+  node_4<int> n;
 
-  node_0<void *> c0;
-  node_0<void *> c1;
-  node_0<void *> c2;
-  node_0<void *> c3;
+  leaf_node<int> c0(nullptr);
+  leaf_node<int> c1(nullptr);
+  leaf_node<int> c2(nullptr);
+  leaf_node<int> c3(nullptr);
 
   n.set_child(-128, &c0);
   n.set_child(-43, &c1);
@@ -85,12 +85,12 @@ static void node_4_next_partial_key(state &s) {
 PICOBENCH(node_4_next_partial_key);
 
 static void node_4_prev_partial_key(state &s) {
-  node_4<void *> n;
+  node_4<int> n;
 
-  node_0<void *> c0;
-  node_0<void *> c1;
-  node_0<void *> c2;
-  node_0<void *> c3;
+  leaf_node<int> c0(nullptr);
+  leaf_node<int> c1(nullptr);
+  leaf_node<int> c2(nullptr);
+  leaf_node<int> c3(nullptr);
 
   n.set_child(-128, &c0);
   n.set_child(-43, &c1);

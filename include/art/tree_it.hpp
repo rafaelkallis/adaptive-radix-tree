@@ -6,6 +6,7 @@
 #ifndef ART_TREE_IT_HPP
 #define ART_TREE_IT_HPP
 
+#include "child_it.hpp"
 #include <cassert>
 #include <iostream>
 #include <iterator>
@@ -14,6 +15,8 @@
 namespace art {
 
 template <class T> class node;
+template <class T> class inner_node;
+template <class T> class leaf_node;
 
 template <class T> class tree_it {
 public:
@@ -44,14 +47,18 @@ private:
 template <class T>
 tree_it<T>::tree_it(std::stack<node<T> *> traversal_stack)
     : traversal_stack_(traversal_stack) {
-  /* preorder-traverse until node with value found or no nodes are left */
+  inner_node<T> *cur;
+  char child_partial_key;
+  std::reverse_iterator<child_it<T>> it, it_end;
+
+  /* preorder-traverse until leaf node found or no nodes are left */
   while (!traversal_stack_.empty() &&
-         traversal_stack_.top()->value_ == nullptr) {
-    auto par = traversal_stack_.top();
+         !traversal_stack_.top()->is_leaf()) {
+    cur = static_cast<inner_node<T>*>(traversal_stack_.top());
     traversal_stack_.pop();
-    for (auto it = par->rbegin(), it_end = par->rend(); it != it_end; ++it) {
-      char child_partial_key = *it;
-      traversal_stack_.push(*par->find_child(child_partial_key));
+    for (it = cur->rbegin(), it_end = cur->rend(); it != it_end; ++it) {
+      child_partial_key = *it;
+      traversal_stack_.push(*cur->find_child(child_partial_key));
     }
   }
 }
@@ -63,22 +70,25 @@ tree_it<T> tree_it<T>::min(node<T> *root) {
 
 template <class T>
 tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
-  int depth, key_len = std::strlen(key) + 1;
   if (root == nullptr) {
     return tree_it<T>();
   }
 
+  int depth, key_len = std::strlen(key) + 1, i;
+  node<T> *cur;
+  std::reverse_iterator<child_it<T>> it, it_end;
+  char partial_key;
   std::stack<node<T> *> node_stack;
   std::stack<int> depth_stack;
+
   node_stack.push(root);
   depth_stack.push(0);
 
-  node<T> *cur;
   while (true) {
     cur = node_stack.top();
     depth = depth_stack.top();
 
-    for (int i = 0; i < cur->prefix_len_; ++i) {
+    for (i = 0; i < cur->prefix_len_; ++i) {
       if (depth + i + 1 == key_len) {
         goto exit_outer_loop;
       }
@@ -89,46 +99,46 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
     }
     node_stack.pop();
     depth_stack.pop();
-    auto child_it = cur->rbegin();
-    auto child_it_end = cur->rend();
-    for (; child_it != child_it_end; ++child_it) {
-      auto partial_key = *child_it;
+    if (cur->is_leaf()) {
+      continue;
+    }
+    it = static_cast<inner_node<T>*>(cur)->rbegin();
+    it_end = static_cast<inner_node<T>*>(cur)->rend();
+    for (; it != it_end; ++it) {
+      partial_key = *it;
       if (partial_key < key[depth + cur->prefix_len_]) {
         break;
       }
-      node_stack.push(*cur->find_child(partial_key));
+      node_stack.push(*static_cast<inner_node<T>*>(cur)->find_child(partial_key));
       depth_stack.push(depth + cur->prefix_len_ + 1);
     }
   }
   exit_outer_loop:
 
-  auto it = tree_it<T>(node_stack);
-  if (*it == nullptr) {
-    ++it;
-  }
-  return it;
+  return tree_it<T>(node_stack);
 }
 
 template <class T> typename tree_it<T>::value_type tree_it<T>::operator*() {
-  return traversal_stack_.top()->value_;
+  return static_cast<leaf_node<T>*>(traversal_stack_.top())->value_;
 }
 
 template <class T> typename tree_it<T>::pointer tree_it<T>::operator->() {
-  return &traversal_stack_.top()->value_;
+  return &static_cast<leaf_node<T>*>(traversal_stack_.top())->value_;
 }
 
 template <class T> tree_it<T> &tree_it<T>::operator++() {
-  while (true) {
-    node<T> *prev = traversal_stack_.top();
+  inner_node<T> *cur;
+  std::reverse_iterator<child_it<T>> it, it_end;
+  char child_partial_key;
+
+  traversal_stack_.pop();
+  while (!traversal_stack_.empty() && !traversal_stack_.top()->is_leaf()) {
+    cur = static_cast<inner_node<T>*>(traversal_stack_.top());
     traversal_stack_.pop();
-    for (auto it = prev->rbegin(), it_end = prev->rend(); it != it_end; ++it) {
-      char child_partial_key = *it;
-      traversal_stack_.push(*prev->find_child(child_partial_key));
+    for (it = cur->rbegin(), it_end = cur->rend(); it != it_end; ++it) {
+      traversal_stack_.push(*cur->find_child(*it));
     }
-    if (traversal_stack_.empty() || (traversal_stack_.top() != nullptr && traversal_stack_.top()->value_ != nullptr)) {
-      break;
-    }
-  }
+  } ;
   return *this;
 }
 

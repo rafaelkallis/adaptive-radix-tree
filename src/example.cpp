@@ -213,5 +213,43 @@ int main() {
   /* art_compressions_dense_delete(); */
 
   /* casual_stress_test(16 * 1000 * 1000); */
+  int int0 = 0;
+  int int1 = 1;
+  int int2 = 2;
+  int int3 = 4;
+  int int4 = 5;
+  int int5 = 5;
+  int int6 = 6;
+
+  art::art<int> m;
+
+  m.set("aa", &int0);
+  m.set("aaaa", &int1);
+  m.set("aaaaaaa", &int2);
+  m.set("aaaaaaaaaa", &int3);
+  m.set("aaaaaaaba", &int4);
+  m.set("aaaabaa", &int5);
+  m.set("aaaabaaaaa", &int6);
+
+  /* The above statements construct the following tree:
+   *
+   *          (aa)
+   *   $_____/ |a
+   *   /       |
+   *  ()->0   (a)
+   *   $_____/ |a\____________b       
+   *   /       |              \
+   *  ()->1   (aa)            (aa)
+   *   $_____/ |a\___b         |$\____a
+   *   /       |     \         |      \
+   *  ()->2 (aa$)->3 (a$)->4 ()->5 (aa$)->6
+   *
+   */
+
+  auto it = m.begin();
+  auto it_end = m.end();
+  for (int i = 0; it != it_end; ++i, ++it) {
+    std::cout << i << ": " << **it << std::endl;
+  }
   return 0;
 }

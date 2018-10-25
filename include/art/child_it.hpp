@@ -11,9 +11,16 @@
 namespace art {
 
 template <class T> class node;
+template <class T> class inner_node;
 
 template <class T> class child_it {
 public:
+  child_it() = default;
+  child_it(const child_it<T> &other) = default;
+  child_it(child_it<T> &&other) noexcept = default;
+  child_it<T> &operator=(const child_it<T> &other) = default;
+  child_it<T> &operator=(child_it<T> &&other) noexcept = default;
+
   explicit child_it(node<T> *n);
   child_it(node<T> *n, int relative_index);
 
@@ -51,19 +58,24 @@ child_it<T>::child_it(node<T> *n, int relative_index)
     /* relative_index is out of bounds, no seek */
     return;
   }
-  if (relative_index_ >= node_->n_children()) {
+
+  if (node_->is_leaf()) {
+    return;
+  }
+
+  if (relative_index_ >= static_cast<inner_node<T>*>(node_)->n_children()) {
     /* relative_index is out of bounds, no seek */
     return;
   }
 
-  if (relative_index_ == node_->n_children() - 1) {
-    cur_partial_key_ = node_->prev_partial_key(127);
+  if (relative_index_ == static_cast<inner_node<T>*>(node_)->n_children() - 1) {
+    cur_partial_key_ = static_cast<inner_node<T>*>(node_)->prev_partial_key(127);
     return;
   }
 
-  cur_partial_key_ = node_->next_partial_key(-128);
+  cur_partial_key_ = static_cast<inner_node<T>*>(node_)->next_partial_key(-128);
   for (int i = 0; i < relative_index_; ++i) {
-    cur_partial_key_ = node_->next_partial_key(cur_partial_key_ + 1);
+    cur_partial_key_ = static_cast<inner_node<T>*>(node_)->next_partial_key(cur_partial_key_ + 1);
   }
 }
 
@@ -79,10 +91,10 @@ typename child_it<T>::pointer child_it<T>::operator->() const {
 
 template <class T> child_it<T> &child_it<T>::operator++() {
   ++relative_index_;
-  if (relative_index_ == 0) {
-    cur_partial_key_ = node_->next_partial_key(-128);
-  } else if (relative_index_ < node_->n_children()) {
-    cur_partial_key_ = node_->next_partial_key(cur_partial_key_ + 1);
+  if (!node_->is_leaf() && relative_index_ == 0) {
+    cur_partial_key_ = static_cast<inner_node<T>*>(node_)->next_partial_key(-128);
+  } else if (!node_->is_leaf() && relative_index_ < static_cast<inner_node<T>*>(node_)->n_children()) {
+    cur_partial_key_ = static_cast<inner_node<T>*>(node_)->next_partial_key(cur_partial_key_ + 1);
   }
   return *this;
 }
@@ -95,10 +107,10 @@ template <class T> child_it<T> child_it<T>::operator++(int) {
 
 template <class T> child_it<T> &child_it<T>::operator--() {
   --relative_index_;
-  if (relative_index_ == node_->n_children() - 1) {
-    cur_partial_key_ = node_->prev_partial_key(127);
-  } else if (relative_index_ >= 0) {
-    cur_partial_key_ = node_->prev_partial_key(cur_partial_key_ - 1);
+  if (!node_->is_leaf() && relative_index_ == static_cast<inner_node<T>*>(node_)->n_children() - 1) {
+    cur_partial_key_ = static_cast<inner_node<T>*>(node_)->prev_partial_key(127);
+  } else if (!node_->is_leaf() && relative_index_ >= 0) {
+    cur_partial_key_ = static_cast<inner_node<T>*>(node_)->prev_partial_key(cur_partial_key_ - 1);
   }
   return *this;
 }

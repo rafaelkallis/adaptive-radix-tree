@@ -28,7 +28,7 @@ using std::string;
 TEST_SUITE("node") {
 
   TEST_CASE("check_prefix") {
-    node_0<int> node;
+    leaf_node<int> node(nullptr);
     string key = "000100001";
     string prefix = "0000";
 
@@ -49,10 +49,10 @@ TEST_SUITE("node") {
   TEST_CASE("iteration") {
     node_4<void> m;
 
-    node_0<void> n0;
-    node_0<void> n1;
-    node_0<void> n2;
-    node_0<void> n3;
+    leaf_node<void> n0(nullptr);
+    leaf_node<void> n1(nullptr);
+    leaf_node<void> n2(nullptr);
+    leaf_node<void> n3(nullptr);
 
     m.set_child(0, &n0);
     m.set_child(5, &n1);
@@ -124,10 +124,10 @@ TEST_SUITE("node") {
   TEST_CASE("reverse iteration") {
     node_4<void> m;
 
-    node_0<void> n0;
-    node_0<void> n1;
-    node_0<void> n2;
-    node_0<void> n3;
+    leaf_node<void> n0(nullptr);
+    leaf_node<void> n1(nullptr);
+    leaf_node<void> n2(nullptr);
+    leaf_node<void> n3(nullptr);
 
     m.set_child(0, &n0);
     m.set_child(5, &n1);

@@ -6,7 +6,7 @@
 #ifndef ART_NODE_16_HPP
 #define ART_NODE_16_HPP
 
-#include "node.hpp"
+#include "inner_node.hpp"
 #include <array>
 #include <cstdlib>
 #include <stdexcept>
@@ -21,15 +21,15 @@ namespace art {
 template <class T> class node_4;
 template <class T> class node_48;
 
-template <class T> class node_16 : public node<T> {
+template <class T> class node_16 : public inner_node<T> {
 friend class node_4<T>;
 friend class node_48<T>;
 public:
   node<T> **find_child(char partial_key) override;
   void set_child(char partial_key, node<T> *child) override;
   node<T> *del_child(char partial_key) override;
-  node<T> *grow() override;
-  node<T> *shrink() override;
+  inner_node<T> *grow() override;
+  inner_node<T> *shrink() override;
   bool is_full() const override;
   bool is_underfull() const override;
 
@@ -108,11 +108,10 @@ template <class T> node<T> *node_16<T>::del_child(char partial_key) {
   return child_to_delete;
 }
 
-template <class T> node<T> *node_16<T>::grow() {
+template <class T> inner_node<T> *node_16<T>::grow() {
   auto new_node = new node_48<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  new_node->value_ = this->value_;
   std::copy(this->children_, this->children_ + this->n_children_, new_node->children_);
   for (int i = 0; i < n_children_; ++i) {
     new_node->indexes_[this->keys_[i]] = i;
@@ -121,11 +120,10 @@ template <class T> node<T> *node_16<T>::grow() {
   return new_node;
 }
 
-template <class T> node<T> *node_16<T>::shrink() {
+template <class T> inner_node<T> *node_16<T>::shrink() {
   auto new_node = new node_4<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  new_node->value_ = this->value_;
   new_node->n_children_ = this->n_children_;
   std::copy(this->keys_, this->keys_ + this->n_children_, new_node->keys_);
   std::copy(this->children_, this->children_ + this->n_children_, new_node->children_);

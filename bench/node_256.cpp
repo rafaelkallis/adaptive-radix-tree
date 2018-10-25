@@ -13,14 +13,14 @@ PICOBENCH_SUITE("node_256");
 
 static void node_256_constructor(state &s) {
   for (auto _ : s) {
-    node_256<void *> n;
+    node_256<int> n;
   }
 }
 PICOBENCH(node_256_constructor);
 
 static void node_256_find_child(state &s) {
-  node_256<void *> n;
-  node_0<void *> child;
+  node_256<int> n;
+  leaf_node<int> child(nullptr);
   for (int i = 0; i < 256; ++i) {
     n.set_child(i - 128, &child);
   }
@@ -31,12 +31,12 @@ static void node_256_find_child(state &s) {
 PICOBENCH(node_256_find_child);
 
 static void node_256_set_child(state &s) {
-  node_256<void *> *n = new node_256<void *>();
-  node_0<void *> child;
+  node_256<int> *n = new node_256<int>();
+  leaf_node<int> child(nullptr);
   for (auto _ : s) {
     if (n->is_full()) {
       delete n;
-      n = new node_256<void *>();
+      n = new node_256<int>();
     }
     n->set_child((rand() % 256) - 128, &child);
   }
@@ -44,8 +44,8 @@ static void node_256_set_child(state &s) {
 PICOBENCH(node_256_set_child);
 
 static void node_256_next_partial_key(state &s) {
-  node_256<void *> n;
-  node_0<void *> child;
+  node_256<int> n;
+  leaf_node<int> child(nullptr);
   for (int i = 0; i < 256; ++i) {
     n.set_child(i - 128, &child);
   }
@@ -56,8 +56,8 @@ static void node_256_next_partial_key(state &s) {
 PICOBENCH(node_256_next_partial_key);
 
 static void node_256_prev_partial_key(state &s) {
-  node_256<void *> n;
-  node_0<void *> child;
+  node_256<int> n;
+  leaf_node<int> child(nullptr);
   for (int i = 0; i < 256; ++i) {
     n.set_child(i - 128, &child);
   }

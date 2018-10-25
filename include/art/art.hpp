@@ -6,8 +6,9 @@
 #ifndef ART_ART_HPP
 #define ART_ART_HPP
 
+#include "leaf_node.hpp"
+#include "inner_node.hpp"
 #include "node.hpp"
-#include "node_0.hpp"
 #include "node_4.hpp"
 #include "tree_it.hpp"
 #include <algorithm>
@@ -78,13 +79,16 @@ template <class T> art<T>::~art() {
   std::stack<node<T> *> node_stack;
   node_stack.push(root_);
   node<T> *cur;
+  inner_node<T> *cur_inner;
+  child_it<T> it, it_end;
   while (!node_stack.empty()) {
     cur = node_stack.top();
     node_stack.pop();
-    auto child_it = cur->begin();
-    auto child_it_end = cur->end();
-    for (; child_it != child_it_end; ++child_it) {
-      node_stack.push(*(*cur).find_child(*child_it));
+    if (!cur->is_leaf()) {
+      cur_inner = static_cast<inner_node<T>*>(cur);
+      for (it = cur_inner->begin(), it_end = cur_inner->end(); it != it_end; ++it) {
+        node_stack.push(*cur_inner->find_child(*it));
+      }
     }
     if (cur->prefix_ != nullptr) {
       delete[] cur->prefix_;
@@ -103,9 +107,9 @@ template <class T> T *art<T>::get(const char *key) const {
     }
     if (cur->prefix_len_ == key_len - depth) {
       /* exact match */
-      return cur->value_;
+      return cur->is_leaf() ? static_cast<leaf_node<T>*>(cur)->value_ : nullptr;
     }
-    child = cur->find_child(key[depth + cur->prefix_len_]);
+    child = static_cast<inner_node<T>*>(cur)->find_child(key[depth + cur->prefix_len_]);
     depth += (cur->prefix_len_ + 1);
     cur = child != nullptr ? *child : nullptr;
   }
@@ -115,15 +119,15 @@ template <class T> T *art<T>::get(const char *key) const {
 template <class T> T *art<T>::set(const char *key, T *value) {
   int key_len = std::strlen(key) + 1, depth = 0, prefix_match_len;
   if (root_ == nullptr) {
-    root_ = new node_0<T>();
+    root_ = new leaf_node<T>(value);
     root_->prefix_ = new char[key_len];
     std::copy(key, key + key_len, root_->prefix_);
     root_->prefix_len_ = key_len;
-    root_->value_ = value;
     return nullptr;
   }
 
   node<T> **cur = &root_, **child;
+  inner_node<T> **cur_inner;
   char child_partial_key;
   bool is_prefix_match;
 
@@ -149,8 +153,9 @@ template <class T> T *art<T>::set(const char *key, T *value) {
        *
        */
 
-      T *old_value = (**cur).value_;
-      (**cur).value_ = value;
+      /* cur must be a leaf */
+      T *old_value = static_cast<leaf_node<T>*>(*cur)->value_;
+      static_cast<leaf_node<T>*>(*cur)->value_ = value;
       return old_value;
     }
 
@@ -161,11 +166,11 @@ template <class T> T *art<T>::set(const char *key, T *value) {
        * => current and new node become children of new parent node.
        *
        *        |                        |
-       *      *(aa)->Ø                 +(a)->Ø
+       *      *(aa)                    +(a)->Ø
        *    a /    \ b     +[ab,v3]  a /   \ b
        *     /      \      =======>   /     \
        *  (aa)->v1  ()->v2          *()->Ø +()->v3
-       *  /|\       /|\           a /   \ b
+       *                          a /   \ b
        *                           /     \
        *                        (aa)->v1 ()->v2
        *                        /|\      /|\
@@ -173,7 +178,8 @@ template <class T> T *art<T>::set(const char *key, T *value) {
 
       auto new_parent = new node_4<T>();
       new_parent->prefix_ = new char[prefix_match_len];
-      std::copy((**cur).prefix_, (**cur).prefix_ + prefix_match_len, new_parent->prefix_);
+      std::copy((**cur).prefix_, (**cur).prefix_ + prefix_match_len,
+                new_parent->prefix_);
       new_parent->prefix_len_ = prefix_match_len;
       new_parent->set_child((**cur).prefix_[prefix_match_len], *cur);
 
@@ -186,22 +192,25 @@ template <class T> T *art<T>::set(const char *key, T *value) {
       auto old_prefix_len = (**cur).prefix_len_;
       (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
       (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
-      std::copy(old_prefix + prefix_match_len + 1, old_prefix + old_prefix_len, (**cur).prefix_);
+      std::copy(old_prefix + prefix_match_len + 1, old_prefix + old_prefix_len,
+                (**cur).prefix_);
       delete old_prefix;
 
-      auto new_node = new node_0<T>();
+      auto new_node = new leaf_node<T>(value);
       new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];
-      std::copy(key + depth + prefix_match_len + 1, key + key_len, new_node->prefix_);
+      std::copy(key + depth + prefix_match_len + 1, key + key_len,
+                new_node->prefix_);
       new_node->prefix_len_ = key_len - depth - prefix_match_len - 1;
-      new_node->value_ = value;
       new_parent->set_child(key[depth + prefix_match_len], new_node);
 
       *cur = new_parent;
       return nullptr;
     }
 
+    /* must be inner node */
+    cur_inner = reinterpret_cast<inner_node<T>**>(cur);
     child_partial_key = key[depth + (**cur).prefix_len_];
-    child = (**cur).find_child(child_partial_key);
+    child = (**cur_inner).find_child(child_partial_key);
 
     if (child == nullptr) {
       /*
@@ -215,17 +224,16 @@ template <class T> T *art<T>::set(const char *key, T *value) {
        *   (a)->v1               (a)->v1 +()->v2
        */
 
-      if ((**cur).is_full()) {
-        *cur = (**cur).grow();
+      if ((**cur_inner).is_full()) {
+        *cur_inner = (**cur_inner).grow();
       }
 
-      auto new_node = new node_0<T>();
+      auto new_node = new leaf_node<T>(value);
       new_node->prefix_ = new char[key_len - depth - (**cur).prefix_len_ - 1];
       std::copy(key + depth + (**cur).prefix_len_ + 1, key + key_len,
                 new_node->prefix_);
       new_node->prefix_len_ = key_len - depth - (**cur).prefix_len_ - 1;
-      new_node->value_ = value;
-      (**cur).set_child(child_partial_key, new_node);
+      (**cur_inner).set_child(child_partial_key, new_node);
       return nullptr;
     }
 
@@ -249,7 +257,8 @@ template <class T> T *art<T>::del(const char *key) {
   }
 
   /* pointer to parent, current and child node */
-  node<T> **par = nullptr, **cur = &root_;
+  node<T> **cur = &root_;
+  inner_node<T> **par = nullptr, **cur_inner;
 
   /* partial key of current and child node */
   char cur_partial_key;
@@ -264,19 +273,16 @@ template <class T> T *art<T>::del(const char *key) {
 
     if (key_len == depth + (**cur).prefix_len_) {
       /* exact match */
-
-      auto value = (**cur).value_;
-      if (value == nullptr) {
-        /* no value to delete */
+      if (!(**cur).is_leaf()) {
         return nullptr;
       }
-      (**cur).value_ = nullptr;
-      auto n_children = (**cur).n_children();
+      auto value = static_cast<leaf_node<T>*>(*cur)->value_;
       auto n_siblings = par != nullptr ? (**par).n_children() - 1 : 0;
 
-      if (n_children == 0 && n_siblings == 0) {
+      if (n_siblings == 0) {
         /*
-         * => delete leaf node
+         * => must be root node
+         * => delete root node
          *
          *     |                 |
          *    (aa)->v1          (aa)->v1
@@ -289,28 +295,19 @@ template <class T> T *art<T>::del(const char *key) {
           delete[](**cur).prefix_;
         }
         delete (*cur);
-        if (par != nullptr) {
-          (**par).del_child(cur_partial_key);
-          if ((**par).is_underfull()) {
-            *par = (**par).shrink();
-          }
-        } else {
-          /* deleting root node */
-          *cur = nullptr;
-        }
+        *cur = nullptr;
 
-      } else if (n_children == 0 && n_siblings == 1 &&
-                 (**par).value_ == nullptr) {
+      } else if (n_siblings == 1) {
         /* => delete leaf node
          * => replace parent with sibling
          *
          *        |a                         |a
          *        |                          |
-         *       (aa)->Ø     -"aaaaabaa"     |
+         *       (aa)        -"aaaaabaa"     |
          *    a /    \ b     ==========>    /
          *     /      \                    /
          *  (aa)->v1 *()->v2             (aaaaa)->v1
-         *  /|\
+         *  /|\                            /|\
          */
 
         /* find sibling */
@@ -341,14 +338,16 @@ template <class T> T *art<T>::del(const char *key) {
           delete[](**par).prefix_;
         }
         delete (*par);
-        *par = sibling;
 
-      } else if (n_children == 0 && n_siblings > 1) {
+        /* this looks crazy, but I know what I'm doing */
+        *par = static_cast<inner_node<T>*>(sibling);
+
+      } else /* if (n_siblings > 1) */ {
         /* => delete leaf node
          *
          *        |a                         |a
          *        |                          |
-         *       (aa)->Ø     -"aaaaabaa"    (aa)->Ø
+         *       (aa)        -"aaaaabaa"    (aa)   
          *    a / |  \ b     ==========> a / |
          *     /  |   \                   /  |
          *           *()->v1
@@ -362,40 +361,6 @@ template <class T> T *art<T>::del(const char *key) {
         if ((**par).is_underfull()) {
           *par = (**par).shrink();
         }
-
-      } else if (n_children == 1) {
-        /* node with 1 child
-         * => replace node with child
-         *
-         *       (aa)->v1            (aa)->v1
-         *        |a                  |a
-         *        |        -[aaaaa]   |
-         *      *(aa)->v2  =======>   |
-         *        |a                  |
-         *        |                   |
-         *       (aa)->v3            (aaaaa)->v3
-         */
-
-        auto child_partial_key = (**cur).next_partial_key(0);
-        auto child = *(**cur).find_child(child_partial_key);
-
-        auto old_prefix = child->prefix_;
-        auto old_prefix_len = child->prefix_len_;
-
-        child->prefix_ = new char[(**cur).prefix_len_ + 1 + old_prefix_len];
-        child->prefix_len_ = (**cur).prefix_len_ + 1 + old_prefix_len;
-        std::copy((**cur).prefix_, (**cur).prefix_ + (**cur).prefix_len_, child->prefix_);
-        child->prefix_[(**cur).prefix_len_] = child_partial_key;
-        std::copy(old_prefix, old_prefix + old_prefix_len, child->prefix_ + (**cur).prefix_len_ + 1);
-        if (old_prefix != nullptr) {
-          delete[] old_prefix;
-        }
-
-        if ((**cur).prefix_ != nullptr) {
-          delete[](**cur).prefix_;
-        }
-        delete (*cur);
-        *cur = child;
       }
 
       return value;
@@ -404,22 +369,21 @@ template <class T> T *art<T>::del(const char *key) {
     /* propagate down and repeat */
     cur_partial_key = key[depth + (**cur).prefix_len_];
     depth += (**cur).prefix_len_ + 1;
-    par = cur;
-    cur = (**cur).find_child(cur_partial_key);
+    par = reinterpret_cast<inner_node<T>**>(cur);
+    cur = (**par).find_child(cur_partial_key);
   }
   return nullptr;
 }
 
-template <class T> 
-tree_it<T> art<T>::begin() { return tree_it<T>::min(this->root_); }
+template <class T> tree_it<T> art<T>::begin() {
+  return tree_it<T>::min(this->root_);
+}
 
-template <class T> 
-tree_it<T> art<T>::begin(const char *key) {
+template <class T> tree_it<T> art<T>::begin(const char *key) {
   return tree_it<T>::greater_equal(this->root_, key);
 }
 
-template <class T> 
-tree_it<T> art<T>::end() { return tree_it<T>(); }
+template <class T> tree_it<T> art<T>::end() { return tree_it<T>(); }
 
 } // namespace art
 

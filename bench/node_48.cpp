@@ -14,14 +14,14 @@ PICOBENCH_SUITE("node_48");
 
 static void node_48_constructor(state &s) {
   for (auto _ : s) {
-    node_48<void *> n;
+    node_48<int> n;
   }
 }
 PICOBENCH(node_48_constructor);
 
 static void node_48_find_child(state &s) {
-  node_48<void *> n;
-  node_0<void *> child;
+  node_48<int> n;
+  leaf_node<int> child(nullptr);
   for (int i = 0; i < 48; ++i) {
     n.set_child(std::floor(5.4468 * i) - 128, &child);
   }
@@ -32,12 +32,12 @@ static void node_48_find_child(state &s) {
 PICOBENCH(node_48_find_child);
 
 static void node_48_set_child(state &s) {
-  node_48<void *> *n = new node_48<void *>();
-  node_0<void *> child;
+  node_48<int> *n = new node_48<int>();
+  leaf_node<int> child(nullptr);
   for (auto _ : s) {
     if (n->is_full()) {
       delete n;
-      n = new node_48<void *>();
+      n = new node_48<int>();
     }
     n->set_child((rand() % 256) - 128, &child);
   }
@@ -46,16 +46,16 @@ PICOBENCH(node_48_set_child);
 
 static void node_48_grow(state &s) {
   for (auto _ : s) {
-    node_48<void *> *n = new node_48<void *>();
-    node<void *> *new_n = n->grow();
+    node_48<int> *n = new node_48<int>();
+    node<int> *new_n = n->grow();
     delete new_n;
   }
 }
 PICOBENCH(node_48_grow);
 
 static void node_48_next_partial_key(state &s) {
-  node_48<void *> n;
-  node_0<void *> child;
+  node_48<int> n;
+  leaf_node<int> child(nullptr);
   for (int i = 0; i < 48; ++i) {
     n.set_child(std::floor(5.4468 * i) - 128, &child);
   }
@@ -66,8 +66,8 @@ static void node_48_next_partial_key(state &s) {
 PICOBENCH(node_48_next_partial_key);
 
 static void node_48_prev_partial_key(state &s) {
-  node_48<void *> n;
-  node_0<void *> child;
+  node_48<int> n;
+  leaf_node<int> child(nullptr);
   for (int i = 0; i < 48; ++i) {
     n.set_child(std::floor(5.4468 * i) - 128, &child);
   }

@@ -8,8 +8,9 @@
 
 #include "art/art.hpp"
 #include "art/child_it.hpp"
+#include "art/inner_node.hpp"
+#include "art/leaf_node.hpp"
 #include "art/node.hpp"
-#include "art/node_0.hpp"
 #include "art/node_16.hpp"
 #include "art/node_256.hpp"
 #include "art/node_4.hpp"
