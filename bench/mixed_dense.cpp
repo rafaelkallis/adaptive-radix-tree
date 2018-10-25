@@ -48,10 +48,10 @@ static void art_mixed(state &s) {
   int *val;
   for (auto _ : s) {
     k = dataset[rng()];
-    if (m.get(k.c_str(), k.length()) == nullptr) {
-      m.set(k.c_str(), k.length(), &v);
+    if (m.get(k.c_str()) == nullptr) {
+      m.set(k.c_str(), &v);
     } else {
-      m.del(k.c_str(), k.length());
+      m.del(k.c_str());
     }
   }
 }

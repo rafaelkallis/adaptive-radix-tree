@@ -29,7 +29,7 @@ void art_bench() {
   std::mt19937_64 g(0);
   for (uint32_t i = 0; i < 1000000; ++i) {
     auto k = dataset[rng()];
-    m.set(k.c_str(), k.length(), &v);
+    m.set(k.c_str(), &v);
     /* m[dataset[rng()]] = &v; */
   }
 }
@@ -42,19 +42,19 @@ void art_bench() {
 /*   std::string k; */
 /*   for (int i = 0; i < n; ++i) { */
 /*     k = std::to_string(rng1()); */
-/*     m.set(k.c_str(), k.length(), &v); */
+/*     m.set(k.c_str(), &v); */
 /*   } */
   
 /*   std::mt19937_64 rng2(0); */
 /*   for (int i = 0; i < n; ++i) { */
 /*     k = std::to_string(rng2()); */
-/*     m.get(k.c_str(), k.length()); */
+/*     m.get(k.c_str()); */
 /*   } */
   
 /*   std::mt19937_64 rng3(0); */
 /*   for (int i = 0; i < n; ++i) { */
 /*     k = std::to_string(rng3()); */
-/*     m.del(k.c_str(), k.length()); */
+/*     m.del(k.c_str()); */
 /*   } */
 /* } */
 
@@ -79,7 +79,7 @@ void art_bench() {
 /*       std::cout << i << " " << m.n_compress << std::endl; */
 /*     } */
 /*     k = pad(std::to_string(i), '0', 7); */
-/*     m.set(k.c_str(), k.length(), &v); */
+/*     m.set(k.c_str(), &v); */
 /*   } */
 /*   std::cout << i << " " << m.n_compress << std::endl; */
 /* } */
@@ -91,7 +91,7 @@ void art_bench() {
 /*   int i; */
 /*   for (i = 0; i < 10000000; ++i) { */
 /*     k = pad(std::to_string(i), '0', 7); */
-/*     m.set(k.c_str(), k.length(), &v); */
+/*     m.set(k.c_str(), &v); */
 /*   } */
 /*   m.n_compress = 0; */
 /*   for (i = 0; i < 10000000; ++i) { */
@@ -99,7 +99,7 @@ void art_bench() {
 /*       std::cout << i << " " << m.n_compress << std::endl; */
 /*     } */
 /*     k = pad(std::to_string(i), '0', 7); */
-/*     m.del(k.c_str(), k.length()); */
+/*     m.del(k.c_str()); */
 /*   } */
 /*   std::cout << i << " " << m.n_compress << std::endl; */
 /* } */
@@ -155,7 +155,7 @@ void art_bench() {
 /*       std::cout << i << " " << m.n_compress << std::endl; */
 /*     } */
 /*     k = std::to_string(rng1()); */
-/*     m.set(k.c_str(), k.length(), &v); */
+/*     m.set(k.c_str(), &v); */
 /*   } */
 /*   std::cout << i << " " << m.n_compress << std::endl; */
 /* } */
@@ -167,7 +167,7 @@ void art_bench() {
 /*   std::string k; */
 /*   for (int i = 0; i < 10000000; ++i) { */
 /*     k = std::to_string(rng1()); */
-/*     m.set(k.c_str(), k.length(), &v); */
+/*     m.set(k.c_str(), &v); */
 /*   } */
 /*   m.n_compress = 0; */
 /*   std::mt19937_64 rng2(0); */
@@ -177,7 +177,7 @@ void art_bench() {
 /*       std::cout << i << " " << m.n_compress << std::endl; */
 /*     } */
 /*     k = std::to_string(rng2()); */
-/*     m.del(k.c_str(), k.length()); */
+/*     m.del(k.c_str()); */
 /*   } */
 /*   std::cout << i << " " << m.n_compress << std::endl; */
 /* } */
@@ -190,7 +190,7 @@ void casual_stress_test(int n) {
   int i;
   for (i = 0; i < n; ++i) {
     k = std::to_string(rng1());
-    m.set(k.c_str(), k.length(), &v);
+    m.set(k.c_str(), &v);
     if ((i % (1<<20)) == 0) {
       std::cout << i << std::endl;
     }

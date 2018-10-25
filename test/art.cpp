@@ -81,7 +81,7 @@ TEST_SUITE("art") {
         art::art<int> m;
 
         for (int i = 0; i < n; i += 1) {
-          m.set(keys[i].c_str(), keys[i].length(), values[i]);
+          m.set(keys[i].c_str(), values[i]);
 
           for (int j = 0; j < i; j += 1) {
             REQUIRE_EQ(values[j], m.get(keys[j].c_str()));
@@ -133,21 +133,19 @@ TEST_SUITE("art") {
 
     /* The above statements construct the following tree:
      *
-     *                (aa)->0
-     *                 |a
-     *                 |
-     *                (a)->1
-     *             a /   \ b
-     *              /     \
-     *        2<-(aa)     (aa)->5
-     *         a /  \ b    |a
-     *          /    \     |
-     *    3<-(aa) 4<-(a)  (aa)->6
-     *      a/|b\c
-     *      / |  \
-     *  7<-() () ()->8
-     *        |
-     *        9
+     *          (aa)
+     *   $______/ |a  
+     *   /        |     
+     *  ()->0    (a)  
+     *   $______/ |a\___________b 
+     *   /        |             \
+     *  ()->1   (aa)           (aa)
+     *   $______/ |a\___b       |$\____a
+     *   /        |     \       |      \
+     *  ()->2 (aa$)->3 (a$)->4 ()->5 (aa) 
+     *                              $/   \a
+     *                              /     \
+     *                             ()->6  ()->7
      */
 
     SUBCASE("delete non existing value") {
@@ -281,14 +279,14 @@ TEST_SUITE("art") {
       auto k = to_string(rng1());
       auto v = new int();
       *v = i;
-      REQUIRE(m.set(k.c_str(), k.length(), v) == nullptr);
+      REQUIRE(m.set(k.c_str(), v) == nullptr);
     }
     mt19937_64 rng2(0);
     for (int i = 0; i < 1000000; ++i) {
       auto k = to_string(rng2());
-      auto get_res = m.get(k.c_str(), k.length());
-      auto del_res = m.del(k.c_str(), k.length());
-      REQUIRE(m.get(k.c_str(), k.length()) == nullptr);
+      auto get_res = m.get(k.c_str());
+      auto del_res = m.del(k.c_str());
+      REQUIRE(m.get(k.c_str()) == nullptr);
       REQUIRE(get_res == del_res);
       REQUIRE(del_res != nullptr);
       REQUIRE(*del_res == i);
@@ -317,16 +315,17 @@ TEST_SUITE("art") {
 
     /* The above statements construct the following tree:
      *
-     *                (aa)->0
-     *                 |a
-     *                 |
-     *                (a)->1
-     *             a /   \ b
-     *              /     \
-     *        2<-(aa)     (aa)->5
-     *         a /  \ b    |a
-     *          /    \     |
-     *    3<-(aa) 4<-(a)  (aa)->6
+     *          (aa)
+     *   $_____/ |a
+     *   /       |
+     *  ()->0   (a)
+     *   $_____/ |a\____________b       
+     *   /       |              \
+     *  ()->1   (aa)            (aa)
+     *   $ ____/ |a\___b         |a\____$
+     *    /      |     \         |      \
+     *  ()->2 (aa$)->3 (a$)->4 ()->5 (aa$)->6
+     *
      */
 
     auto it = m.begin();
@@ -392,16 +391,17 @@ TEST_SUITE("art") {
 
     /* The above statements construct the following tree:
      *
-     *                (aa)->0
-     *                 |a
-     *                 |
-     *                (a)->1
-     *             a /   \ b
-     *              /     \
-     *        2<-(aa)     (aa)->5
-     *         a /  \ b    |a
-     *          /    \     |
-     *    3<-(aa) 4<-(a)  (aa)->6
+     *          (aa)
+     *   $_____/ |a
+     *   /       |
+     *  ()->0   (a)
+     *   $_____/ |a\____________b       
+     *   /       |              \
+     *  ()->1   (aa)            (aa)
+     *   $ ____/ |a\___b         |a\____$
+     *    /      |     \         |      \
+     *  ()->2 (aa$)->3 (a$)->4 ()->5 (aa$)->6
+     *
      */
 
     // iterator on ["aaaaaaaaaa",3]

@@ -18,10 +18,10 @@ template <class T> class node;
 template <class T> class tree_it {
 public:
   tree_it() = default;
-  explicit tree_it(node<T> *root);
   explicit tree_it(std::stack<node<T> *> traversal_stack);
 
-  static tree_it<T> greater_equal(node<T> *root, const char *key, int key_len);
+  static tree_it<T> min(node<T> *root);
+  static tree_it<T> greater_equal(node<T> *root, const char *key);
 
   using iterator_category = std::forward_iterator_tag;
   using value_type = T *;
@@ -41,13 +41,6 @@ private:
   std::stack<node<T> *> traversal_stack_;
 };
 
-template <class T> tree_it<T>::tree_it(node<T> *root) : traversal_stack_() {
-  if (root == nullptr) {
-    return;
-  }
-  traversal_stack_.push(root);
-}
-
 template <class T>
 tree_it<T>::tree_it(std::stack<node<T> *> traversal_stack)
     : traversal_stack_(traversal_stack) {
@@ -63,9 +56,14 @@ tree_it<T>::tree_it(std::stack<node<T> *> traversal_stack)
   }
 }
 
+template <class T> 
+tree_it<T> tree_it<T>::min(node<T> *root) {
+  return tree_it<T>::greater_equal(root, "");
+}
+
 template <class T>
-tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key,
-                                     int key_len) {
+tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
+  int depth, key_len = std::strlen(key) + 1;
   if (root == nullptr) {
     return tree_it<T>();
   }
@@ -76,18 +74,17 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key,
   depth_stack.push(0);
 
   node<T> *cur;
-  int depth;
   while (true) {
     cur = node_stack.top();
     depth = depth_stack.top();
 
     for (int i = 0; i < cur->prefix_len_; ++i) {
       if (depth + i + 1 == key_len) {
-        return tree_it<T>(node_stack);
+        goto exit_outer_loop;
       }
       if (cur->prefix_[i] < key[depth + i]) {
         node_stack.pop();
-        return tree_it<T>(node_stack);
+        goto exit_outer_loop;
       }
     }
     node_stack.pop();
@@ -103,8 +100,13 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key,
       depth_stack.push(depth + cur->prefix_len_ + 1);
     }
   }
+  exit_outer_loop:
 
-  return tree_it<T>(node_stack);
+  auto it = tree_it<T>(node_stack);
+  if (*it == nullptr) {
+    ++it;
+  }
+  return it;
 }
 
 template <class T> typename tree_it<T>::value_type tree_it<T>::operator*() {
@@ -123,7 +125,7 @@ template <class T> tree_it<T> &tree_it<T>::operator++() {
       char child_partial_key = *it;
       traversal_stack_.push(*prev->find_child(child_partial_key));
     }
-    if (traversal_stack_.empty() || traversal_stack_.top() != nullptr) {
+    if (traversal_stack_.empty() || (traversal_stack_.top() != nullptr && traversal_stack_.top()->value_ != nullptr)) {
       break;
     }
   }

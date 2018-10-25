@@ -27,7 +27,6 @@ public:
    * @return the value associated with the key or a nullptr.
    */
   T *get(const char *key) const;
-  T *get(const char *key, const int key_len) const;
 
   /**
    * Associates the given key with the given value.
@@ -40,7 +39,6 @@ public:
    * previously associated value.
    */
   T *set(const char *key, T *value);
-  T *set(const char *key, const int key_len, T *value);
 
   /**
    * Deletes the given key and returns it's associated value.
@@ -52,7 +50,6 @@ public:
    * @return the values assciated with they key or a nullptr otherwise.
    */
   T *del(const char *key);
-  T *del(const char *key, const int key_len);
 
   /**
    * Forward iterator that traverses the tree in lexicographic order.
@@ -64,7 +61,6 @@ public:
    * from the provided key.
    */
   tree_it<T> begin(const char *key);
-  tree_it<T> begin(const char *key, const int key_len);
 
   /**
    * Iterator to the end of the lexicographic order.
@@ -98,12 +94,8 @@ template <class T> art<T>::~art() {
 }
 
 template <class T> T *art<T>::get(const char *key) const {
-  return get(key, std::strlen(key));
-}
-
-template <class T> T *art<T>::get(const char *key, const int key_len) const {
   node<T> *cur = root_, **child;
-  int depth = 0;
+  int depth = 0, key_len = std::strlen(key) + 1;
   while (cur != nullptr) {
     if (cur->prefix_len_ != cur->check_prefix(key + depth, key_len - depth)) {
       /* prefix mismatch */
@@ -121,11 +113,7 @@ template <class T> T *art<T>::get(const char *key, const int key_len) const {
 }
 
 template <class T> T *art<T>::set(const char *key, T *value) {
-  return set(key, std::strlen(key), value);
-}
-
-template <class T>
-T *art<T>::set(const char *key, const int key_len, T *value) {
+  int key_len = std::strlen(key) + 1, depth = 0, prefix_match_len;
   if (root_ == nullptr) {
     root_ = new node_0<T>();
     root_->prefix_ = new char[key_len];
@@ -137,7 +125,6 @@ T *art<T>::set(const char *key, const int key_len, T *value) {
 
   node<T> **cur = &root_, **child;
   char child_partial_key;
-  int depth = 0, prefix_match_len;
   bool is_prefix_match;
 
   while (true) {
@@ -155,57 +142,16 @@ T *art<T>::set(const char *key, const int key_len, T *value) {
        * => return old value to caller to handle.
        *        _                             _
        *        |                             |
-       *       (aa)->Ø                       (aa)->Ø
+       *       (aa)                          (aa)
        *    a /    \ b     +[aaaaa,v3]    a /    \ b
        *     /      \      ==========>     /      \
        * *(aa)->v1  ()->v2             *(aa)->v3  ()->v2
-       *  /|\       /|\                 /|\       /|\
+       *
        */
 
       T *old_value = (**cur).value_;
       (**cur).value_ = value;
       return old_value;
-    }
-
-    if (is_prefix_match && (**cur).prefix_len_ > key_len - depth) {
-      /* new key is a prefix of the current node's key:
-       * => "expand"
-       * => create new node with value to insert.
-       * => new node becomes parent of current node.
-       *        _                           _
-       *        |                           |
-       *       (aa)->Ø                     (aa)->Ø
-       *    a /    \ b     +[aaaa,v3]   a /    \ b
-       *     /      \      =========>    /      \
-       * *(aa)->v1  ()->v2            +(a)->v3  ()->v2
-       *  /|\       /|\             a /         /|\
-       *                             /
-       *                           *()->v1
-       *                            /|\
-       */
-
-      auto new_node = new node_4<T>();
-      new_node->value_ = value;
-      new_node->prefix_ = new char[prefix_match_len];
-      std::copy((**cur).prefix_, (**cur).prefix_ + prefix_match_len, new_node->prefix_);
-      new_node->prefix_len_ = prefix_match_len;
-      new_node->set_child((**cur).prefix_[prefix_match_len], *cur);
-
-      // TODO(rafaelkallis): memmove?
-      /* std::memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1,
-       */
-      /*         (**cur).prefix_len_ - prefix_match_len - 1); */
-      /* (**cur).prefix_len_ -= prefix_match_len + 1; */
-
-      auto old_prefix = (**cur).prefix_;
-      auto old_prefix_len = (**cur).prefix_len_;
-      (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
-      (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
-      std::copy(old_prefix + prefix_match_len + 1, old_prefix + old_prefix_len, (**cur).prefix_);
-      delete old_prefix;
-
-      *cur = new_node;
-      return nullptr;
     }
 
     if (!is_prefix_match) {
@@ -297,10 +243,7 @@ T *art<T>::set(const char *key, const int key_len, T *value) {
 }
 
 template <class T> T *art<T>::del(const char *key) {
-  return del(key, std::strlen(key));
-}
-
-template <class T> T *art<T>::del(const char *key, const int key_len) {
+  int depth = 0, key_len = std::strlen(key) + 1;
   if (root_ == nullptr) {
     return nullptr;
   }
@@ -310,9 +253,6 @@ template <class T> T *art<T>::del(const char *key, const int key_len) {
 
   /* partial key of current and child node */
   char cur_partial_key;
-
-  /* current key depth */
-  int depth = 0;
 
   while (cur != nullptr) {
     if ((**cur).prefix_len_ !=
@@ -470,17 +410,16 @@ template <class T> T *art<T>::del(const char *key, const int key_len) {
   return nullptr;
 }
 
-template <class T> tree_it<T> art<T>::begin() { return tree_it<T>(root_); }
+template <class T> 
+tree_it<T> art<T>::begin() { return tree_it<T>::min(this->root_); }
 
-template <class T> tree_it<T> art<T>::begin(const char *key) {
-  return begin(key, std::strlen(key));
+template <class T> 
+tree_it<T> art<T>::begin(const char *key) {
+  return tree_it<T>::greater_equal(this->root_, key);
 }
 
-template <class T> tree_it<T> art<T>::begin(const char *key, int key_len) {
-  return tree_it<T>::greater_equal(root_, key, key_len);
-}
-
-template <class T> tree_it<T> art<T>::end() { return tree_it<T>(); }
+template <class T> 
+tree_it<T> art<T>::end() { return tree_it<T>(); }
 
 } // namespace art
 

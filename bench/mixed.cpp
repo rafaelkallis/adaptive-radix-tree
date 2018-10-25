@@ -35,10 +35,10 @@ static void art_mixed_sparse(state &s) {
   int v = 1;
   for (auto _ : s) {
     k = to_string(h(rng()));
-    if (m.get(k.c_str(), k.length()) == nullptr) {
-      m.set(k.c_str(), k.length(), &v);
+    if (m.get(k.c_str()) == nullptr) {
+      m.set(k.c_str(), &v);
     } else {
-      m.del(k.c_str(), k.length());
+      m.del(k.c_str());
     }
   }
 }
