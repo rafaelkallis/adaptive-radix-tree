@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stack>
+#include <cstring>
 
 namespace art {
 
@@ -107,7 +108,14 @@ template <class T> T *art<T>::get(const char *key) const {
     }
     if (cur->prefix_len_ == key_len - depth) {
       /* exact match */
-      return cur->is_leaf() ? static_cast<leaf_node<T>*>(cur)->value_ : nullptr;
+      if (!cur->is_leaf()) {
+        return nullptr;
+      }
+      if (!std::strcmp(key, static_cast<leaf_node<T>*>(cur)->key_)) {
+        /* keys do not compare equal */
+        return nullptr;
+      }
+      return static_cast<leaf_node<T>*>(cur)->value_;
     }
     child = static_cast<inner_node<T>*>(cur)->find_child(key[depth + cur->prefix_len_]);
     depth += (cur->prefix_len_ + 1);
@@ -119,9 +127,7 @@ template <class T> T *art<T>::get(const char *key) const {
 template <class T> T *art<T>::set(const char *key, T *value) {
   int key_len = std::strlen(key) + 1, depth = 0, prefix_match_len;
   if (root_ == nullptr) {
-    root_ = new leaf_node<T>(value);
-    root_->prefix_ = new char[key_len];
-    std::copy(key, key + key_len, root_->prefix_);
+    root_ = new leaf_node<T>(key, value);
     root_->prefix_len_ = key_len;
     return nullptr;
   }
@@ -132,74 +138,59 @@ template <class T> T *art<T>::set(const char *key, T *value) {
   bool is_prefix_match;
 
   while (true) {
-    /* number of bytes of the current node's prefix that match the key */
-    prefix_match_len = (**cur).check_prefix(key + depth, key_len - depth);
+    if ((**cur).is_leaf()) {
+      auto cur_leaf = reinterpret_cast<leaf_node<T>**>(cur);
+      int key_match_len = 0;
+      for (; key[key_match_len] == (**cur_leaf).key_[key_match_len]; ++key_match_len) {}
+      if (key_match_len < depth) {
+        /*
+        return nullptr;
+      }
+      if (key_len == depth + (**cur).prefix_len_ && !std::strcmp(key, (**cur).key_)) {
+        /* exact match:
+         * => "replace"
+         * => replace value of current node.
+         * => return old value to caller to handle.
+         *        _                             _
+         *        |                             |
+         *       (aa)                          (aa)
+         *    a /    \ b     +[aaaaa,v3]    a /    \ b
+         *     /      \      ==========>     /      \
+         * *(aa)->v1  ()->v2             *(aa)->v3  ()->v2
+         *
+         */
 
-    /* true if the current node's prefix matches with a part of the key */
-    is_prefix_match = (std::min<int>((**cur).prefix_len_, key_len - depth)) ==
-                      prefix_match_len;
-
-    if (is_prefix_match && (**cur).prefix_len_ == key_len - depth) {
-      /* exact match:
-       * => "replace"
-       * => replace value of current node.
-       * => return old value to caller to handle.
-       *        _                             _
-       *        |                             |
-       *       (aa)                          (aa)
-       *    a /    \ b     +[aaaaa,v3]    a /    \ b
-       *     /      \      ==========>     /      \
-       * *(aa)->v1  ()->v2             *(aa)->v3  ()->v2
-       *
-       */
-
-      /* cur must be a leaf */
-      T *old_value = static_cast<leaf_node<T>*>(*cur)->value_;
-      static_cast<leaf_node<T>*>(*cur)->value_ = value;
-      return old_value;
-    }
-
-    if (!is_prefix_match) {
+        T *old_value = (**cur_leaf)->value_;
+        (**cur_leaf).value_ = value;
+        return old_value;
+      }
+      
       /* prefix mismatch:
        * => new parent node with common prefix and no associated value.
        * => new node with value to insert.
        * => current and new node become children of new parent node.
        *
        *        |                        |
-       *      *(aa)                    +(a)->Ø
+       *      *(aa)                    +(a)   
        *    a /    \ b     +[ab,v3]  a /   \ b
        *     /      \      =======>   /     \
-       *  (aa)->v1  ()->v2          *()->Ø +()->v3
+       *  (aa)->v1  ()->v2          *()    +()->v3
        *                          a /   \ b
        *                           /     \
        *                        (aa)->v1 ()->v2
        *                        /|\      /|\
        */
 
+      int prefix_match_len = 0;
+      for (; key[depth + prefix_match_len] == (**cur_leaf).key_[depth + prefix_match_len]; ++prefix_match_len) {}
+
       auto new_parent = new node_4<T>();
-      new_parent->prefix_ = new char[prefix_match_len];
-      std::copy((**cur).prefix_, (**cur).prefix_ + prefix_match_len,
-                new_parent->prefix_);
       new_parent->prefix_len_ = prefix_match_len;
-      new_parent->set_child((**cur).prefix_[prefix_match_len], *cur);
+      new_parent->set_child(key[depth + prefix_match_len], *cur);
 
-      // TODO(rafaelkallis): shrink?
-      /* memmove((**cur).prefix_, (**cur).prefix_ + prefix_match_len + 1, */
-      /*         (**cur).prefix_len_ - prefix_match_len - 1); */
-      /* (**cur).prefix_len_ -= prefix_match_len + 1; */
+      (**cur).prefix_len_ -= prefix_match_len + 1;
 
-      auto old_prefix = (**cur).prefix_;
-      auto old_prefix_len = (**cur).prefix_len_;
-      (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
-      (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
-      std::copy(old_prefix + prefix_match_len + 1, old_prefix + old_prefix_len,
-                (**cur).prefix_);
-      delete old_prefix;
-
-      auto new_node = new leaf_node<T>(value);
-      new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];
-      std::copy(key + depth + prefix_match_len + 1, key + key_len,
-                new_node->prefix_);
+      auto new_node = new leaf_node<T>(key, value);
       new_node->prefix_len_ = key_len - depth - prefix_match_len - 1;
       new_parent->set_child(key[depth + prefix_match_len], new_node);
 
@@ -218,20 +209,17 @@ template <class T> T *art<T>::set(const char *key, T *value) {
        * => create new node with value to insert.
        * => new node becomes current node's child.
        *
-       *      *(aa)->Ø              *(aa)->Ø
-       *    a /        +[aab,v2]  a /    \ b
-       *     /         ========>   /      \
-       *   (a)->v1               (a)->v1 +()->v2
+       *      *(aa)              *(aa)   
+       *    a /     +[aab,v2]  a /    \ b
+       *     /      ========>   /      \
+       *   (a)->v1            (a)->v1 +()->v2
        */
 
       if ((**cur_inner).is_full()) {
         *cur_inner = (**cur_inner).grow();
       }
 
-      auto new_node = new leaf_node<T>(value);
-      new_node->prefix_ = new char[key_len - depth - (**cur).prefix_len_ - 1];
-      std::copy(key + depth + (**cur).prefix_len_ + 1, key + key_len,
-                new_node->prefix_);
+      auto new_node = new leaf_node<T>(key, value);
       new_node->prefix_len_ = key_len - depth - (**cur).prefix_len_ - 1;
       (**cur_inner).set_child(child_partial_key, new_node);
       return nullptr;
