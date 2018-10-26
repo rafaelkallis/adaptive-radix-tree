@@ -38,16 +38,36 @@ target_include_directories(zipf PUBLIC ${ZIPF_INCLUDE_DIR})
 ### executables ###
 
 # main executable
-file(GLOB MAIN_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
-add_executable(main ${MAIN_SOURCES})
+add_executable(main 
+  "${PROJECT_SOURCE_DIR}/src/example.cpp"
+  )
 target_link_libraries(main art zipf)
 
 # test executable
-file(GLOB TEST_SOURCES "${PROJECT_SOURCE_DIR}/test/*.cpp")
-add_executable(test ${TEST_SOURCES})
+add_executable(test
+  "${PROJECT_SOURCE_DIR}/test/art.cpp"
+  "${PROJECT_SOURCE_DIR}/test/main.cpp"
+  "${PROJECT_SOURCE_DIR}/test/node.cpp"
+  "${PROJECT_SOURCE_DIR}/test/node_4.cpp"
+  "${PROJECT_SOURCE_DIR}/test/node_16.cpp"
+  "${PROJECT_SOURCE_DIR}/test/node_48.cpp"
+  "${PROJECT_SOURCE_DIR}/test/node_256.cpp"
+  )
 target_link_libraries(test art doctest)
 
 # bench executable
-file(GLOB BENCH_SOURCES "${PROJECT_SOURCE_DIR}/bench/*.cpp")
-add_executable(bench ${BENCH_SOURCES})
+add_executable(bench
+  "${PROJECT_SOURCE_DIR}/bench/delete.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/insert.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/main.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/mixed.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/mixed_dense.cpp"
+  # "${PROJECT_SOURCE_DIR}/bench/node_4.cpp"
+  # "${PROJECT_SOURCE_DIR}/bench/node_16.cpp"
+  # "${PROJECT_SOURCE_DIR}/bench/node_48.cpp"
+  # "${PROJECT_SOURCE_DIR}/bench/node_256.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/query_sparse_uniform.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/query_sparse_uniform_64.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/query_sparse_zipf.cpp"
+  )
 target_link_libraries(bench art picobench zipf)

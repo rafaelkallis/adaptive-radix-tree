@@ -154,8 +154,9 @@ template <class T> T *art<T>::set(const char *key, T *value) {
        */
 
       /* cur must be a leaf */
-      T *old_value = static_cast<leaf_node<T>*>(*cur)->value_;
-      static_cast<leaf_node<T>*>(*cur)->value_ = value;
+      auto cur_leaf = static_cast<leaf_node<T>*>(*cur);
+      T *old_value = cur_leaf->value_;
+      cur_leaf->value_ = value;
       return old_value;
     }
 
@@ -252,6 +253,7 @@ template <class T> T *art<T>::set(const char *key, T *value) {
 
 template <class T> T *art<T>::del(const char *key) {
   int depth = 0, key_len = std::strlen(key) + 1;
+
   if (root_ == nullptr) {
     return nullptr;
   }

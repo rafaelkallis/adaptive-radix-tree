@@ -26,6 +26,10 @@ public:
   node<T> &operator=(const node<T> &other) = default;
   node<T> &operator=(node<T> &&other) noexcept = default;
 
+  /**
+   * Determines if this node is a leaf node, i.e., contains a value.
+   * Needed for downcasting a node<T> instance to a leaf_node<T> or inner_node<T> instance.
+   */
   virtual bool is_leaf() const = 0;
 
   /**
