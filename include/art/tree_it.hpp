@@ -8,6 +8,7 @@
 
 #include "child_it.hpp"
 #include <cassert>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <stack>
@@ -52,9 +53,8 @@ tree_it<T>::tree_it(std::stack<node<T> *> traversal_stack)
   std::reverse_iterator<child_it<T>> it, it_end;
 
   /* preorder-traverse until leaf node found or no nodes are left */
-  while (!traversal_stack_.empty() &&
-         !traversal_stack_.top()->is_leaf()) {
-    cur = static_cast<inner_node<T>*>(traversal_stack_.top());
+  while (!traversal_stack_.empty() && !traversal_stack_.top()->is_leaf()) {
+    cur = static_cast<inner_node<T> *>(traversal_stack_.top());
     traversal_stack_.pop();
     for (it = cur->rbegin(), it_end = cur->rend(); it != it_end; ++it) {
       child_partial_key = *it;
@@ -63,8 +63,7 @@ tree_it<T>::tree_it(std::stack<node<T> *> traversal_stack)
   }
 }
 
-template <class T> 
-tree_it<T> tree_it<T>::min(node<T> *root) {
+template <class T> tree_it<T> tree_it<T>::min(node<T> *root) {
   return tree_it<T>::greater_equal(root, "");
 }
 
@@ -102,43 +101,43 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
     if (cur->is_leaf()) {
       continue;
     }
-    it = static_cast<inner_node<T>*>(cur)->rbegin();
-    it_end = static_cast<inner_node<T>*>(cur)->rend();
+    it = static_cast<inner_node<T> *>(cur)->rbegin();
+    it_end = static_cast<inner_node<T> *>(cur)->rend();
     for (; it != it_end; ++it) {
       partial_key = *it;
       if (partial_key < key[depth + cur->prefix_len_]) {
         break;
       }
-      node_stack.push(*static_cast<inner_node<T>*>(cur)->find_child(partial_key));
+      node_stack.push(
+          *static_cast<inner_node<T> *>(cur)->find_child(partial_key));
       depth_stack.push(depth + cur->prefix_len_ + 1);
     }
   }
-  exit_outer_loop:
+exit_outer_loop:
 
   return tree_it<T>(node_stack);
 }
 
 template <class T> typename tree_it<T>::value_type tree_it<T>::operator*() {
-  return static_cast<leaf_node<T>*>(traversal_stack_.top())->value_;
+  return static_cast<leaf_node<T> *>(traversal_stack_.top())->value_;
 }
 
 template <class T> typename tree_it<T>::pointer tree_it<T>::operator->() {
-  return &static_cast<leaf_node<T>*>(traversal_stack_.top())->value_;
+  return &static_cast<leaf_node<T> *>(traversal_stack_.top())->value_;
 }
 
 template <class T> tree_it<T> &tree_it<T>::operator++() {
   inner_node<T> *cur;
   std::reverse_iterator<child_it<T>> it, it_end;
-  char child_partial_key;
 
   traversal_stack_.pop();
   while (!traversal_stack_.empty() && !traversal_stack_.top()->is_leaf()) {
-    cur = static_cast<inner_node<T>*>(traversal_stack_.top());
+    cur = static_cast<inner_node<T> *>(traversal_stack_.top());
     traversal_stack_.pop();
     for (it = cur->rbegin(), it_end = cur->rend(); it != it_end; ++it) {
       traversal_stack_.push(*cur->find_child(*it));
     }
-  } ;
+  };
   return *this;
 }
 
