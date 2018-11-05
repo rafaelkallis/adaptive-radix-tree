@@ -48,6 +48,7 @@ add_executable(test
   "${PROJECT_SOURCE_DIR}/test/art.cpp"
   "${PROJECT_SOURCE_DIR}/test/main.cpp"
   "${PROJECT_SOURCE_DIR}/test/node.cpp"
+  "${PROJECT_SOURCE_DIR}/test/inner_node.cpp"
   "${PROJECT_SOURCE_DIR}/test/node_4.cpp"
   "${PROJECT_SOURCE_DIR}/test/node_16.cpp"
   "${PROJECT_SOURCE_DIR}/test/node_48.cpp"

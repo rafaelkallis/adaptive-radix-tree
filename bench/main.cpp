@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   picobench::runner runner;
   runner.parse_cmd_line(argc, argv);
   if (runner.should_run()) {
-    runner.set_default_state_iterations({1000000});
+    runner.set_default_state_iterations({1600000});
     auto report = runner.run_benchmarks();
     report.to_text(std::cout);
   }

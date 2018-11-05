@@ -7,6 +7,7 @@
 #define ART_INNER_NODE_HPP
 
 #include "child_it.hpp"
+#include "leaf_node.hpp"
 #include "node.hpp"
 #include <algorithm>
 #include <array>
@@ -99,28 +100,31 @@ public:
    */
   child_it<T> begin();
   std::reverse_iterator<child_it<T>> rbegin();
+
+  /**
+   * Iterator on after the last child node.
+   *
+   * @return Iterator on after the last child node.
+   */
   child_it<T> end();
   std::reverse_iterator<child_it<T>> rend();
 };
 
-template <class T> 
-bool inner_node<T>::is_leaf() const { return false; }
+template <class T> bool inner_node<T>::is_leaf() const { return false; }
 
-template <class T> 
-child_it<T> inner_node<T>::begin() { return child_it<T>(this); }
+template <class T> child_it<T> inner_node<T>::begin() {
+  return child_it<T>(this);
+}
 
-template <class T> 
-std::reverse_iterator<child_it<T>> inner_node<T>::rbegin() {
+template <class T> std::reverse_iterator<child_it<T>> inner_node<T>::rbegin() {
   return std::reverse_iterator<child_it<T>>(end());
 }
 
-template <class T> 
-child_it<T> inner_node<T>::end() {
+template <class T> child_it<T> inner_node<T>::end() {
   return child_it<T>(this, n_children());
 }
 
-template <class T> 
-std::reverse_iterator<child_it<T>> inner_node<T>::rend() {
+template <class T> std::reverse_iterator<child_it<T>> inner_node<T>::rend() {
   return std::reverse_iterator<child_it<T>>(begin());
 }
 
