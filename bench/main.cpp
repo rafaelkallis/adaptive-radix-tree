@@ -12,7 +12,8 @@ int main(int argc, char *argv[]) {
   runner.parse_cmd_line(argc, argv);
   if (runner.should_run()) {
     runner.set_default_state_iterations({1600000});
-    auto report = runner.run_benchmarks();
+    runner.run_benchmarks();
+    auto report = runner.generate_report();
     report.to_text(std::cout);
   }
   return 0;
