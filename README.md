@@ -34,6 +34,9 @@ int main() {
 ## Contributing
 
 ```cpp
+# clone repository with submodules
+git clone --recurse-submodules https://github.com/rafaelkallis/adaptive-radix-tree
+
 # build test binaries
 make [release]
 
