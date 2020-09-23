@@ -6,3 +6,5 @@ dataset.txt
 massif.*
 cachegrind.*
 callgrind.*
+cmake-build-debug
+.idea

@@ -46,7 +46,7 @@ private:
 };
 
 template <class T> node_48<T>::node_48() {
-  std::fill(this->indexes_, this->indexes_ + 256,node_48::EMPTY);
+  std::fill(this->indexes_, this->indexes_ + 256, node_48::EMPTY);
   std::fill(this->children_, this->children_ + 48, nullptr);
 }
 
