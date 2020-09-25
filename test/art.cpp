@@ -372,7 +372,7 @@ TEST_SUITE("art") {
     }
 
     SUBCASE("tree_len") {
-      int n = 0xFFFF;
+      int n = 0x10000;
       char key[5];
       int value;
       art::art<int> m;
