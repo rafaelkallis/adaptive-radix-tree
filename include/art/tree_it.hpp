@@ -73,7 +73,7 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
     return tree_it<T>();
   }
 
-  int depth, key_len = std::strlen(key) + 1, i;
+  int cur_depth, key_len = std::strlen(key) + 1, i;
   node<T> *cur;
   std::reverse_iterator<child_it<T>> it, it_end;
   char partial_key;
@@ -85,13 +85,13 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
 
   while (true) {
     cur = node_stack.top();
-    depth = depth_stack.top();
+    cur_depth = depth_stack.top();
 
     for (i = 0; i < cur->prefix_len_; ++i) {
-      if (depth + i + 1 == key_len) {
+      if (cur_depth + i + 1 == key_len) {
         goto exit_outer_loop;
       }
-      if (cur->prefix_[i] < key[depth + i]) {
+      if (cur->prefix_[i] < key[cur_depth + i]) {
         node_stack.pop();
         goto exit_outer_loop;
       }
@@ -105,12 +105,12 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
     it_end = static_cast<inner_node<T> *>(cur)->rend();
     for (; it != it_end; ++it) {
       partial_key = *it;
-      if (partial_key < key[depth + cur->prefix_len_]) {
+      if (partial_key < key[cur_depth + cur->prefix_len_]) {
         break;
       }
       node_stack.push(
           *static_cast<inner_node<T> *>(cur)->find_child(partial_key));
-      depth_stack.push(depth + cur->prefix_len_ + 1);
+      depth_stack.push(cur_depth + cur->prefix_len_ + 1);
     }
   }
 exit_outer_loop:
