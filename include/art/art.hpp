@@ -121,7 +121,7 @@ template <class T> T *art<T>::set(const char *key, T *value) {
   if (root_ == nullptr) {
     root_ = new leaf_node<T>(value);
     root_->prefix_ = new char[key_len];
-    std::copy(key, key + key_len, root_->prefix_);
+    std::copy(key, key + key_len + 1, root_->prefix_);
     root_->prefix_len_ = key_len;
     return nullptr;
   }
