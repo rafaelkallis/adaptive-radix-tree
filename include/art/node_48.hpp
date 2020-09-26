@@ -52,7 +52,7 @@ template <class T> node_48<T>::node_48() {
 
 template <class T> node<T> **node_48<T>::find_child(char partial_key) {
   // TODO(rafaelkallis): direct lookup instead of temp save?
-  char index = indexes_[128 + partial_key];
+  uint8_t index = indexes_[128 + partial_key];
   return node_48::EMPTY != index ? &children_[index] : nullptr;
 }
 
@@ -66,7 +66,7 @@ void node_48<T>::set_child(char partial_key, node<T> *child) {
   /* find empty child entry */
   for (int i = 0; i < 48; ++i) {
     if (children_[i] == nullptr) {
-      indexes_[128 + partial_key] = i;
+      indexes_[128 + partial_key] = (uint8_t) i;
       children_[i] = child;
       break;
     }
@@ -76,7 +76,7 @@ void node_48<T>::set_child(char partial_key, node<T> *child) {
 
 template <class T> node<T> *node_48<T>::del_child(char partial_key) {
   node<T> *child_to_delete = nullptr;
-  char index = indexes_[128 + partial_key];
+  unsigned char index = indexes_[128 + partial_key];
   if (index != node_48::EMPTY) {
     child_to_delete = children_[index];
     indexes_[128 + partial_key] = node_48::EMPTY;
@@ -90,7 +90,7 @@ template <class T> inner_node<T> *node_48<T>::grow() {
   auto new_node = new node_256<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  char index;
+  uint8_t index;
   for (int partial_key = -128; partial_key < 127; ++partial_key) {
     index = indexes_[128 + partial_key];
     if (index != node_48::EMPTY) {
@@ -105,7 +105,7 @@ template <class T> inner_node<T> *node_48<T>::shrink() {
   auto new_node = new node_16<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  char index;
+  uint8_t index;
   for (int partial_key = -128; partial_key < 127; ++partial_key) {
     index = indexes_[128 + partial_key];
     if (index != node_48::EMPTY) {

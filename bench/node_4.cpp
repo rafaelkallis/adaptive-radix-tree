@@ -12,7 +12,7 @@ using picobench::state;
 PICOBENCH_SUITE("node_4");
 
 static void node_4_constructor(state &s) {
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     node_4<int> n;
   }
 }
@@ -33,7 +33,7 @@ static void node_4_find_child(state &s) {
 
   char partial_keys[] = {-128, -43, 42, 127};
   node<int> **child = nullptr;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     child = n.find_child(partial_keys[rand() % 4]);
   }
 }
@@ -43,7 +43,7 @@ static void node_4_set_child(state &s) {
   auto n = new node_4<int>();
   leaf_node<int> child(nullptr);
   char partial_keys[] = {-128, -43, 42, 127};
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     if (n->is_full()) {
       delete n;
       n = new node_4<int>();
@@ -57,7 +57,7 @@ PICOBENCH(node_4_set_child);
 static void node_4_grow(state &s) {
   inner_node<int> *n = nullptr;
   inner_node<int> *new_n = nullptr;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     n = new node_4<int>();
     new_n = n->grow();
     delete new_n;
@@ -78,7 +78,7 @@ static void node_4_next_partial_key(state &s) {
   n.set_child(42, &c2);
   n.set_child(127, &c3);
 
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     auto next_partial_key = n.next_partial_key((rand() % 256) - 128);
   }
 }
@@ -97,7 +97,7 @@ static void node_4_prev_partial_key(state &s) {
   n.set_child(42, &c2);
   n.set_child(127, &c3);
 
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     auto prev_partial_key = n.prev_partial_key((rand() % 256) - 128);
   }
 }

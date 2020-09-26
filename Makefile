@@ -1,13 +1,14 @@
+MAKEFLAGS += --silent
 
 export BUILD_DIR ?= build
 
 default: debug
 
 release:
-	mkdir -p ./$(BUILD_DIR) && cd ./$(BUILD_DIR) && cmake ../ -DCMAKE_BUILD_TYPE=Release && VERBOSE=1 cmake --build .
+	mkdir -p ./$(BUILD_DIR) && cd ./$(BUILD_DIR) && cmake ../ -DCMAKE_BUILD_TYPE=Release && cmake --build .
 
 debug:
-	mkdir -p ./$(BUILD_DIR) && cd ./$(BUILD_DIR) && cmake ../ -DCMAKE_BUILD_TYPE=Debug && VERBOSE=1 cmake --build .
+	mkdir -p ./$(BUILD_DIR) && cd ./$(BUILD_DIR) && cmake ../ -DCMAKE_BUILD_TYPE=Debug && cmake --build .
 
 test:
 	@if [ -f ./$(BUILD_DIR)/test ]; then ./$(BUILD_DIR)/test ${ARGS}; else echo "Please run 'make' or 'make release' first" && exit 1; fi
