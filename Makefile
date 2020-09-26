@@ -1,3 +1,4 @@
+MAKEFLAGS += --silent
 
 export BUILD_DIR ?= build
 

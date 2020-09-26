@@ -33,7 +33,7 @@ static void art_mixed_sparse(state &s) {
   hash<uint32_t> h;
   string k;
   int v = 1;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     k = to_string(h(rng()));
     if (m.get(k.c_str()) == nullptr) {
       m.set(k.c_str(), &v);
@@ -50,7 +50,7 @@ static void red_black_mixed_sparse(state &s) {
   hash<uint32_t> h;
   string k;
   int v = 1;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     k = to_string(h(rng()));
     if (m[k] == nullptr) {
       m[k] = &v;
@@ -67,7 +67,7 @@ static void hashmap_mixed_sparse(state &s) {
   hash<uint32_t> h;
   string k;
   int v = 1;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     k = to_string(h(rng()));
     if (m[k] == nullptr) {
       m[k] = &v;

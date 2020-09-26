@@ -24,19 +24,20 @@ using std::unordered_map;
 
 PICOBENCH_SUITE("query sparse uniform base 64 keys");
 
-std::string to_base64(std::string string_);
+std::string to_base64(const std::string& string_);
 
 static void art_q_s_u(state &s) {
   art::art<int> m;
   hash<uint32_t> h;
   int v = 1;
+  int *v_ptr = &v;
   mt19937_64 rng1(0);
-  for (auto _ : s) {
-    m.set(to_base64(to_string(h(rng1()))).c_str(), &v);
+  for (auto i __attribute__((unused)) : s) {
+    m.set(to_base64(to_string(h(rng1()))).c_str(), v_ptr);
   }
   mt19937_64 rng2(0);
-  for (auto _ : s) {
-    m.get(to_base64(to_string(h(rng2()))).c_str());
+  for (auto i __attribute__((unused)) : s) {
+    v_ptr = m.get(to_base64(to_string(h(rng2()))).c_str());
   }
 }
 PICOBENCH(art_q_s_u)
@@ -48,12 +49,12 @@ static void red_black_q_s_u(state &s) {
   hash<uint32_t> h;
   int v = 1;
   mt19937_64 rng1(0);
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     m[to_base64(to_string(h(rng1())))] = v;
   }
   mt19937_64 rng2(0);
-  for (auto _ : s) {
-    auto v = m[to_base64(to_string(h(rng2())))];
+  for (auto i __attribute__((unused)) : s) {
+    v = m[to_base64(to_string(h(rng2())))];
   }
 }
 PICOBENCH(red_black_q_s_u)
@@ -65,12 +66,12 @@ static void hashmap_q_s_u(state &s) {
   hash<uint32_t> h;
   int v = 1;
   mt19937_64 rng1(0);
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     m[to_base64(to_string(h(rng1())))] = v;
   }
   mt19937_64 rng2(0);
-  for (auto _ : s) {
-    auto v = m[to_base64(to_string(h(rng2())))];
+  for (auto i __attribute__((unused)) : s) {
+    v = m[to_base64(to_string(h(rng2())))];
   }
 }
 PICOBENCH(hashmap_q_s_u)
@@ -82,7 +83,7 @@ static const std::string base64_chars =
              "abcdefghijklmnopqrstuvwxyz"
              "0123456789+/";
 
-std::string to_base64(std::string string_) {
+std::string to_base64(const std::string& string_) {
   const char *bytes_to_encode = string_.c_str();
   int in_len = string_.length();
   std::string ret;

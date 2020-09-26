@@ -8,11 +8,9 @@
 #include "zipf.hpp"
 #include <functional>
 #include <map>
-#include <queue>
-#include <random>
 #include <string>
 #include <unordered_map>
-#include <utility>
+
 
 using picobench::state;
 using std::string;
@@ -28,13 +26,14 @@ static void art_q_s_z(state &s) {
   art::art<int> m;
   hash<uint32_t> h;
   int v = 1;
+  int *v_ptr = &v;
   fast_zipf rng1(1000000);
-  for (auto _ : s) {
-    m.set(to_string(h(rng1())).c_str(), &v);
+  for (auto i __attribute__((unused)) : s) {
+    m.set(to_string(h(rng1())).c_str(), v_ptr);
   }
   fast_zipf rng2(1000000);
-  for (auto _ : s) {
-    m.get(to_string(h(rng2())).c_str());
+  for (auto i __attribute__((unused)) : s) {
+    v_ptr = m.get(to_string(h(rng2())).c_str());
   }
 }
 PICOBENCH(art_q_s_z);
@@ -44,12 +43,12 @@ static void red_black_q_s_z(state &s) {
   hash<uint32_t> h;
   int v = 1;
   fast_zipf rng1(1000000);
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     m[to_string(h(rng1()))] = v;
   }
   fast_zipf rng2(1000000);
-  for (auto _ : s) {
-    auto v = m[to_string(h(rng2()))];
+  for (auto i __attribute__((unused)) : s) {
+    v = m[to_string(h(rng2()))];
   }
 }
 PICOBENCH(red_black_q_s_z);
@@ -59,12 +58,12 @@ static void hashmap_q_s_z(state &s) {
   hash<uint32_t> h;
   int v = 1;
   fast_zipf rng1(1000000);
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     m[to_string(h(rng1()))] = v;
   }
   fast_zipf rng2(1000000);
-  for (auto _ : s) {
-    auto v = m[to_string(h(rng2()))];
+  for (auto i __attribute__((unused)) : s) {
+    v = m[to_string(h(rng2()))];
   }
 }
 PICOBENCH(hashmap_q_s_z);

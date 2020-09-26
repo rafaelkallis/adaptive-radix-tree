@@ -20,7 +20,7 @@ static void art_insert_sparse(state &s) {
   art::art<int> m;
   int v = 1;
   std::mt19937_64 rng(0);
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     m.set(std::to_string(rng()).c_str(), &v);
   }
 }
@@ -30,7 +30,7 @@ static void red_black_insert_sparse(state &s) {
   std::map<std::string, int> m;
   int v = 1;
   std::mt19937_64 rng(0);
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     m[std::to_string(rng())] = v;
   }
 }
@@ -41,7 +41,7 @@ static void hashmap_insert_sparse(state &s) {
   int v = 1;
   std::random_device rd;
   std::mt19937_64 g(rd());
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     m[std::to_string(g())] = v;
   }
 }
