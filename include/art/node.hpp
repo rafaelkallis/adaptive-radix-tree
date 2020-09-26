@@ -33,16 +33,16 @@ public:
   virtual bool is_leaf() const = 0;
 
   /**
-   * Determines the number of matching bytes between the node's prefix and
-   * the key. The first byte we compare is prefix[0] and key[depth + 0].
+   * Determines the number of matching bytes between the node's prefix and the key.
    *
-   * Given a node with prefix: "abbd", a key "aaabbbccc" and depth 2,
-   * checkPrefix returns 4, since the (5)th byte of the prefix ('c') does not
-   * match the (depth + 5)th byte of the key ('d').
+   * Given a node with prefix: "abbbd", a key "abbbccc",
+   * check_prefix returns 4, since byte 4 of the prefix ('d') does not
+   * match byte 4 of the key ('c').
    *
-   * key:     "aaabbbccc"
-   * prefix:    "abbbd"
-   *             ^^^^*
+   * key:     "abbbccc"
+   * prefix:  "abbbd"
+   *           ^^^^*
+   * index:    01234
    */
   int check_prefix(const char *key, int key_len) const;
 
