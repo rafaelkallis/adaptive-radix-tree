@@ -453,12 +453,13 @@ TEST_SUITE("art") {
 
     SUBCASE("monte carlo") {
       mt19937_64 rng(0);
-      int n = 0x10000;
-      char keys[n][4];
+      int n_bytes = 4;
+      int n = 1 << (n_bytes * 4);
+      char keys[n][n_bytes + 1];
       int value;
       art::art<int> m;
       for (int i = 0; i < n; ++i) {
-        std::snprintf(keys[i], 5, "%04X", i);
+        std::snprintf(keys[i], n_bytes + 1, "%04X", i); // note: change format if you change n_bytes
         m.set(keys[i], &value);
       }
       for (int experiment = 0; experiment < 1000; ++experiment) {
