@@ -199,7 +199,7 @@ template <class T> T *art<T>::set(const char *key, T *value) {
 
       auto new_node = new leaf_node<T>(value);
       new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];
-      std::copy(key + depth + prefix_match_len + 1, key + key_len,
+      std::copy(key + depth + prefix_match_len + 1, key + key_len + 1,
                 new_node->prefix_);
       new_node->prefix_len_ = key_len - depth - prefix_match_len - 1;
       new_parent->set_child(key[depth + prefix_match_len], new_node);
@@ -231,7 +231,7 @@ template <class T> T *art<T>::set(const char *key, T *value) {
 
       auto new_node = new leaf_node<T>(value);
       new_node->prefix_ = new char[key_len - depth - (**cur).prefix_len_ - 1];
-      std::copy(key + depth + (**cur).prefix_len_ + 1, key + key_len,
+      std::copy(key + depth + (**cur).prefix_len_ + 1, key + key_len + 1,
                 new_node->prefix_);
       new_node->prefix_len_ = key_len - depth - (**cur).prefix_len_ - 1;
       (**cur_inner).set_child(child_partial_key, new_node);

@@ -77,7 +77,7 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
     return tree_it<T>();
   }
 
-  int cur_depth, key_len = std::strlen(key), i;
+  int cur_depth, key_len = std::strlen(key) + 1, i;
   node<T> *cur;
   std::reverse_iterator<child_it<T>> child_it, child_it_end;
   char partial_key;
@@ -91,9 +91,6 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
     cur = node_stack.top();
     cur_depth = depth_stack.top();
 
-    if (cur_depth == key_len) {
-        return tree_it<T>(node_stack);
-    }
     for (i = 0; i < cur->prefix_len_; ++i) {
       if (cur_depth + i == key_len) {
         return tree_it<T>(node_stack);
@@ -105,6 +102,10 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
         return tree_it<T>(node_stack);
       }
     }
+    if (cur_depth + i == key_len) {
+      return tree_it<T>(node_stack);
+    }
+
     node_stack.pop();
     depth_stack.pop();
     if (cur->is_leaf()) {
