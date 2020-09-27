@@ -27,6 +27,7 @@ using std::unordered_map;
 
 PICOBENCH_SUITE("mixed_dense");
 
+static void art_mixed(state &s) __attribute__((unused));
 static void art_mixed(state &s) {
   ifstream file("dataset.txt");
   if (!file) {
@@ -45,8 +46,7 @@ static void art_mixed(state &s) {
 
   art::art<int> m;
   string k;
-  int *val;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     k = dataset[rng()];
     if (m.get(k.c_str()) == nullptr) {
       m.set(k.c_str(), &v);
@@ -57,6 +57,7 @@ static void art_mixed(state &s) {
 }
 /* PICOBENCH(art_mixed).iterations({1000000}); */
 
+static void red_black_mixed(state &s) __attribute__((unused));
 static void red_black_mixed(state &s) {
   ifstream file("dataset.txt");
   if (!file) {
@@ -75,8 +76,7 @@ static void red_black_mixed(state &s) {
 
   map<string, int *> m;
   string k;
-  int *val;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     k = dataset[rng()];
     if (m[k] == nullptr) {
       m[k] = &v;
@@ -87,6 +87,7 @@ static void red_black_mixed(state &s) {
 }
 /* PICOBENCH(red_black_mixed).iterations({1000000}); */
 
+static void hashmap_mixed(state &s) __attribute__((unused));
 static void hashmap_mixed(state &s) {
   ifstream file("dataset.txt");
   if (!file) {
@@ -105,8 +106,7 @@ static void hashmap_mixed(state &s) {
 
   unordered_map<string, int *> m;
   string k;
-  int *val;
-  for (auto _ : s) {
+  for (auto i __attribute__((unused)) : s) {
     k = dataset[rng()];
     if (m[k] == nullptr) {
       m[k] = &v;

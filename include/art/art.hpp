@@ -260,10 +260,10 @@ template <class T> T *art<T>::del(const char *key) {
 
   /* pointer to parent, current and child node */
   node<T> **cur = &root_;
-  inner_node<T> **par = nullptr, **cur_inner;
+  inner_node<T> **par = nullptr;
 
   /* partial key of current and child node */
-  char cur_partial_key;
+  char cur_partial_key = 0;
 
   while (cur != nullptr) {
     if ((**cur).prefix_len_ !=
