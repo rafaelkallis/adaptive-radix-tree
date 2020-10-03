@@ -12,6 +12,7 @@
 #include "node_4.hpp"
 #include "tree_it.hpp"
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <stack>
 
@@ -19,6 +20,8 @@ namespace art {
 
 template <class T> class art {
 public:
+  art(std::function<void(T*)> free_fn=nullptr) : root_(nullptr), free_(free_fn) {}
+
   ~art();
 
   /**
@@ -70,6 +73,7 @@ public:
 
 private:
   node<T> *root_ = nullptr;
+  std::function<void(T*)> free_;
 };
 
 template <class T> art<T>::~art() {
@@ -89,7 +93,11 @@ template <class T> art<T>::~art() {
       for (it = cur_inner->begin(), it_end = cur_inner->end(); it != it_end; ++it) {
         node_stack.push(*cur_inner->find_child(*it));
       }
+    } else if (free_) {
+      leaf_node<T> *leaf = static_cast<leaf_node<T>*>(cur);
+      free_(leaf->value_);
     }
+
     if (cur->prefix_ != nullptr) {
       delete[] cur->prefix_;
     }
