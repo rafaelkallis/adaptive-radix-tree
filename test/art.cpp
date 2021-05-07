@@ -10,6 +10,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <memory>
 
 using std::array;
 using std::hash;
@@ -331,40 +332,70 @@ TEST_SUITE("art") {
 
       auto it = m.begin();
       auto it_end = m.end();
+      std::unique_ptr<char[]> managed_passed_key(new char[20]);
+      char *passed_key = managed_passed_key.get();
 
       // 0
       REQUIRE(it != it_end);
       REQUIRE_EQ(&int0, *it);
+      REQUIRE_EQ(3, it.depth());
+      it.key(passed_key);
+      REQUIRE(std::equal(passed_key, passed_key + 3, "aa"));
+      REQUIRE_EQ("aa", it.key());
 
       ++it;
       // 1
       REQUIRE(it != it_end);
       REQUIRE_EQ(&int1, *it);
+      REQUIRE_EQ(5, it.depth());
+      it.key(passed_key);
+      REQUIRE(std::equal(passed_key, passed_key + 5, "aaaa"));
+      REQUIRE_EQ("aaaa", it.key());
 
       ++it;
       // 2
       REQUIRE(it != it_end);
       REQUIRE_EQ(&int2, *it);
+      REQUIRE_EQ(8, it.depth());
+      it.key(passed_key);
+      REQUIRE(std::equal(passed_key, passed_key + 8, "aaaaaaa"));
+      REQUIRE_EQ("aaaaaaa", it.key());
 
       ++it;
       // 3
       REQUIRE(it != it_end);
       REQUIRE_EQ(&int3, *it);
+      REQUIRE_EQ(11, it.depth());
+      it.key(passed_key);
+      REQUIRE(std::equal(passed_key, passed_key + 11, "aaaaaaaaaa"));
+      REQUIRE_EQ("aaaaaaaaaa", it.key());
 
       ++it;
       // 4
       REQUIRE(it != it_end);
       REQUIRE_EQ(&int4, *it);
+      REQUIRE_EQ(10, it.depth());
+      it.key(passed_key);
+      REQUIRE(std::equal(passed_key, passed_key + 10, "aaaaaaaba"));
+      REQUIRE_EQ("aaaaaaaba", it.key());
 
       ++it;
       // 5
       REQUIRE(it != it_end);
       REQUIRE_EQ(&int5, *it);
+      REQUIRE_EQ(8, it.depth());
+      it.key(passed_key);
+      REQUIRE(std::equal(passed_key, passed_key + 8, "aaaabaa"));
+      REQUIRE_EQ("aaaabaa", it.key());
 
       ++it;
       // 6
       REQUIRE(it != it_end);
       REQUIRE_EQ(&int6, *it);
+      REQUIRE_EQ(11, it.depth());
+      it.key(passed_key);
+      REQUIRE(std::equal(passed_key, passed_key + 11, "aaaabaaaaa"));
+      REQUIRE_EQ("aaaabaaaaa", it.key());
 
       ++it;
       // 7 (overflow)
