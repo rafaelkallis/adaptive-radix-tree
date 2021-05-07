@@ -25,6 +25,7 @@ template <class T> class tree_it {
 public:
   tree_it() = default;
   explicit tree_it(std::stack<node<T> *> traversal_stack, std::stack<const char *> key_stack, std::stack<int> depth_stack);
+  ~tree_it();
 
   static tree_it<T> min(node<T> *root);
   static tree_it<T> greater_equal(node<T> *root, const char *key);
@@ -98,6 +99,13 @@ tree_it<T>::tree_it(std::stack<node<T> *> traversal_stack, std::stack<const char
   
   assert((traversal_stack.size() == key_stack.size()));
   assert((traversal_stack.size() == depth_stack.size()));
+}
+
+template <class T> tree_it<T>::~tree_it() {
+  while (!key_stack_.empty()) {
+    delete [] key_stack_.top();
+    key_stack_.pop();
+  }
 }
 
 template <class T> tree_it<T> tree_it<T>::min(node<T> *root) {
