@@ -12,8 +12,6 @@
 #include <iostream>
 #include <iterator>
 #include <stack>
-#include <memory>
-#include <string>
 
 namespace art {
 
