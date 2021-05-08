@@ -67,6 +67,7 @@ add_executable(bench
   # "${PROJECT_SOURCE_DIR}/bench/node_16.cpp"
   # "${PROJECT_SOURCE_DIR}/bench/node_48.cpp"
   # "${PROJECT_SOURCE_DIR}/bench/node_256.cpp"
+  # "${PROJECT_SOURCE_DIR}/bench/query_iteration.cpp"
   "${PROJECT_SOURCE_DIR}/bench/query_sparse_uniform.cpp"
   "${PROJECT_SOURCE_DIR}/bench/query_sparse_uniform_64.cpp"
   "${PROJECT_SOURCE_DIR}/bench/query_sparse_zipf.cpp"
