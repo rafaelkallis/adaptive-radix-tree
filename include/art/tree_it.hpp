@@ -12,7 +12,6 @@
 #include <iostream>
 #include <iterator>
 #include <deque>
-#include <utility>
 
 namespace art {
 
