@@ -28,12 +28,13 @@ public:
 
     step();
     explicit step(node<T> *node, int depth);
+    explicit step(node<T> *node, int depth, const char* key);
     step(const step &other);
     step& operator=(const step &other);
     ~step();
   };
 
-  tree_it() = default;
+  tree_it();
   explicit tree_it(std::deque<step> traversal_stack);
 
   static tree_it<T> min(node<T> *root);
@@ -70,9 +71,12 @@ template <class T>
 tree_it<T>::step::step(node<T> *node, int depth) : node_(node), depth_(depth), key_(depth ? new char[depth] : nullptr) {}
 
 template <class T>
-tree_it<T>::step::step(const tree_it<T>::step &other) : step(other.node_, other.depth_) {
-  std::copy(other.key_, other.key_ + other.depth_, key_);
+tree_it<T>::step::step(node<T> *node, int depth, const char *key) : node_(node), depth_(depth), key_(depth ? new char[depth] : nullptr) {
+  std::copy(key, key + depth, key_);
 }
+
+template <class T>
+tree_it<T>::step::step(const tree_it<T>::step &other) : step(other.node_, other.depth_, other.key_) {}
 
 template <class T>
 typename tree_it<T>::step& tree_it<T>::step::operator=(const tree_it<T>::step &other) {
@@ -94,6 +98,9 @@ template <class T>
 tree_it<T>::step::~step() {
   delete [] key_;
 }
+
+template <class T>
+tree_it<T>::tree_it() : tree_it(std::deque<tree_it<T>::step>()) {}
 
 template <class T>
 tree_it<T>::tree_it(std::deque<tree_it<T>::step> traversal_stack) : traversal_stack_(traversal_stack) {
