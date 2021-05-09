@@ -12,6 +12,7 @@
 #include <iostream>
 #include <iterator>
 #include <deque>
+#include <utility>
 
 namespace art {
 
@@ -146,7 +147,7 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
   tree_it<T>::step cur, child;
   int key_len = std::strlen(key), i;
   inner_node<T> *cur_in_node;
-  std::reverse_iterator<child_it<T>> it, it_end;
+  std::reverse_iterator<child_it<T>> child_it, child_it_end;
   std::deque<tree_it<T>::step> traversal_stack;
 
   traversal_stack.push_back(tree_it<T>::step(root, 0));
@@ -169,15 +170,15 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
     if (!cur.node_->is_leaf()) {
       // TODO: the following part is 1:1 with seek in constructor, is it possible to de-duplicate?
       cur_in_node = static_cast<inner_node<T> *>(cur.node_);
-      for (it = cur_in_node->rbegin(), it_end = cur_in_node->rend(); it != it_end; ++it) {
-        if (*it < key[cur.depth_ + cur.node_->prefix_len_]) {
+      for (child_it = cur_in_node->rbegin(), child_it_end = cur_in_node->rend(); child_it != child_it_end; ++child_it) {
+        if (*child_it < key[cur.depth_ + cur.node_->prefix_len_]) {
           break;
         }
-        child = tree_it<T>::step(*cur_in_node->find_child(*it), cur.depth_ + cur.node_->prefix_len_ + 1);
+        child = tree_it<T>::step(*cur_in_node->find_child(*child_it), cur.depth_ + cur.node_->prefix_len_ + 1);
         /* compute child key: cur_key + cur_node->prefix_ + child_partial_key */
         std::copy_n(cur.key_, cur.depth_, child.key_);
         std::copy_n(cur.node_->prefix_, cur.node_->prefix_len_, child.key_ + cur.depth_);
-        child.key_[cur.depth_ + cur.node_->prefix_len_] = *it;
+        child.key_[cur.depth_ + cur.node_->prefix_len_] = *child_it;
         traversal_stack.push_back(child);
       }
     }
