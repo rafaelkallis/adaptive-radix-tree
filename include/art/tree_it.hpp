@@ -58,13 +58,15 @@ public:
   bool operator==(const tree_it<T> &rhs) const;
   bool operator!=(const tree_it<T> &rhs) const;
 
-  template <class OutputIterator> void key(OutputIterator key) const;
+  template <class OutputIt> void key(OutputIt key) const;
   const std::string key() const;
 
   int depth() const;
 
 private:
-  void seek_leaf();
+  static void seek_leaf(std::deque<step>& traversal_stack);
+  static void seek_leaf(std::deque<step>& traversal_stack, const char *key, int key_len);
+
   std::deque<step> traversal_stack_;
 };
 
@@ -131,7 +133,7 @@ tree_it<T>::tree_it() : tree_it(std::deque<tree_it<T>::step>()) {}
 
 template <class T>
 tree_it<T>::tree_it(std::deque<tree_it<T>::step> traversal_stack) : traversal_stack_(traversal_stack) {
-  seek_leaf();
+  seek_leaf(traversal_stack_);
 }
 
 template <class T> tree_it<T> tree_it<T>::min(node<T> *root) {
@@ -140,49 +142,12 @@ template <class T> tree_it<T> tree_it<T>::min(node<T> *root) {
 
 template <class T>
 tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
-  if (root == nullptr) {
-    return tree_it<T>();
-  }
-
-  tree_it<T>::step cur, child;
-  int key_len = std::strlen(key), i;
-  inner_node<T> *cur_in_node;
-  std::reverse_iterator<child_it<T>> child_it, child_it_end;
   std::deque<tree_it<T>::step> traversal_stack;
-
-  traversal_stack.push_back(tree_it<T>::step(root, 0));
-
-  while (true) {
-    cur = traversal_stack.back();
-    if (cur.depth_ == key_len) {
-        return tree_it<T>(traversal_stack);
-    }
-    for (i = 0; i < cur.node_->prefix_len_; ++i) {
-      if (cur.depth_ + i == key_len) {
-        return tree_it<T>(traversal_stack);
-      }
-      if (cur.node_->prefix_[i] < key[cur.depth_ + i]) {
-        traversal_stack.pop_back();
-        return tree_it<T>(traversal_stack);
-      }
-    }
-    traversal_stack.pop_back();
-    if (!cur.node_->is_leaf()) {
-      // TODO: the following part is 1:1 with seek in constructor, is it possible to de-duplicate?
-      cur_in_node = static_cast<inner_node<T> *>(cur.node_);
-      for (child_it = cur_in_node->rbegin(), child_it_end = cur_in_node->rend(); child_it != child_it_end; ++child_it) {
-        if (*child_it < key[cur.depth_ + cur.node_->prefix_len_]) {
-          break;
-        }
-        child = tree_it<T>::step(*cur_in_node->find_child(*child_it), cur.depth_ + cur.node_->prefix_len_ + 1);
-        /* compute child key: cur_key + cur_node->prefix_ + child_partial_key */
-        std::copy_n(cur.key_, cur.depth_, child.key_);
-        std::copy_n(cur.node_->prefix_, cur.node_->prefix_len_, child.key_ + cur.depth_);
-        child.key_[cur.depth_ + cur.node_->prefix_len_] = *child_it;
-        traversal_stack.push_back(child);
-      }
-    }
+  if (root != nullptr) {
+    traversal_stack.push_back(tree_it<T>::step(root, 0));
   }
+  seek_leaf(traversal_stack, key, std::strlen(key));
+  return tree_it<T>(traversal_stack);
 }
 
 template <class T> typename tree_it<T>::value_type tree_it<T>::operator*() {
@@ -198,7 +163,7 @@ template <class T> typename tree_it<T>::pointer tree_it<T>::operator->() {
 template <class T> tree_it<T> &tree_it<T>::operator++() {
   assert(!traversal_stack_.empty());
   traversal_stack_.pop_back();
-  seek_leaf();
+  seek_leaf(traversal_stack_);
   return *this;
 }
 
@@ -225,8 +190,8 @@ template <class T> bool tree_it<T>::operator!=(const tree_it<T> &rhs) const {
 }
 
 template <class T> 
-template <class OutputIterator> 
-void tree_it<T>::key(OutputIterator key) const {
+template <class OutputIt> 
+void tree_it<T>::key(OutputIt key) const {
   tree_it<T>::step cur = traversal_stack_.back();
   std::copy_n(cur.key_, cur.depth_, key);
   std::copy_n(cur.node_->prefix_, cur.node_->prefix_len_, key + cur.depth_);
@@ -246,15 +211,15 @@ int tree_it<T>::depth() const {
 }
 
 template <class T> 
-void tree_it<T>::seek_leaf() {
+void tree_it<T>::seek_leaf(std::deque<tree_it<T>::step> &traversal_stack) {
   tree_it<T>::step cur, child;
   inner_node<T> *cur_in_node;
   std::reverse_iterator<child_it<T>> child_it, child_it_end;
 
   /* preorder-traverse until leaf node found or no nodes are left */
-  while (!traversal_stack_.empty() && !traversal_stack_.back().node_->is_leaf()) {
-    cur = traversal_stack_.back();
-    traversal_stack_.pop_back();
+  while (!traversal_stack.empty() && !traversal_stack.back().node_->is_leaf()) {
+    cur = traversal_stack.back();
+    traversal_stack.pop_back();
     cur_in_node = static_cast<inner_node<T> *>(cur.node_);
     for (child_it = cur_in_node->rbegin(), child_it_end = cur_in_node->rend(); child_it != child_it_end; ++child_it) {
       child = tree_it<T>::step(*cur_in_node->find_child(*child_it), cur.depth_ + cur_in_node->prefix_len_ + 1);
@@ -262,7 +227,52 @@ void tree_it<T>::seek_leaf() {
       std::copy_n(cur.key_, cur.depth_, child.key_);
       std::copy_n(cur_in_node->prefix_, cur_in_node->prefix_len_, child.key_ + cur.depth_);
       child.key_[cur.depth_ + cur_in_node->prefix_len_] = *child_it;
-      traversal_stack_.push_back(child);
+      traversal_stack.push_back(child);
+    }
+  }
+}
+
+template <class T>
+void tree_it<T>::seek_leaf(std::deque<tree_it<T>::step> &traversal_stack, const char *key, int key_len) {
+  tree_it<T>::step cur, child;
+  int i;
+  inner_node<T> *cur_in_node;
+  std::reverse_iterator<child_it<T>> child_it, child_it_end;
+
+  while (!traversal_stack.empty()) {
+    cur = traversal_stack.back();
+    if (cur.depth_ == key_len) {
+      seek_leaf(traversal_stack);
+      return;
+    }
+    for (i = 0; i < cur.node_->prefix_len_; ++i) {
+      if (cur.depth_ + i == key_len) {
+        seek_leaf(traversal_stack);
+        return;
+      }
+      if (cur.node_->prefix_[i] < key[cur.depth_ + i]) {
+        traversal_stack.pop_back();
+        seek_leaf(traversal_stack);
+        return;
+      }
+    }
+    traversal_stack.pop_back();
+    if (!cur.node_->is_leaf()) {
+      // TODO: the following part is 1:1 with seek in constructor, is it possible to de-duplicate?
+      cur_in_node = static_cast<inner_node<T> *>(cur.node_);
+      child_it = cur_in_node->rbegin();
+      child_it_end = cur_in_node->rend();
+      for (; child_it != child_it_end; ++child_it) {
+        if (*child_it < key[cur.depth_ + cur.node_->prefix_len_]) {
+          break;
+        }
+        child = tree_it<T>::step(*cur_in_node->find_child(*child_it), cur.depth_ + cur.node_->prefix_len_ + 1);
+        /* compute child key: cur_key + cur_node->prefix_ + child_partial_key */
+        std::copy_n(cur.key_, cur.depth_, child.key_);
+        std::copy_n(cur.node_->prefix_, cur.node_->prefix_len_, child.key_ + cur.depth_);
+        child.key_[cur.depth_ + cur.node_->prefix_len_] = *child_it;
+        traversal_stack.push_back(child);
+      }
     }
   }
 }
