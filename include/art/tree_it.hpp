@@ -12,6 +12,7 @@
 #include <iostream>
 #include <iterator>
 #include <deque>
+#include <utility>
 
 namespace art {
 
@@ -30,8 +31,11 @@ public:
     explicit step(node<T> *node, int depth);
     explicit step(node<T> *node, int depth, const char* key);
     step(const step &other);
-    step& operator=(const step &other);
+    step(step &&other);
     ~step();
+    
+    step& operator=(const step &other);
+    step& operator=(step &&other) noexcept;
   };
 
   tree_it();
@@ -72,11 +76,23 @@ tree_it<T>::step::step(node<T> *node, int depth) : node_(node), depth_(depth), k
 
 template <class T>
 tree_it<T>::step::step(node<T> *node, int depth, const char *key) : node_(node), depth_(depth), key_(depth ? new char[depth] : nullptr) {
-  std::copy(key, key + depth, key_);
+  std::copy_n(key, depth, key_);
 }
 
 template <class T>
 tree_it<T>::step::step(const tree_it<T>::step &other) : step(other.node_, other.depth_, other.key_) {}
+
+template <class T>
+tree_it<T>::step::step(tree_it<T>::step &&other) : node_(other.node_), depth_(other.depth_), key_(other.key_) {
+  other.node_ = nullptr;
+  other.depth_ = 0;
+  other.key_ = nullptr;
+}
+
+template <class T>
+tree_it<T>::step::~step() {
+  delete [] key_;
+}
 
 template <class T>
 typename tree_it<T>::step& tree_it<T>::step::operator=(const tree_it<T>::step &other) {
@@ -84,7 +100,7 @@ typename tree_it<T>::step& tree_it<T>::step::operator=(const tree_it<T>::step &o
     node<T> *node = other.node_;
     int depth = other.depth_;
     char *key = depth ? new char[depth] : nullptr;
-    std::copy(other.key_, other.key_ + other.depth_, key);
+    std::copy_n(other.key_, other.depth_, key);
 
     node_ = node;
     depth_ = depth;
@@ -95,8 +111,19 @@ typename tree_it<T>::step& tree_it<T>::step::operator=(const tree_it<T>::step &o
 }
 
 template <class T>
-tree_it<T>::step::~step() {
-  delete [] key_;
+typename tree_it<T>::step& tree_it<T>::step::operator=(tree_it<T>::step &&other) noexcept {
+  if (this != &other) {
+    node_ = other.node_;
+    other.node_ = nullptr;
+
+    depth_ = other.depth_;
+    other.depth_ = 0;
+
+    delete [] key_;
+    key_ = other.key_;
+    other.key_ = nullptr;
+  }
+  return *this;
 }
 
 template <class T>
@@ -106,13 +133,6 @@ template <class T>
 tree_it<T>::tree_it(std::deque<tree_it<T>::step> traversal_stack) : traversal_stack_(traversal_stack) {
   seek_leaf();
 }
-
-// template <class T> 
-// tree_it<T>::~tree_it() {
-//   while (!traversal_stack_.empty()) {
-//     traversal_stack_.pop_back();
-//   }
-// }
 
 template <class T> tree_it<T> tree_it<T>::min(node<T> *root) {
   return tree_it<T>::greater_equal(root, "");
@@ -156,8 +176,8 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
         }
         child = tree_it<T>::step(*cur_in_node->find_child(*it), cur.depth_ + cur.node_->prefix_len_ + 1);
         /* compute child key: cur_key + cur_node->prefix_ + child_partial_key */
-        std::copy(cur.key_, cur.key_ + cur.depth_, child.key_);
-        std::copy(cur.node_->prefix_, cur.node_->prefix_ + cur.node_->prefix_len_, child.key_ + cur.depth_);
+        std::copy_n(cur.key_, cur.depth_, child.key_);
+        std::copy_n(cur.node_->prefix_, cur.node_->prefix_len_, child.key_ + cur.depth_);
         child.key_[cur.depth_ + cur.node_->prefix_len_] = *it;
         traversal_stack.push_back(child);
       }
@@ -208,8 +228,8 @@ template <class T>
 template <class OutputIterator> 
 void tree_it<T>::key(OutputIterator key) const {
   tree_it<T>::step cur = traversal_stack_.back();
-  std::copy(cur.key_, cur.key_ + cur.depth_, key);
-  std::copy(cur.node_->prefix_, cur.node_->prefix_ + cur.node_->prefix_len_, key + cur.depth_);
+  std::copy_n(cur.key_, cur.depth_, key);
+  std::copy_n(cur.node_->prefix_, cur.node_->prefix_len_, key + cur.depth_);
 }
 
 template <class T>
@@ -239,8 +259,8 @@ void tree_it<T>::seek_leaf() {
     for (child_it = cur_in_node->rbegin(), child_it_end = cur_in_node->rend(); child_it != child_it_end; ++child_it) {
       child = tree_it<T>::step(*cur_in_node->find_child(*child_it), cur.depth_ + cur_in_node->prefix_len_ + 1);
       /* compute child key: cur_key + cur_node->prefix_ + child_partial_key */
-      std::copy(cur.key_, cur.key_ + cur.depth_, child.key_);
-      std::copy(cur_in_node->prefix_, cur_in_node->prefix_ + cur_in_node->prefix_len_, child.key_ + cur.depth_);
+      std::copy_n(cur.key_, cur.depth_, child.key_);
+      std::copy_n(cur_in_node->prefix_, cur_in_node->prefix_len_, child.key_ + cur.depth_);
       child.key_[cur.depth_ + cur_in_node->prefix_len_] = *child_it;
       traversal_stack_.push_back(child);
     }
