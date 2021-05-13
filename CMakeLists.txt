@@ -53,6 +53,7 @@ add_executable(test
   "${PROJECT_SOURCE_DIR}/test/node_16.cpp"
   "${PROJECT_SOURCE_DIR}/test/node_48.cpp"
   "${PROJECT_SOURCE_DIR}/test/node_256.cpp"
+  "${PROJECT_SOURCE_DIR}/test/tree_it.cpp"
   )
 target_link_libraries(test art doctest)
 
