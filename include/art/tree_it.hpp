@@ -11,7 +11,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
-#include <deque>
+#include <vector>
 
 namespace art {
 
@@ -35,7 +35,7 @@ public:
   };
 
   tree_it() = default;
-  explicit tree_it(std::deque<step> traversal_stack);
+  explicit tree_it(std::vector<step> traversal_stack);
 
   static tree_it<T> min(node<T> *root);
   static tree_it<T> greater_equal(node<T> *root, const char *key);
@@ -62,7 +62,7 @@ private:
   const step &get_step() const;
   void seek_leaf();
 
-  std::deque<step> traversal_stack_;
+  std::vector<step> traversal_stack_;
 };
 
 template <class T>
@@ -91,7 +91,7 @@ typename tree_it<T>::step tree_it<T>::step::operator++(int) {
 }
 
 template <class T>
-tree_it<T>::tree_it(std::deque<step> traversal_stack) : traversal_stack_(traversal_stack) {
+tree_it<T>::tree_it(std::vector<step> traversal_stack) : traversal_stack_(traversal_stack) {
   seek_leaf();
 }
 
@@ -106,7 +106,7 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
   int key_len = std::strlen(key);
   inner_node<T> *cur_inner_node;
   child_it<T> child_it, child_it_end;
-  std::deque<tree_it<T>::step> traversal_stack;
+  std::vector<tree_it<T>::step> traversal_stack;
 
   // sentinel child iterator for root
   traversal_stack.push_back({root, 0, {nullptr, -2}, {nullptr, -1}});
