@@ -42,10 +42,13 @@ public:
   bool operator<=(const child_it &rhs) const;
   bool operator>=(const child_it &rhs) const;
 
+  char get_partial_key() const;
+  node<T> *get_child_node() const;
+
 private:
-  inner_node<T> *node_;
-  char cur_partial_key_;
-  int relative_index_;
+  inner_node<T> *node_ = nullptr;
+  char cur_partial_key_ = -128;
+  int relative_index_ = 0;
 };
 
 template <class T> child_it<T>::child_it(inner_node<T> *n) : child_it<T>(n, 0) {}
@@ -94,7 +97,9 @@ typename child_it<T>::pointer child_it<T>::operator->() const {
 
 template <class T> child_it<T> &child_it<T>::operator++() {
   ++relative_index_;
-  if (relative_index_ == 0) {
+  if (relative_index_ < 0) {
+    return *this;
+  } else if (relative_index_ == 0) {
     cur_partial_key_ = node_->next_partial_key(-128);
   } else if (relative_index_ < node_->n_children()) {
     cur_partial_key_ = node_->next_partial_key(cur_partial_key_ + 1);
@@ -110,7 +115,9 @@ template <class T> child_it<T> child_it<T>::operator++(int) {
 
 template <class T> child_it<T> &child_it<T>::operator--() {
   --relative_index_;
-  if (relative_index_ == node_->n_children() - 1) {
+  if (relative_index_ > node_->n_children() - 1) {
+    return *this;
+  } else if (relative_index_ == node_->n_children() - 1) {
     cur_partial_key_ = node_->prev_partial_key(127);
   } else if (relative_index_ >= 0) {
     cur_partial_key_ = node_->prev_partial_key(cur_partial_key_ - 1);
@@ -146,6 +153,17 @@ template <class T> bool child_it<T>::operator<=(const child_it<T> &rhs) const {
 
 template <class T> bool child_it<T>::operator>(const child_it<T> &rhs) const {
   return (rhs < (*this));
+}
+
+template <class T>
+char child_it<T>::get_partial_key() const {
+  return cur_partial_key_;
+}
+
+template <class T>
+node<T> *child_it<T>::get_child_node() const {
+  assert(0 <= relative_index_ && relative_index_ < node_->n_children());
+  return *node_->find_child(cur_partial_key_);
 }
 
 } // namespace art

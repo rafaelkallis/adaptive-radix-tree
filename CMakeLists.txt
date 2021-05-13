@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 add_library(art INTERFACE)
 
@@ -53,6 +53,7 @@ add_executable(test
   "${PROJECT_SOURCE_DIR}/test/node_16.cpp"
   "${PROJECT_SOURCE_DIR}/test/node_48.cpp"
   "${PROJECT_SOURCE_DIR}/test/node_256.cpp"
+  "${PROJECT_SOURCE_DIR}/test/tree_it.cpp"
   )
 target_link_libraries(test art doctest)
 
@@ -67,7 +68,7 @@ add_executable(bench
   # "${PROJECT_SOURCE_DIR}/bench/node_16.cpp"
   # "${PROJECT_SOURCE_DIR}/bench/node_48.cpp"
   # "${PROJECT_SOURCE_DIR}/bench/node_256.cpp"
-  # "${PROJECT_SOURCE_DIR}/bench/query_iteration.cpp"
+  "${PROJECT_SOURCE_DIR}/bench/query_iteration.cpp"
   "${PROJECT_SOURCE_DIR}/bench/query_sparse_uniform.cpp"
   "${PROJECT_SOURCE_DIR}/bench/query_sparse_uniform_64.cpp"
   "${PROJECT_SOURCE_DIR}/bench/query_sparse_zipf.cpp"
