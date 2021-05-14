@@ -10,6 +10,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <memory>
 
 using std::array;
 using std::hash;

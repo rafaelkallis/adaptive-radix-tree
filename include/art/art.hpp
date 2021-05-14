@@ -385,7 +385,9 @@ template <class T> tree_it<T> art<T>::begin(const char *key) {
   return tree_it<T>::greater_equal(this->root_, key);
 }
 
-template <class T> tree_it<T> art<T>::end() { return tree_it<T>(); }
+template <class T> tree_it<T> art<T>::end() { 
+  return tree_it<T>(); 
+}
 
 } // namespace art
 
