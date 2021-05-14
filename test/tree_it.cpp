@@ -32,7 +32,7 @@ TEST_SUITE("tree_it") {
       int int5 = 5;
       int int6 = 6;
 
-      art::art<int> m;
+      art::art<int*> m;
 
       m.set("aa", &int0);
       m.set("aaaa", &int1);
@@ -126,7 +126,7 @@ TEST_SUITE("tree_it") {
       int n = 0x10000;
       char key[5];
       int value;
-      art::art<int> m;
+      art::art<int*> m;
       for (int i = 0; i < n; ++i) {
         std::snprintf(key, 5, "%04X", i);
         m.set(key, &value);
@@ -152,7 +152,7 @@ TEST_SUITE("tree_it") {
       int int5 = 5;
       int int6 = 6;
 
-      art::art<int> m;
+      art::art<int*> m;
 
       m.set("aa", &int0);
       m.set("aaaa", &int1);
@@ -208,7 +208,7 @@ TEST_SUITE("tree_it") {
       int n = 1 << (n_bytes * 4);
       char keys[n][n_bytes + 1];
       int value;
-      art::art<int> m;
+      art::art<int*> m;
       for (int i = 0; i < n; ++i) {
         std::snprintf(keys[i], n_bytes + 1, "%04X", i); // note: change format if you change n_bytes
         m.set(keys[i], &value);

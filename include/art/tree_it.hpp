@@ -50,7 +50,7 @@ public:
   static tree_it<T> greater_equal(node<T> *root, const char *key);
 
   using iterator_category = std::forward_iterator_tag;
-  using value_type = T *;
+  using value_type = T;
   using difference_type = int;
   using pointer = value_type *;
   /* using reference = const value_type &; */

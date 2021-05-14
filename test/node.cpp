@@ -28,7 +28,7 @@ using std::string;
 TEST_SUITE("node") {
 
   TEST_CASE("check_prefix") {
-    leaf_node<int> node(nullptr);
+    leaf_node<int*> node(nullptr);
     string key = "000100001";
     int key_len = key.length() + 1; // +1 for \0
     string prefix = "0000";

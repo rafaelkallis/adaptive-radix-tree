@@ -22,12 +22,12 @@ TEST_SUITE("node 256") {
   TEST_CASE("monte carlo") {
     /* set up */
     array<char, 256> partial_keys;
-    array<node<void> *, 256> children;
+    array<node<void*> *, 256> children;
 
     for (int i = 0; i < 256; i += 1) {
       /* populate partial_keys with all values in the char domain */
       partial_keys[i] = i - 128;
-      children[i] = new leaf_node<void>(nullptr);
+      children[i] = new leaf_node<void*>(nullptr);
     }
 
     /* rng */
@@ -35,7 +35,7 @@ TEST_SUITE("node 256") {
 
     for (int experiment = 0; experiment < 100; experiment += 1) {
       /* test subject */
-      node_256<void> node;
+      node_256<void*> node;
 
       /* shuffle in order to make a seemingly random insertion order */
       shuffle(partial_keys.begin(), partial_keys.end(), g);
@@ -64,15 +64,15 @@ TEST_SUITE("node 256") {
   }
   
   TEST_CASE("delete child") {
-    leaf_node<void> n0(nullptr);
-    leaf_node<void> n1(nullptr);
-    leaf_node<void> n2(nullptr);
-    leaf_node<void> n3(nullptr);
-    leaf_node<void> n4(nullptr);
-    leaf_node<void> n5(nullptr);
-    leaf_node<void> n6(nullptr);
+    leaf_node<void*> n0(nullptr);
+    leaf_node<void*> n1(nullptr);
+    leaf_node<void*> n2(nullptr);
+    leaf_node<void*> n3(nullptr);
+    leaf_node<void*> n4(nullptr);
+    leaf_node<void*> n5(nullptr);
+    leaf_node<void*> n6(nullptr);
 
-    node_256<void> subject;
+    node_256<void*> subject;
 
     subject.set_child(1, &n1);
     subject.set_child(2, &n2);
@@ -137,14 +137,14 @@ TEST_SUITE("node 256") {
   }
 
   TEST_CASE("next partial key") {
-    node_256<void> n;
+    node_256<void*> n;
 
     SUBCASE("completely empty node") {
       REQUIRE_THROWS_AS(n.next_partial_key(-128), std::out_of_range);
     }
 
     SUBCASE("child at -128") {
-      leaf_node<void> n0(nullptr);
+      leaf_node<void*> n0(nullptr);
       n.set_child(-128, &n0);
       REQUIRE_EQ(-128, n.next_partial_key(-128));
       for (int i = 1; i < 256; ++i) {
@@ -153,7 +153,7 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("child at 127") {
-      leaf_node<void> n0(nullptr);
+      leaf_node<void*> n0(nullptr);
       n.set_child(127, &n0);
       for (int i = 0; i < 256; ++i) {
         REQUIRE_EQ(127, n.next_partial_key(i - 128));
@@ -161,10 +161,10 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("dense children") {
-      leaf_node<void> n0(nullptr);
-      leaf_node<void> n1(nullptr);
-      leaf_node<void> n2(nullptr);
-      leaf_node<void> n3(nullptr);
+      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n1(nullptr);
+      leaf_node<void*> n2(nullptr);
+      leaf_node<void*> n3(nullptr);
       n.set_child(0, &n0);
       n.set_child(1, &n1);
       n.set_child(2, &n2);
@@ -177,10 +177,10 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("sparse children") {
-      leaf_node<void> n0(nullptr);
-      leaf_node<void> n1(nullptr);
-      leaf_node<void> n2(nullptr);
-      leaf_node<void> n3(nullptr);
+      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n1(nullptr);
+      leaf_node<void*> n2(nullptr);
+      leaf_node<void*> n3(nullptr);
       n.set_child(0, &n0);
       n.set_child(5, &n1);
       n.set_child(10, &n2);
@@ -194,7 +194,7 @@ TEST_SUITE("node 256") {
   }
   
   TEST_CASE("previous partial key") {
-    node_256<void> n;
+    node_256<void*> n;
 
     SUBCASE("completely empty node") {
       for (int i = 0; i < 256; ++i) {
@@ -203,7 +203,7 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("child at -128") {
-      leaf_node<void> n0(nullptr);
+      leaf_node<void*> n0(nullptr);
       n.set_child(-128, &n0);
       for (int i = 0; i < 256; ++i) {
         REQUIRE_EQ(-128, n.prev_partial_key(i - 128));
@@ -211,7 +211,7 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("child at 127") {
-      leaf_node<void> n0(nullptr);
+      leaf_node<void*> n0(nullptr);
       n.set_child(127, &n0);
       REQUIRE_EQ(127, n.prev_partial_key(127));
       for (int i = 0; i < 255; ++i) {
@@ -220,10 +220,10 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("dense children") {
-      leaf_node<void> n0(nullptr);
-      leaf_node<void> n1(nullptr);
-      leaf_node<void> n2(nullptr);
-      leaf_node<void> n3(nullptr);
+      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n1(nullptr);
+      leaf_node<void*> n2(nullptr);
+      leaf_node<void*> n3(nullptr);
       n.set_child(1, &n0);
       n.set_child(2, &n1);
       n.set_child(3, &n2);
@@ -237,10 +237,10 @@ TEST_SUITE("node 256") {
     }
     
     SUBCASE("sparse children") {
-      leaf_node<void> n0(nullptr);
-      leaf_node<void> n1(nullptr);
-      leaf_node<void> n2(nullptr);
-      leaf_node<void> n3(nullptr);
+      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n1(nullptr);
+      leaf_node<void*> n2(nullptr);
+      leaf_node<void*> n3(nullptr);
       n.set_child(1, &n0);
       n.set_child(5, &n1);
       n.set_child(10, &n2);
