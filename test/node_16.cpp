@@ -29,7 +29,7 @@ TEST_SUITE("node 16") {
       partial_keys[i] = i;
 
       /* populate child nodes */
-      children[i] = new leaf_node<void*>(nullptr);
+      children[i] = new leaf_node<void*>(nullptr, 0, nullptr);
     }
 
     /* rng */
@@ -68,13 +68,13 @@ TEST_SUITE("node 16") {
   }
   
   TEST_CASE("delete child") {
-    leaf_node<void*> n0(nullptr);
-    leaf_node<void*> n1(nullptr);
-    leaf_node<void*> n2(nullptr);
-    leaf_node<void*> n3(nullptr);
-    leaf_node<void*> n4(nullptr);
-    leaf_node<void*> n5(nullptr);
-    leaf_node<void*> n6(nullptr);
+    leaf_node<void*> n0(nullptr, 0, nullptr);
+    leaf_node<void*> n1(nullptr, 0, nullptr);
+    leaf_node<void*> n2(nullptr, 0, nullptr);
+    leaf_node<void*> n3(nullptr, 0, nullptr);
+    leaf_node<void*> n4(nullptr, 0, nullptr);
+    leaf_node<void*> n5(nullptr, 0, nullptr);
+    leaf_node<void*> n6(nullptr, 0, nullptr);
 
     node_16<void*> subject;
 

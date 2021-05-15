@@ -91,20 +91,18 @@ void node_16<T>::set_child(char partial_key, node<T> *child) {
 }
 
 template <class T> node<T> *node_16<T>::del_child(char partial_key) {
-  node<T> *child_to_delete = nullptr;
-  for (int i = 0; i < n_children_; ++i) {
-    if (child_to_delete == nullptr && partial_key == keys_[i]) {
-      child_to_delete = children_[i];
-    }
-    if (child_to_delete != nullptr) {
-      /* move existing sibling to the left */
-      keys_[i] = i < n_children_ - 1 ? keys_[i + 1] : 0;
-      children_[i] = i < n_children_ - 1 ? children_[i + 1] : nullptr;
-    }
+  int i = 0;
+  for (; i < n_children_ && partial_key != keys_[i]; ++i) {}
+  if (i == n_children_) {
+    return nullptr;
   }
-  if (child_to_delete != nullptr) {
-    --n_children_;
+  node<T> *child_to_delete = children_[i];
+  for (; i < n_children_ - 1; ++i) {
+    /* move existing sibling to the left */
+    keys_[i] = keys_[i + 1];
+    children_[i] = children_[i + 1];
   }
+  --n_children_;
   return child_to_delete;
 }
 
@@ -112,11 +110,18 @@ template <class T> inner_node<T> *node_16<T>::grow() {
   auto new_node = new node_48<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  std::copy(this->children_, this->children_ + this->n_children_, new_node->children_);
-  for (int i = 0; i < n_children_; ++i) {
+  for (int i = 0; i < this->n_children_; ++i) {
     new_node->indexes_[(uint8_t) this->keys_[i]] = i;
   }
+  std::copy_n(this->children_, this->n_children_, new_node->children_);
+
+  this->prefix_ = nullptr;
+  this->prefix_len_ = 0;
+  this->n_children_ = 0;
+  std::fill_n(this->keys_, 16, 0);
+  std::fill_n(this->children_, 16, nullptr);
   delete this;
+
   return new_node;
 }
 
@@ -125,9 +130,16 @@ template <class T> inner_node<T> *node_16<T>::shrink() {
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
   new_node->n_children_ = this->n_children_;
-  std::copy(this->keys_, this->keys_ + this->n_children_, new_node->keys_);
-  std::copy(this->children_, this->children_ + this->n_children_, new_node->children_);
+  std::copy_n(this->keys_, this->n_children_, new_node->keys_);
+  std::copy_n(this->children_, this->n_children_, new_node->children_);
+
+  this->prefix_ = nullptr;
+  this->prefix_len_ = 0;
+  this->n_children_ = 0;
+  std::fill_n(this->keys_, 16, 0);
+  std::fill_n(this->children_, 16, nullptr);
   delete this;
+
   return new_node;
 }
 

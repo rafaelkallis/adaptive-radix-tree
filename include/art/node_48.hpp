@@ -46,8 +46,8 @@ private:
 };
 
 template <class T> node_48<T>::node_48() {
-  std::fill(this->indexes_, this->indexes_ + 256, node_48::EMPTY);
-  std::fill(this->children_, this->children_ + 48, nullptr);
+  std::fill_n(this->indexes_, 256, node_48::EMPTY);
+  std::fill_n(this->children_, 48, nullptr);
 }
 
 template <class T> node<T> **node_48<T>::find_child(char partial_key) {
@@ -90,14 +90,19 @@ template <class T> inner_node<T> *node_48<T>::grow() {
   auto new_node = new node_256<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  uint8_t index;
   for (int partial_key = -128; partial_key < 127; ++partial_key) {
-    index = indexes_[128 + partial_key];
+    const uint8_t index = indexes_[128 + partial_key];
     if (index != node_48::EMPTY) {
       new_node->set_child(partial_key, children_[index]);
     }
   }
+
+  this->prefix_ = nullptr;
+  this->prefix_len_ = 0;
+  std::fill_n(this->indexes_, 256, node_48::EMPTY);
+  std::fill_n(this->children_, 48, nullptr);
   delete this;
+  
   return new_node;
 }
 
@@ -105,14 +110,19 @@ template <class T> inner_node<T> *node_48<T>::shrink() {
   auto new_node = new node_16<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
-  uint8_t index;
   for (int partial_key = -128; partial_key < 127; ++partial_key) {
-    index = indexes_[128 + partial_key];
+    const uint8_t index = this->indexes_[128 + partial_key];
     if (index != node_48::EMPTY) {
-      new_node->set_child(partial_key, children_[index]);
+      new_node->set_child(partial_key, this->children_[index]);
     }
   }
+
+  this->prefix_ = nullptr;
+  this->prefix_len_ = 0;
+  std::fill_n(this->indexes_, 256, node_48::EMPTY);
+  std::fill_n(this->children_, 48, nullptr);
   delete this;
+
   return new_node;
 }
 

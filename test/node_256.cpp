@@ -27,7 +27,7 @@ TEST_SUITE("node 256") {
     for (int i = 0; i < 256; i += 1) {
       /* populate partial_keys with all values in the char domain */
       partial_keys[i] = i - 128;
-      children[i] = new leaf_node<void*>(nullptr);
+      children[i] = new leaf_node<void*>(nullptr, 0, nullptr);
     }
 
     /* rng */
@@ -64,13 +64,13 @@ TEST_SUITE("node 256") {
   }
   
   TEST_CASE("delete child") {
-    leaf_node<void*> n0(nullptr);
-    leaf_node<void*> n1(nullptr);
-    leaf_node<void*> n2(nullptr);
-    leaf_node<void*> n3(nullptr);
-    leaf_node<void*> n4(nullptr);
-    leaf_node<void*> n5(nullptr);
-    leaf_node<void*> n6(nullptr);
+    leaf_node<void*> n0(nullptr, 0, nullptr);
+    leaf_node<void*> n1(nullptr, 0, nullptr);
+    leaf_node<void*> n2(nullptr, 0, nullptr);
+    leaf_node<void*> n3(nullptr, 0, nullptr);
+    leaf_node<void*> n4(nullptr, 0, nullptr);
+    leaf_node<void*> n5(nullptr, 0, nullptr);
+    leaf_node<void*> n6(nullptr, 0, nullptr);
 
     node_256<void*> subject;
 
@@ -144,7 +144,7 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("child at -128") {
-      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
       n.set_child(-128, &n0);
       REQUIRE_EQ(-128, n.next_partial_key(-128));
       for (int i = 1; i < 256; ++i) {
@@ -153,7 +153,7 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("child at 127") {
-      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
       n.set_child(127, &n0);
       for (int i = 0; i < 256; ++i) {
         REQUIRE_EQ(127, n.next_partial_key(i - 128));
@@ -161,10 +161,10 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("dense children") {
-      leaf_node<void*> n0(nullptr);
-      leaf_node<void*> n1(nullptr);
-      leaf_node<void*> n2(nullptr);
-      leaf_node<void*> n3(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
+      leaf_node<void*> n1(nullptr, 0, nullptr);
+      leaf_node<void*> n2(nullptr, 0, nullptr);
+      leaf_node<void*> n3(nullptr, 0, nullptr);
       n.set_child(0, &n0);
       n.set_child(1, &n1);
       n.set_child(2, &n2);
@@ -177,10 +177,10 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("sparse children") {
-      leaf_node<void*> n0(nullptr);
-      leaf_node<void*> n1(nullptr);
-      leaf_node<void*> n2(nullptr);
-      leaf_node<void*> n3(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
+      leaf_node<void*> n1(nullptr, 0, nullptr);
+      leaf_node<void*> n2(nullptr, 0, nullptr);
+      leaf_node<void*> n3(nullptr, 0, nullptr);
       n.set_child(0, &n0);
       n.set_child(5, &n1);
       n.set_child(10, &n2);
@@ -203,7 +203,7 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("child at -128") {
-      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
       n.set_child(-128, &n0);
       for (int i = 0; i < 256; ++i) {
         REQUIRE_EQ(-128, n.prev_partial_key(i - 128));
@@ -211,7 +211,7 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("child at 127") {
-      leaf_node<void*> n0(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
       n.set_child(127, &n0);
       REQUIRE_EQ(127, n.prev_partial_key(127));
       for (int i = 0; i < 255; ++i) {
@@ -220,10 +220,10 @@ TEST_SUITE("node 256") {
     }
 
     SUBCASE("dense children") {
-      leaf_node<void*> n0(nullptr);
-      leaf_node<void*> n1(nullptr);
-      leaf_node<void*> n2(nullptr);
-      leaf_node<void*> n3(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
+      leaf_node<void*> n1(nullptr, 0, nullptr);
+      leaf_node<void*> n2(nullptr, 0, nullptr);
+      leaf_node<void*> n3(nullptr, 0, nullptr);
       n.set_child(1, &n0);
       n.set_child(2, &n1);
       n.set_child(3, &n2);
@@ -237,10 +237,10 @@ TEST_SUITE("node 256") {
     }
     
     SUBCASE("sparse children") {
-      leaf_node<void*> n0(nullptr);
-      leaf_node<void*> n1(nullptr);
-      leaf_node<void*> n2(nullptr);
-      leaf_node<void*> n3(nullptr);
+      leaf_node<void*> n0(nullptr, 0, nullptr);
+      leaf_node<void*> n1(nullptr, 0, nullptr);
+      leaf_node<void*> n2(nullptr, 0, nullptr);
+      leaf_node<void*> n3(nullptr, 0, nullptr);
       n.set_child(1, &n0);
       n.set_child(5, &n1);
       n.set_child(10, &n2);

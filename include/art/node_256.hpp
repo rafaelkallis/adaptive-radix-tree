@@ -73,7 +73,12 @@ template <class T> inner_node<T> *node_256<T>::shrink() {
       new_node->set_child(partial_key, children_[128 + partial_key]);
     }
   }
+
+  this->prefix_ = nullptr;
+  this->prefix_len_ = 0;
+  this->children_.fill(nullptr);
   delete this;
+
   return new_node;
 }
 

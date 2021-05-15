@@ -28,14 +28,12 @@ using std::string;
 TEST_SUITE("node") {
 
   TEST_CASE("check_prefix") {
-    leaf_node<int*> node(nullptr);
     string key = "000100001";
     int key_len = key.length() + 1; // +1 for \0
+
     string prefix = "0000";
     int prefix_len = prefix.length() + 1; // +1 for \0
-
-    node.prefix_ = (char *) prefix.c_str();
-    node.prefix_len_ = prefix_len;
+    leaf_node<int*> node(prefix.c_str(), prefix_len, nullptr);
 
     CHECK_EQ(3, node.check_prefix(key.c_str() + 0, key_len - 0));
     CHECK_EQ(2, node.check_prefix(key.c_str() + 1, key_len - 1));

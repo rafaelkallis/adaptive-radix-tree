@@ -19,6 +19,8 @@ namespace art {
 
 template <class T> class art {
 public:
+  art() = default;
+  art(const art<T> &other);
   ~art();
 
   /**
@@ -72,7 +74,13 @@ private:
   node<T> *root_ = nullptr;
 };
 
-template <class T> art<T>::~art() {
+template <class T> 
+art<T>::art(const art<T> &other) {
+  throw new std::exception;
+}
+
+template <class T> 
+art<T>::~art() {
   if (root_ == nullptr) {
     return;
   }
@@ -87,13 +95,12 @@ template <class T> art<T>::~art() {
     if (!cur->is_leaf()) {
       cur_inner = static_cast<inner_node<T>*>(cur);
       for (it = cur_inner->begin(), it_end = cur_inner->end(); it != it_end; ++it) {
-        node_stack.push(*cur_inner->find_child(*it));
+        node<T> *child_node = it.get_child_node();
+        node_stack.push(child_node);
       }
     }
-    if (cur->prefix_ != nullptr) {
-      delete[] cur->prefix_;
-    }
     delete cur;
+    cur = nullptr;
   }
 }
 
@@ -121,10 +128,7 @@ template <class T>
 T art<T>::set(const char *key, T value) {
   int key_len = std::strlen(key) + 1, depth = 0, prefix_match_len;
   if (root_ == nullptr) {
-    root_ = new leaf_node<T>(value);
-    root_->prefix_ = new char[key_len];
-    std::copy(key, key + key_len + 1, root_->prefix_);
-    root_->prefix_len_ = key_len;
+    root_ = new leaf_node<T>(key, key_len, value);
     return T{};
   }
 
@@ -181,8 +185,7 @@ T art<T>::set(const char *key, T value) {
 
       auto new_parent = new node_4<T>();
       new_parent->prefix_ = new char[prefix_match_len];
-      std::copy((**cur).prefix_, (**cur).prefix_ + prefix_match_len,
-                new_parent->prefix_);
+      std::copy_n((**cur).prefix_, prefix_match_len, new_parent->prefix_);
       new_parent->prefix_len_ = prefix_match_len;
       new_parent->set_child((**cur).prefix_[prefix_match_len], *cur);
 
@@ -195,15 +198,14 @@ T art<T>::set(const char *key, T value) {
       auto old_prefix_len = (**cur).prefix_len_;
       (**cur).prefix_ = new char[old_prefix_len - prefix_match_len - 1];
       (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
-      std::copy(old_prefix + prefix_match_len + 1, old_prefix + old_prefix_len,
-                (**cur).prefix_);
+      std::copy_n(old_prefix + prefix_match_len + 1, (**cur).prefix_len_, (**cur).prefix_);
       delete old_prefix;
 
-      auto new_node = new leaf_node<T>(value);
-      new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];
-      std::copy(key + depth + prefix_match_len + 1, key + key_len,
-                new_node->prefix_);
-      new_node->prefix_len_ = key_len - depth - prefix_match_len - 1;
+      auto new_node = new leaf_node<T>(
+        key + depth + prefix_match_len + 1, 
+        key_len - depth - prefix_match_len - 1, 
+        value
+      );
       new_parent->set_child(key[depth + prefix_match_len], new_node);
 
       *cur = new_parent;
@@ -231,11 +233,11 @@ T art<T>::set(const char *key, T value) {
         *cur_inner = (**cur_inner).grow();
       }
 
-      auto new_node = new leaf_node<T>(value);
-      new_node->prefix_ = new char[key_len - depth - (**cur).prefix_len_ - 1];
-      std::copy(key + depth + (**cur).prefix_len_ + 1, key + key_len,
-                new_node->prefix_);
-      new_node->prefix_len_ = key_len - depth - (**cur).prefix_len_ - 1;
+      auto new_node = new leaf_node<T>(
+        key + depth + (**cur).prefix_len_ + 1,
+        key_len - depth - (**cur).prefix_len_ - 1,
+        value
+      );
       (**cur_inner).set_child(child_partial_key, new_node);
       return T{};
     }
@@ -296,9 +298,6 @@ T art<T>::del(const char *key) {
          *   *(aa)->v2
          */
 
-        if ((**cur).prefix_ != nullptr) {
-          delete[](**cur).prefix_;
-        }
         delete (*cur);
         *cur = nullptr;
 
@@ -327,22 +326,14 @@ T art<T>::del(const char *key) {
 
         sibling->prefix_ = new char[(**par).prefix_len_ + 1 + old_prefix_len];
         sibling->prefix_len_ = (**par).prefix_len_ + 1 + old_prefix_len;
-        std::copy((**par).prefix_, (**par).prefix_ + (**par).prefix_len_,
-                  sibling->prefix_);
+        std::copy_n((**par).prefix_, (**par).prefix_len_, sibling->prefix_);
         sibling->prefix_[(**par).prefix_len_] = sibling_partial_key;
-        std::copy(old_prefix, old_prefix + old_prefix_len,
-                  sibling->prefix_ + (**par).prefix_len_ + 1);
-        if (old_prefix != nullptr) {
-          delete[] old_prefix;
-        }
-        if ((**cur).prefix_ != nullptr) {
-          delete[](**cur).prefix_;
-        }
+        std::copy_n(old_prefix, old_prefix_len, sibling->prefix_ + (**par).prefix_len_ + 1);
+        delete [] old_prefix;
         delete (*cur);
-        if ((**par).prefix_ != nullptr) {
-          delete[](**par).prefix_;
-        }
+        *cur = nullptr;
         delete (*par);
+        *par = nullptr;
 
         /* this looks crazy, but I know what I'm doing */
         *par = static_cast<inner_node<T>*>(sibling);
@@ -358,11 +349,10 @@ T art<T>::del(const char *key) {
          *           *()->v1
          */
 
-        if ((**cur).prefix_ != nullptr) {
-          delete[](**cur).prefix_;
-        }
-        delete (*cur);
-        (**par).del_child(cur_partial_key);
+        assert(n_siblings > 1);
+        node<T> *child_to_delete = (**par).del_child(cur_partial_key);
+        assert(child_to_delete->is_leaf());
+        delete child_to_delete;
         if ((**par).is_underfull()) {
           *par = (**par).shrink();
         }
