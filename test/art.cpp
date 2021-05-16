@@ -34,7 +34,25 @@ TEST_SUITE("art") {
     m.set("aaaba", &int2);
     REQUIRE_EQ(nullptr, m.get("aba"));
 
-    art::art<int*> m_copy = m;
+    art::art<int*> m_copy(m);
+    m_copy.set("aba", &int3);
+    REQUIRE_EQ(nullptr, m.get("aba"));
+    REQUIRE_EQ(&int3, m_copy.get("aba"));
+  }
+
+  TEST_CASE("copy assignment") {
+    art::art<int*> m;
+
+    int int1 = 1;
+    int int2 = 2;
+    int int3 = 3;
+
+    m.set("aaaaa", &int1);
+    m.set("aaaba", &int2);
+    REQUIRE_EQ(nullptr, m.get("aba"));
+
+    art::art<int*> m_copy;
+    m_copy = m;
     m_copy.set("aba", &int3);
     REQUIRE_EQ(nullptr, m.get("aba"));
     REQUIRE_EQ(&int3, m_copy.get("aba"));

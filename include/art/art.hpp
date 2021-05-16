@@ -83,6 +83,9 @@ public:
   tree_it<T> end() const;
   tree_it<T> cend() const;
 
+  void swap(art<T> &other) noexcept;
+  void clear() noexcept;
+
 private:
   node<T> *root_ = nullptr;
 
@@ -104,33 +107,14 @@ art<T>::art(art<T> &&other) noexcept : root_(other.root_) {
 
 template <class T> 
 art<T>::~art() {
-  if (root_ == nullptr) {
-    return;
-  }
-  std::stack<const node<T> *> node_stack;
-  node_stack.push(root_);
-  while (!node_stack.empty()) {
-    const node<T> *cur = node_stack.top();
-    node_stack.pop();
-    if (!cur->is_leaf()) {
-      auto it = cur->as_inner()->begin();
-      auto it_end = cur->as_inner()->end();
-      for (; it != it_end; ++it) {
-        const node<T> *child_node = it.get_child_node();
-        node_stack.push(child_node);
-      }
-    }
-    delete cur;
-  }
+  clear();
 }
 
 template <class T> 
 art<T>& art<T>::operator=(const art<T> &other) {
   if (this != &other) {
-    // TODO traverse internal structure
-    for (auto it = other.begin(), it_end = other.end(); it != it_end; ++it) {
-      set(it.key().c_str(), *it);
-    }
+    art<T> temp(other);
+    swap(temp);
   }
   return *this;
 }
@@ -138,8 +122,8 @@ art<T>& art<T>::operator=(const art<T> &other) {
 template <class T> 
 art<T>& art<T>::operator=(art<T> &&other) {
   if (this != &other) {
-    root_ = other.root_;
-    other.root_ = nullptr;
+    art<T> temp(other);
+    swap(temp);
   }
   return *this;
 }
@@ -437,7 +421,62 @@ template <class T> tree_it<T> art<T>::cend() const {
   return tree_it<T>(); 
 }
 
-template <class T> const art<T>& art<T>::as_const() const { 
+template <class T> 
+void art<T>::swap(art<T> &other) noexcept {
+  std::swap(root_, other.root_);
+}
+
+template <class T> 
+void art<T>::clear() noexcept { 
+  if (root_ == nullptr) {
+    return;
+  }
+  if (root_->is_leaf()) {
+    delete root_;
+    root_ = nullptr;
+    return;
+  }
+  struct step {
+    const inner_node<T> *node_;
+    child_it<T> it_;
+    child_it<T> it_end_;
+  };
+  std::vector<step> node_stack;
+  node_stack.push_back({
+    root_->as_inner(), 
+    root_->as_inner()->begin(), 
+    root_->as_inner()->end()
+  });
+  while (true) {
+    step &cur = node_stack.back();
+    if (cur.it_ == cur.it_end_) {
+      delete cur.node_;
+      node_stack.pop_back();
+      if (node_stack.empty()) {
+        return;
+      }
+      ++node_stack.back().it_;
+      continue;
+    }
+    
+    const node<T> *child = cur.it_.get_child_node();
+    if (child->is_leaf()) {
+      delete child;
+      ++cur.it_;
+      continue;
+    }
+
+    node_stack.push_back({
+      child->as_inner(), 
+      child->as_inner()->begin(), 
+      child->as_inner()->end()
+    });
+  }
+  root_ = nullptr;
+}
+
+template <class T> 
+const art<T>& art<T>::as_const() const { 
   return static_cast<const art<T> &>(*this); 
 }
 

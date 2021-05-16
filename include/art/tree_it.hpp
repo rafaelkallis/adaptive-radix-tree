@@ -41,10 +41,12 @@ public:
 
     step &operator++();
     step operator++(int);
+
+    void swap(step &other) noexcept;
   };
 
-  tree_it();
-  explicit tree_it(const node<T> *root, std::vector<step> traversal_stack);
+  tree_it() = default;
+  tree_it(const node<T> *root, std::vector<step> traversal_stack);
 
   static tree_it<T> min(const node<T> *root);
   static tree_it<T> greater_equal(const node<T> *root, const char *key);
@@ -66,7 +68,6 @@ public:
   int get_key_len() const;
   const std::string key() const;
   
-
 private:
   step &get_step();
   const step &get_step() const;
@@ -102,6 +103,24 @@ tree_it<T>::step::step(const node<T> *node, int depth, const char *key, child_it
     std::copy_n(key, depth, key_);
   }
 
+template <class T>
+tree_it<T>::step::step(const tree_it<T>::step &other) 
+  : step(other.child_node_, other.depth_, other.key_, other.child_it_, other.child_it_end_) {}
+
+template <class T>
+tree_it<T>::step::step(tree_it<T>::step &&other) 
+  : child_node_(other.child_node_), 
+    depth_(other.depth_), 
+    key_(other.key_),
+    child_it_(other.child_it_),
+    child_it_end_(other.child_it_end_) {
+   other.child_node_ = nullptr;
+   other.depth_ = 0;
+   other.key_ = nullptr;
+   other.child_it_ = {};
+   other.child_it_end_ = {};
+}
+
 template <class T> 
 typename tree_it<T>::step &tree_it<T>::step::operator++() {
   assert(child_it_ != child_it_end_);
@@ -123,24 +142,6 @@ typename tree_it<T>::step tree_it<T>::step::operator++(int) {
 }
 
 template <class T>
-tree_it<T>::step::step(const tree_it<T>::step &other) 
-  : step(other.child_node_, other.depth_, other.key_, other.child_it_, other.child_it_end_) {}
-
-template <class T>
-tree_it<T>::step::step(tree_it<T>::step &&other) 
-  : child_node_(other.child_node_), 
-    depth_(other.depth_), 
-    key_(other.key_),
-    child_it_(other.child_it_),
-    child_it_end_(other.child_it_end_) {
-   other.child_node_ = nullptr;
-   other.depth_ = 0;
-   other.key_ = nullptr;
-   other.child_it_ = {};
-   other.child_it_end_ = {};
-}
-
-template <class T>
 tree_it<T>::step::~step() {
   delete [] key_;
 }
@@ -148,19 +149,8 @@ tree_it<T>::step::~step() {
 template <class T>
 typename tree_it<T>::step& tree_it<T>::step::operator=(const tree_it<T>::step &other) {
   if (this != &other) {
-    node<T> *node = other.child_node_;
-    int depth = other.depth_;
-    char *key = depth ? new char[depth] : nullptr;
-    std::copy_n(other.key_, other.depth_, key);
-    child_it<T> c_it = other.child_it_;
-    child_it<T> c_it_end = other.child_it_end_;
-
-    child_node_ = node;
-    depth_ = depth;
-    delete [] key_;
-    key_ = key;
-    child_it_ = c_it;
-    child_it_end_ = c_it_end;
+    tree_it<T>::step temp(other);
+    swap(temp);
   }
   return *this;
 }
@@ -168,27 +158,20 @@ typename tree_it<T>::step& tree_it<T>::step::operator=(const tree_it<T>::step &o
 template <class T>
 typename tree_it<T>::step& tree_it<T>::step::operator=(tree_it<T>::step &&other) noexcept {
   if (this != &other) {
-    child_node_ = other.child_node_;
-    other.child_node_ = nullptr;
-
-    depth_ = other.depth_;
-    other.depth_ = 0;
-
-    delete [] key_;
-    key_ = other.key_;
-    other.key_ = nullptr;
-
-    child_it_ = other.child_it_;
-    other.child_it_ = {};
-
-    child_it_end_ = other.child_it_end_;
-    other.child_it_end_ = {};
+    tree_it<T>::step temp(other);
+    swap(temp);
   }
   return *this;
 }
 
 template <class T>
-tree_it<T>::tree_it() {}
+void tree_it<T>::step::swap(tree_it<T>::step &other) noexcept {
+  std::swap(child_node_, other.child_node_);
+  std::swap(depth_, other.depth_);
+  std::swap(key_, other.key_);
+  std::swap(child_it_, other.child_it_);
+  std::swap(child_it_end_, other.child_it_end_);
+}
 
 template <class T>
 tree_it<T>::tree_it(const node<T> *root, std::vector<step> traversal_stack) : root_(root), traversal_stack_(traversal_stack) {
