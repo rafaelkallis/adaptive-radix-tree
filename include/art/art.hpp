@@ -21,7 +21,17 @@ template <class T> class art {
 public:
   art() = default;
   art(const art<T> &other);
+  art(art<T> &&other) noexcept;
   ~art();
+
+  art<T> &operator=(const art<T> &other);
+  art<T> &operator=(art<T> &&other);
+
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using iterator = tree_it<T>;
+  using const_iterator = tree_it<const T>;
 
   /**
    * Finds the value associated with the given key.
@@ -57,26 +67,39 @@ public:
   /**
    * Forward iterator that traverses the tree in lexicographic order.
    */
-  tree_it<T> begin();
+  tree_it<T> begin() const;
+  tree_it<T> cbegin() const;
 
   /**
    * Forward iterator that traverses the tree in lexicographic order starting
    * from the provided key.
    */
-  tree_it<T> begin(const char *key);
+  tree_it<T> begin(const char *key) const;
+  tree_it<T> cbegin(const char *key) const;
 
   /**
    * Iterator to the end of the lexicographic order.
    */
-  tree_it<T> end();
+  tree_it<T> end() const;
+  tree_it<T> cend() const;
 
 private:
   node<T> *root_ = nullptr;
+
+  const art<T> &as_const() const;
 };
 
 template <class T> 
 art<T>::art(const art<T> &other) {
-  throw new std::exception;
+  // TODO traverse internal structure
+  for (auto it = other.begin(), it_end = other.end(); it != it_end; ++it) {
+    set(it.key().c_str(), *it);
+  }
+}
+
+template <class T> 
+art<T>::art(art<T> &&other) noexcept : root_(other.root_) {
+  other.root_ = nullptr;
 }
 
 template <class T> 
@@ -84,29 +107,46 @@ art<T>::~art() {
   if (root_ == nullptr) {
     return;
   }
-  std::stack<node<T> *> node_stack;
+  std::stack<const node<T> *> node_stack;
   node_stack.push(root_);
-  node<T> *cur;
-  inner_node<T> *cur_inner;
-  child_it<T> it, it_end;
   while (!node_stack.empty()) {
-    cur = node_stack.top();
+    const node<T> *cur = node_stack.top();
     node_stack.pop();
     if (!cur->is_leaf()) {
-      cur_inner = static_cast<inner_node<T>*>(cur);
-      for (it = cur_inner->begin(), it_end = cur_inner->end(); it != it_end; ++it) {
-        node<T> *child_node = it.get_child_node();
+      auto it = cur->as_inner()->begin();
+      auto it_end = cur->as_inner()->end();
+      for (; it != it_end; ++it) {
+        const node<T> *child_node = it.get_child_node();
         node_stack.push(child_node);
       }
     }
     delete cur;
-    cur = nullptr;
   }
 }
 
 template <class T> 
+art<T>& art<T>::operator=(const art<T> &other) {
+  if (this != &other) {
+    // TODO traverse internal structure
+    for (auto it = other.begin(), it_end = other.end(); it != it_end; ++it) {
+      set(it.key().c_str(), *it);
+    }
+  }
+  return *this;
+}
+
+template <class T> 
+art<T>& art<T>::operator=(art<T> &&other) {
+  if (this != &other) {
+    root_ = other.root_;
+    other.root_ = nullptr;
+  }
+  return *this;
+}
+
+template <class T> 
 T art<T>::get(const char *key) const {
-  node<T> *cur = root_, **child;
+  const node<T> *cur = root_;
   int depth = 0, key_len = std::strlen(key) + 1;
   while (cur != nullptr) {
     if (cur->prefix_len_ != cur->check_prefix(key + depth, key_len - depth)) {
@@ -115,9 +155,9 @@ T art<T>::get(const char *key) const {
     }
     if (cur->prefix_len_ == key_len - depth) {
       /* exact match */
-      return cur->is_leaf() ? static_cast<leaf_node<T>*>(cur)->value_ : T{};
+      return cur->is_leaf() ? cur->as_leaf()->value_ : T{};
     }
-    child = static_cast<inner_node<T>*>(cur)->find_child(key[depth + cur->prefix_len_]);
+    auto child = cur->as_inner()->find_child(key[depth + cur->prefix_len_]);
     depth += (cur->prefix_len_ + 1);
     cur = child != nullptr ? *child : nullptr;
   }
@@ -298,6 +338,7 @@ T art<T>::del(const char *key) {
          *   *(aa)->v2
          */
 
+        assert(*cur == root_);
         delete (*cur);
         *cur = nullptr;
 
@@ -370,16 +411,34 @@ T art<T>::del(const char *key) {
   return T{};
 }
 
-template <class T> tree_it<T> art<T>::begin() {
+template <class T> 
+tree_it<T> art<T>::begin() const {
   return tree_it<T>::min(this->root_);
 }
 
-template <class T> tree_it<T> art<T>::begin(const char *key) {
+template <class T> 
+tree_it<T> art<T>::cbegin() const {
+  return begin();
+}
+
+template <class T> tree_it<T> art<T>::begin(const char *key) const {
   return tree_it<T>::greater_equal(this->root_, key);
 }
 
-template <class T> tree_it<T> art<T>::end() { 
+template <class T> tree_it<T> art<T>::cbegin(const char *key) const {
+  return begin(key);
+}
+
+template <class T> tree_it<T> art<T>::end() const { 
   return tree_it<T>(); 
+}
+
+template <class T> tree_it<T> art<T>::cend() const { 
+  return tree_it<T>(); 
+}
+
+template <class T> const art<T>& art<T>::as_const() const { 
+  return static_cast<const art<T> &>(*this); 
 }
 
 } // namespace art

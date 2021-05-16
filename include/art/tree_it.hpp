@@ -23,7 +23,7 @@ template <class T> class leaf_node;
 template <class T> class tree_it {
 public:
   struct step {
-    node<T> *child_node_; // no ownership
+    const node<T> *child_node_; // no ownership
     int depth_;
     char *key_; // ownership
     child_it<T> child_it_;
@@ -31,7 +31,7 @@ public:
 
     step();
     step(int depth, child_it<T> c_it, child_it<T> c_it_end);
-    step(node<T> *node, int depth, const char *key, child_it<T> c_it, child_it<T> c_it_end);
+    step(const node<T> *node, int depth, const char *key, child_it<T> c_it, child_it<T> c_it_end);
     step(const step &other);
     step(step &&other);
     ~step();
@@ -44,20 +44,19 @@ public:
   };
 
   tree_it();
-  explicit tree_it(node<T> *root, std::vector<step> traversal_stack);
+  explicit tree_it(const node<T> *root, std::vector<step> traversal_stack);
 
-  static tree_it<T> min(node<T> *root);
-  static tree_it<T> greater_equal(node<T> *root, const char *key);
+  static tree_it<T> min(const node<T> *root);
+  static tree_it<T> greater_equal(const node<T> *root, const char *key);
 
   using iterator_category = std::forward_iterator_tag;
-  using value_type = T;
+  using value_type = const T;
   using difference_type = int;
   using pointer = value_type *;
-  /* using reference = const value_type &; */
+  using reference = value_type &;
 
-  /* reference operator*(); */
-  value_type operator*();
-  pointer operator->();
+  reference operator*() const;
+  pointer operator->() const;
   tree_it<T> &operator++();
   tree_it<T> operator++(int);
   bool operator==(const tree_it<T> &rhs) const;
@@ -71,13 +70,13 @@ public:
 private:
   step &get_step();
   const step &get_step() const;
-  node<T> *get_node() const;
+  const node<T> *get_child_node() const;
   const char *get_key() const;
   int get_depth() const;
   
   void seek_leaf();
 
-  node<T> *root_;
+  const node<T> *root_;
   std::vector<step> traversal_stack_;
 };
 
@@ -94,7 +93,7 @@ tree_it<T>::step::step(int depth, child_it<T> c_it, child_it<T> c_it_end)
     child_it_end_(c_it_end) {}
 
 template <class T>
-tree_it<T>::step::step(node<T> *node, int depth, const char *key, child_it<T> c_it, child_it<T> c_it_end) 
+tree_it<T>::step::step(const node<T> *node, int depth, const char *key, child_it<T> c_it, child_it<T> c_it_end) 
   : child_node_(node), 
   depth_(depth), 
   key_(depth ? new char[depth] : nullptr), 
@@ -192,16 +191,16 @@ template <class T>
 tree_it<T>::tree_it() {}
 
 template <class T>
-tree_it<T>::tree_it(node<T> *root, std::vector<step> traversal_stack) : root_(root), traversal_stack_(traversal_stack) {
+tree_it<T>::tree_it(const node<T> *root, std::vector<step> traversal_stack) : root_(root), traversal_stack_(traversal_stack) {
   seek_leaf();
 }
 
-template <class T> tree_it<T> tree_it<T>::min(node<T> *root) {
+template <class T> tree_it<T> tree_it<T>::min(const node<T> *root) {
   return tree_it<T>::greater_equal(root, "");
 }
 
 template <class T>
-tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
+tree_it<T> tree_it<T>::greater_equal(const node<T> *root, const char *key) {
   assert(root != nullptr);
 
   int key_len = std::strlen(key);
@@ -212,7 +211,7 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
 
   while (true) {
     tree_it<T>::step &cur_step = traversal_stack.back();
-    node<T> *cur_node = cur_step.child_node_;
+    const node<T> *cur_node = cur_step.child_node_;
     int cur_depth = cur_step.depth_;
 
     int prefix_match_len = std::min<int>(cur_node->check_prefix(key + cur_depth, key_len - cur_depth), key_len - cur_depth);
@@ -229,9 +228,8 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
       continue;
     }
     // seek subtree where search key is "lesser than or equal" the subtree partial key
-    inner_node<T> *cur_inner_node = static_cast<inner_node<T> *>(cur_node);
-    child_it<T> c_it = cur_inner_node->begin();
-    child_it<T> c_it_end = cur_inner_node->end();
+    child_it<T> c_it = cur_node->as_inner()->begin();
+    child_it<T> c_it_end = cur_node->as_inner()->end();
     // TODO more efficient with specialized node search method?
     for (; c_it != c_it_end; ++c_it) {
       if (key[cur_depth + cur_node->prefix_len_] <= c_it.get_partial_key()) {
@@ -248,18 +246,16 @@ tree_it<T> tree_it<T>::greater_equal(node<T> *root, const char *key) {
   }
 }
 
-template <class T> typename tree_it<T>::value_type tree_it<T>::operator*() {
-  assert(get_node()->is_leaf());
-  return static_cast<leaf_node<T> *>(get_node())->value_;
+template <class T> typename tree_it<T>::reference tree_it<T>::operator*() const {
+  return get_child_node()->as_leaf()->value_;
 }
 
-template <class T> typename tree_it<T>::pointer tree_it<T>::operator->() {
-  assert(get_node()->is_leaf());
-  return &static_cast<leaf_node<T> *>(get_node())->value_;
+template <class T> typename tree_it<T>::pointer tree_it<T>::operator->() const {
+  return &get_child_node()->as_leaf()->value_;
 }
 
 template <class T> tree_it<T> &tree_it<T>::operator++() {
-  assert(get_node()->is_leaf());
+  assert(get_child_node()->is_leaf());
   ++get_step();
   seek_leaf();
   return *this;
@@ -280,7 +276,7 @@ template <class T> bool tree_it<T>::operator==(const tree_it<T> &rhs) const {
     /* one is empty */
     return false;
   }
-  return get_node() == rhs.get_node();
+  return get_child_node() == rhs.get_child_node();
 }
 
 template <class T> bool tree_it<T>::operator!=(const tree_it<T> &rhs) const {
@@ -291,17 +287,17 @@ template <class T>
 template <class OutputIt> 
 void tree_it<T>::key(OutputIt key) const {
   std::copy_n(get_key(), get_depth(), key);
-  std::copy_n(get_node()->prefix_, get_node()->prefix_len_, key + get_depth());
+  std::copy_n(get_child_node()->prefix_, get_child_node()->prefix_len_, key + get_depth());
 }
 
 template <class T>
 int tree_it<T>::get_key_len() const {
-  return get_depth() + get_node()->prefix_len_;
+  return get_depth() + get_child_node()->prefix_len_;
 }
 
 template <class T>
 const std::string tree_it<T>::key() const {
-  std::string str(get_depth() + get_node()->prefix_len_ - 1, 0);
+  std::string str(get_depth() + get_child_node()->prefix_len_ - 1, 0);
   key(str.begin());
   return str;
 }
@@ -319,22 +315,21 @@ void tree_it<T>::seek_leaf() {
   }
   
   /* find leftmost leaf node */
-  while (!get_node()->is_leaf()) {
-    inner_node<T> *cur_inner_node = static_cast<inner_node<T> *>(get_node());
-    int depth = get_depth() + get_node()->prefix_len_ + 1;
-    child_it<T> c_it = cur_inner_node->begin();
-    child_it<T> c_it_end = cur_inner_node->end();
+  while (!get_child_node()->is_leaf()) {
+    int depth = get_depth() + get_child_node()->prefix_len_ + 1;
+    child_it<T> c_it = get_child_node()->as_inner()->begin();
+    child_it<T> c_it_end = get_child_node()->as_inner()->end();
     tree_it<T>::step child(depth, c_it, c_it_end);
     /* compute child key: cur_key + cur_node->prefix_ + child_partial_key */
     std::copy_n(get_key(), get_depth(), child.key_);
-    std::copy_n(get_node()->prefix_, get_node()->prefix_len_, child.key_ + get_depth());
-    child.key_[get_depth() + get_node()->prefix_len_] = c_it.get_partial_key();
+    std::copy_n(get_child_node()->prefix_, get_child_node()->prefix_len_, child.key_ + get_depth());
+    child.key_[get_depth() + get_child_node()->prefix_len_] = c_it.get_partial_key();
     traversal_stack_.push_back(child);
   }
 }
 
 template <class T>
-node<T> * tree_it<T>::get_node() const {
+const node<T> * tree_it<T>::get_child_node() const {
   return get_step().child_node_;
 }
 

@@ -15,19 +15,18 @@ template <class T> class inner_node;
 template <class T> class child_it {
 public:
   child_it() = default;
-  explicit child_it(inner_node<T> *n);
-  child_it(inner_node<T> *n, int relative_index);
+  explicit child_it(const inner_node<T> *n);
+  child_it(const inner_node<T> *n, int relative_index);
   child_it(const child_it<T> &other) = default;
   child_it(child_it<T> &&other) noexcept = default;
   child_it<T> &operator=(const child_it<T> &other) = default;
   child_it<T> &operator=(child_it<T> &&other) noexcept = default;
 
-
   using iterator_category = std::bidirectional_iterator_tag;
   using value_type = const char;
   using difference_type = int;
-  using pointer = value_type *;
-  using reference = value_type &;
+  using pointer = value_type*;
+  using reference = value_type&;
 
   reference operator*() const;
   pointer operator->() const;
@@ -43,18 +42,18 @@ public:
   bool operator>=(const child_it &rhs) const;
 
   char get_partial_key() const;
-  node<T> *get_child_node() const;
+  const node<T> *get_child_node() const;
 
 private:
-  inner_node<T> *node_ = nullptr;
+  const inner_node<T> *node_ = nullptr;
   char cur_partial_key_ = -128;
   int relative_index_ = 0;
 };
 
-template <class T> child_it<T>::child_it(inner_node<T> *n) : child_it<T>(n, 0) {}
+template <class T> child_it<T>::child_it(const inner_node<T> *n) : child_it<T>(n, 0) {}
 
 template <class T>
-child_it<T>::child_it(inner_node<T> *n, int relative_index)
+child_it<T>::child_it(const inner_node<T> *n, int relative_index)
     : node_(n), cur_partial_key_(0), relative_index_(relative_index) {
   if (relative_index_ < 0) {
     /* relative_index is out of bounds, no seek */
@@ -161,7 +160,7 @@ char child_it<T>::get_partial_key() const {
 }
 
 template <class T>
-node<T> *child_it<T>::get_child_node() const {
+const node<T> *child_it<T>::get_child_node() const {
   assert(0 <= relative_index_ && relative_index_ < node_->n_children());
   return *node_->find_child(cur_partial_key_);
 }

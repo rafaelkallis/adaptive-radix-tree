@@ -138,7 +138,7 @@ TEST_SUITE("inner_node") {
     ++it;
     // 3
     REQUIRE(it != it_end);
-    REQUIRE_EQ(0, *it);
+    REQUIRE_EQ(0, (int) *it);
 
     ++it;
     // 4 (overflow)
@@ -149,7 +149,7 @@ TEST_SUITE("inner_node") {
     --it;
     // 3
     REQUIRE(it != it_end);
-    REQUIRE_EQ(0, *it);
+    REQUIRE_EQ(0, (int) *it);
 
     --it;
     // 2

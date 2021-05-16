@@ -16,6 +16,9 @@
 
 namespace art {
 
+template <class T> class inner_node;
+template <class T> class leaf_node;
+
 template <class T> class node {
 public:
   node() = default;
@@ -47,6 +50,12 @@ public:
    * index:    01234
    */
   int check_prefix(const char *key, int key_len) const;
+
+  inner_node<T> *as_inner();
+  const inner_node<T> *as_inner() const;
+
+  leaf_node<T> *as_leaf();
+  const leaf_node<T> *as_leaf() const;
 
   char *prefix_ = nullptr;
   uint16_t prefix_len_ = 0;
@@ -106,6 +115,30 @@ node<T>& node<T>::operator=(node<T> &&other) noexcept {
 template <class T>
 int node<T>::check_prefix(const char *key, int /* key_len */) const {
   return std::mismatch(prefix_, prefix_ + prefix_len_, key).second - key;
+}
+
+template <class T>
+inner_node<T>* node<T>::as_inner() {
+  assert(!is_leaf());
+  return static_cast<inner_node<T>*>(this);
+}
+
+template <class T>
+const inner_node<T>* node<T>::as_inner() const {
+  assert(!is_leaf());
+  return static_cast<const inner_node<T>*>(this);
+}
+
+template <class T>
+leaf_node<T>* node<T>::as_leaf() {
+  assert(is_leaf());
+  return static_cast<leaf_node<T>*>(this);
+}
+
+template <class T>
+const leaf_node<T>* node<T>::as_leaf() const {
+  assert(is_leaf());
+  return static_cast<const leaf_node<T>*>(this);
 }
 
 } // namespace art

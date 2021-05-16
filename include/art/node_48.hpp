@@ -24,7 +24,7 @@ template <class T> class node_48 : public inner_node<T> {
 public:
   node_48();
 
-  node<T> **find_child(char partial_key) override;
+  const node<T> *const *find_child(char partial_key) const override;
   void set_child(char partial_key, node<T> *child) override;
   node<T> *del_child(char partial_key) override;
   inner_node<T> *grow() override;
@@ -50,7 +50,8 @@ template <class T> node_48<T>::node_48() {
   std::fill_n(this->children_, 48, nullptr);
 }
 
-template <class T> node<T> **node_48<T>::find_child(char partial_key) {
+template <class T> 
+const node<T> *const *node_48<T>::find_child(char partial_key) const {
   // TODO(rafaelkallis): direct lookup instead of temp save?
   uint8_t index = indexes_[128 + partial_key];
   return node_48::EMPTY != index ? &children_[index] : nullptr;

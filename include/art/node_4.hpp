@@ -23,7 +23,7 @@ template <class T> class node_4 : public inner_node<T> {
   friend class node_16<T>;
 
 public:
-  node<T> **find_child(char partial_key) override;
+  const node<T> *const *find_child(char partial_key) const override;
   void set_child(char partial_key, node<T> *child) override;
   node<T> *del_child(char partial_key) override;
   inner_node<T> *grow() override;
@@ -43,7 +43,8 @@ private:
   node<T> *children_[4];
 };
 
-template <class T> node<T> **node_4<T>::find_child(char partial_key) {
+template <class T>
+const node<T> *const *node_4<T>::find_child(char partial_key) const {
   for (int i = 0; i < n_children_; ++i) {
     if (keys_[i] == partial_key) {
       return &children_[i];

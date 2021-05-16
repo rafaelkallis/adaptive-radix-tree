@@ -37,7 +37,8 @@ public:
    * @return Child node identified by the given partial key or
    * a null pointer of no child node is associated with the partial key.
    */
-  virtual node<T> **find_child(char partial_key) = 0;
+  node<T> **find_child(char partial_key);
+  virtual const node<T> *const *find_child(char partial_key) const = 0;
 
   /**
    * Adds the given node to the node's children.
@@ -97,34 +98,47 @@ public:
    *
    * @return Iterator on the first child node.
    */
-  child_it<T> begin();
-  std::reverse_iterator<child_it<T>> rbegin();
+  child_it<T> begin() const;
+  std::reverse_iterator<child_it<T>> rbegin() const;
 
   /**
    * Iterator on after the last child node.
    *
    * @return Iterator on after the last child node.
    */
-  child_it<T> end();
-  std::reverse_iterator<child_it<T>> rend();
+  child_it<T> end() const;
+  std::reverse_iterator<child_it<T>> rend() const;
+
+private:
+  const inner_node<T> &as_const() const;
 };
 
 template <class T> bool inner_node<T>::is_leaf() const { return false; }
 
-template <class T> child_it<T> inner_node<T>::begin() {
+template <class T> 
+node<T> ** inner_node<T>::find_child(char partial_key) {
+  return const_cast<node<T> **>(as_const().find_child(partial_key));
+}
+
+template <class T> child_it<T> inner_node<T>::begin() const {
   return child_it<T>(this);
 }
 
-template <class T> std::reverse_iterator<child_it<T>> inner_node<T>::rbegin() {
+template <class T> std::reverse_iterator<child_it<T>> inner_node<T>::rbegin() const {
   return std::reverse_iterator<child_it<T>>(end());
 }
 
-template <class T> child_it<T> inner_node<T>::end() {
+template <class T> child_it<T> inner_node<T>::end() const {
   return child_it<T>(this, n_children());
 }
 
-template <class T> std::reverse_iterator<child_it<T>> inner_node<T>::rend() {
+template <class T> std::reverse_iterator<child_it<T>> inner_node<T>::rend() const {
   return std::reverse_iterator<child_it<T>>(begin());
+}
+
+template <class T> 
+const inner_node<T> &inner_node<T>::as_const() const {
+  return static_cast<const inner_node<T> &>(*this);
 }
 
 } // namespace art

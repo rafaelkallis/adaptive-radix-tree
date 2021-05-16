@@ -23,6 +23,23 @@ using std::to_string;
 
 TEST_SUITE("art") {
 
+  TEST_CASE("copy constructor") {
+    art::art<int*> m;
+
+    int int1 = 1;
+    int int2 = 2;
+    int int3 = 3;
+
+    m.set("aaaaa", &int1);
+    m.set("aaaba", &int2);
+    REQUIRE_EQ(nullptr, m.get("aba"));
+
+    art::art<int*> m_copy = m;
+    m_copy.set("aba", &int3);
+    REQUIRE_EQ(nullptr, m.get("aba"));
+    REQUIRE_EQ(&int3, m_copy.get("aba"));
+  }
+
   TEST_CASE("set") {
 
     art::art<int*> trie;

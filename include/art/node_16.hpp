@@ -25,7 +25,7 @@ template <class T> class node_16 : public inner_node<T> {
 friend class node_4<T>;
 friend class node_48<T>;
 public:
-  node<T> **find_child(char partial_key) override;
+  const node<T> *const *find_child(char partial_key) const override;
   void set_child(char partial_key, node<T> *child) override;
   node<T> *del_child(char partial_key) override;
   inner_node<T> *grow() override;
@@ -45,7 +45,8 @@ private:
   node<T> *children_[16];
 };
 
-template <class T> node<T> **node_16<T>::find_child(char partial_key) {
+template <class T>
+const node<T> *const *node_16<T>::find_child(char partial_key) const {
 #if defined(__i386__) || defined(__amd64__)
   int bitfield =
       _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_set1_epi8(partial_key),

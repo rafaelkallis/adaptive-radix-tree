@@ -19,7 +19,7 @@ friend class node_48<T>;
 public:
   node_256();
 
-  node<T> **find_child(char partial_key) override;
+  const node<T> *const *find_child(char partial_key) const override;
   void set_child(char partial_key, node<T> *child) override;
   node<T> *del_child(char partial_key) override;
   inner_node<T> *grow() override;
@@ -40,9 +40,11 @@ private:
 
 template <class T> node_256<T>::node_256() { children_.fill(nullptr); }
 
-template <class T> node<T> **node_256<T>::find_child(char partial_key) {
-  return children_[128 + partial_key] != nullptr ? &children_[128 + partial_key]
-                                                 : nullptr;
+template <class T>
+const node<T> *const *node_256<T>::find_child(char partial_key) const {
+  return children_[128 + partial_key] != nullptr 
+    ? &children_[128 + partial_key]
+    : nullptr;
 }
 
 template <class T>
