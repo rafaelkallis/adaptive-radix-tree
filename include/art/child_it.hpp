@@ -15,13 +15,13 @@ template <class T> class inner_node;
 template <class T> class child_it {
 public:
   child_it() = default;
+  explicit child_it(inner_node<T> *n);
+  child_it(inner_node<T> *n, int relative_index);
   child_it(const child_it<T> &other) = default;
   child_it(child_it<T> &&other) noexcept = default;
   child_it<T> &operator=(const child_it<T> &other) = default;
   child_it<T> &operator=(child_it<T> &&other) noexcept = default;
 
-  explicit child_it(inner_node<T> *n);
-  child_it(inner_node<T> *n, int relative_index);
 
   using iterator_category = std::bidirectional_iterator_tag;
   using value_type = const char;

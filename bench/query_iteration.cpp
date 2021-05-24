@@ -22,11 +22,11 @@ using std::unordered_map;
 PICOBENCH_SUITE("query iteration");
 
 static void full_scan_zipf(state &s) {
-  art::art<int> m;
+  art::art<int*> m;
   hash<uint32_t> h;
   int v = 1;
   int *v_ptr = &v;
-  art::tree_it<int> it, it_end;
+  art::tree_it<int*> it, it_end;
   fast_zipf rng(1000000);
   for (int i = 0; i < 100000; ++i) {
     m.set(to_string(h(rng())).c_str(), v_ptr);
@@ -38,11 +38,11 @@ static void full_scan_zipf(state &s) {
 PICOBENCH(full_scan_zipf).iterations({1000});
 
 static void full_scan_uniform(state &s) {
-  art::art<int> m;
+  art::art<int*> m;
   hash<uint32_t> h;
   int v = 1;
   int *v_ptr = &v;
-  art::tree_it<int> it, it_end;
+  art::tree_it<int*> it, it_end;
   mt19937_64 rng(0);
   for (int i = 0; i < 100000; ++i) {
     m.set(to_string(h(rng())).c_str(), v_ptr);

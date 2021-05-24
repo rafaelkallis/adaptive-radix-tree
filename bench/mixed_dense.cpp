@@ -44,7 +44,7 @@ static void art_mixed(state &s) {
   int v = 1;
   fast_zipf rng(n);
 
-  art::art<int> m;
+  art::art<int*> m;
   string k;
   for (auto i __attribute__((unused)) : s) {
     k = dataset[rng()];

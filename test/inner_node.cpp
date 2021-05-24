@@ -28,12 +28,12 @@ using std::string;
 TEST_SUITE("inner_node") {
 
   TEST_CASE("iteration") {
-    node_4<void> m;
+    node_4<void*> m;
 
-    leaf_node<void> n0(nullptr);
-    leaf_node<void> n1(nullptr);
-    leaf_node<void> n2(nullptr);
-    leaf_node<void> n3(nullptr);
+    leaf_node<void*> n0(nullptr);
+    leaf_node<void*> n1(nullptr);
+    leaf_node<void*> n2(nullptr);
+    leaf_node<void*> n3(nullptr);
 
     m.set_child(0, &n0);
     m.set_child(5, &n1);
@@ -103,12 +103,12 @@ TEST_SUITE("inner_node") {
   }
 
   TEST_CASE("reverse iteration") {
-    node_4<void> m;
+    node_4<void*> m;
 
-    leaf_node<void> n0(nullptr);
-    leaf_node<void> n1(nullptr);
-    leaf_node<void> n2(nullptr);
-    leaf_node<void> n3(nullptr);
+    leaf_node<void*> n0(nullptr);
+    leaf_node<void*> n1(nullptr);
+    leaf_node<void*> n2(nullptr);
+    leaf_node<void*> n3(nullptr);
 
     m.set_child(0, &n0);
     m.set_child(5, &n1);

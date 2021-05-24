@@ -21,13 +21,12 @@ namespace art {
 
 template <class T> class inner_node : public node<T> {
 public:
-  virtual ~inner_node() = default;
-
   inner_node() = default;
   inner_node(const inner_node<T> &other) = default;
   inner_node(inner_node<T> &&other) noexcept = default;
   inner_node<T> &operator=(const inner_node<T> &other) = default;
   inner_node<T> &operator=(inner_node<T> &&other) noexcept = default;
+  virtual ~inner_node() = default;
 
   bool is_leaf() const override;
 

@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <thread>
+#include <memory>
 
 using std::string;
 
@@ -22,7 +23,7 @@ void art_bench() {
   file.close();
 
   fast_zipf rng(n);
-  art::art<int> m;
+  art::art<int*> m;
   /* std::map<art::key_type, int*> m; */
   /* std::unordered_map<art::key_type, int*> m; */
   int v = 1;
@@ -35,7 +36,7 @@ void art_bench() {
 }
 
 /* void art_sparse_uniform() { */
-/*   art::art<int> m; */
+/*   art::art<int*> m; */
 /*   int n = 1000; */
 /*   int v = 1; */
 /*   std::mt19937_64 rng1(0); */
@@ -70,7 +71,7 @@ void art_bench() {
 /* } */
 
 /* void art_compressions_dense_insert() { */
-/*   art::art<int> m; */
+/*   art::art<int*> m; */
 /*   int v = 1; */
 /*   std::string k; */
 /*   int i; */
@@ -85,7 +86,7 @@ void art_bench() {
 /* } */
 
 /* void art_compressions_dense_delete() { */
-/*   art::art<int> m; */
+/*   art::art<int*> m; */
 /*   int v = 1; */
 /*   std::string k; */
 /*   int i; */
@@ -105,7 +106,7 @@ void art_bench() {
 /* } */
 
 /* void art_compressions_paths_insert() { */
-/*   art::art<int> m; */
+/*   art::art<int*> m; */
 /*   int v = 1; */
 /*   auto file = std::ifstream("dataset.txt"); */
 /*   std::string line; */
@@ -122,7 +123,7 @@ void art_bench() {
 /* } */
 
 /* void art_compressions_paths_delete() { */
-/*   art::art<int> m; */
+/*   art::art<int*> m; */
 /*   int v = 1; */
 /*   auto file = std::ifstream("dataset.txt"); */
 /*   std::string line; */
@@ -145,7 +146,7 @@ void art_bench() {
 /* } */
 
 /* void art_compressions_sparse_insert() { */
-/*   art::art<int> m; */
+/*   art::art<int*> m; */
 /*   int v = 1; */
 /*   std::mt19937_64 rng1(0); */
 /*   std::string k; */
@@ -161,7 +162,7 @@ void art_bench() {
 /* } */
 
 /* void art_compressions_sparse_delete() { */
-/*   art::art<int> m; */
+/*   art::art<int*> m; */
 /*   int v = 1; */
 /*   std::mt19937_64 rng1(0); */
 /*   std::string k; */
@@ -183,7 +184,7 @@ void art_bench() {
 /* } */
 
 void casual_stress_test(int n) {
-  art::art<int> m;
+  art::art<int*> m;
   int v = 1;
   std::mt19937_64 rng1(0);
   std::string k;
@@ -213,23 +214,20 @@ int main() {
   /* art_compressions_dense_delete(); */
 
   /* casual_stress_test(16 * 1000 * 1000); */
-  int int0 = 0;
-  int int1 = 1;
-  int int2 = 2;
-  int int3 = 4;
-  int int4 = 5;
-  int int5 = 5;
-  int int6 = 6;
+  
+  //
+  // simple example
+  //
 
   art::art<int> m;
 
-  m.set("aa", &int0);
-  m.set("aaaa", &int1);
-  m.set("aaaaaaa", &int2);
-  m.set("aaaaaaaaaa", &int3);
-  m.set("aaaaaaaba", &int4);
-  m.set("aaaabaa", &int5);
-  m.set("aaaabaaaaa", &int6);
+  m.set("aa", 0);
+  m.set("aaaa", 1);
+  m.set("aaaaaaa", 2);
+  m.set("aaaaaaaaaa", 3);
+  m.set("aaaaaaaba", 4);
+  m.set("aaaabaa", 5);
+  m.set("aaaabaaaaa", 6);
 
   /* The above statements construct the following tree:
    *
@@ -249,7 +247,8 @@ int main() {
   auto it = m.begin();
   auto it_end = m.end();
   for (int i = 0; it != it_end; ++i, ++it) {
-    std::cout << i << ": " << **it << std::endl;
+    std::cout << it.key() << " -> " << *it << std::endl;
   }
+
   return 0;
 }

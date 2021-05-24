@@ -10,6 +10,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <memory>
 
 using std::array;
 using std::hash;
@@ -24,7 +25,7 @@ TEST_SUITE("art") {
 
   TEST_CASE("set") {
 
-    art::art<int> trie;
+    art::art<int*> trie;
 
     int dummy_value_1;
     int dummy_value_2;
@@ -78,7 +79,7 @@ TEST_SUITE("art") {
           values[i] = new int();
         }
 
-        art::art<int> m;
+        art::art<int*> m;
 
         for (int i = 0; i < n; i += 1) {
           m.set(keys[i].c_str(), values[i]);
@@ -118,7 +119,7 @@ TEST_SUITE("art") {
     auto key9 = "aaaaaaaaaac";
     auto int9 = 9;
 
-    art::art<int> m;
+    art::art<int*> m;
 
     m.set(key0, &int0);
     m.set(key1, &int1);
@@ -273,7 +274,7 @@ TEST_SUITE("art") {
   }
 
   TEST_CASE("monte carlo delete") {
-    art::art<int> m;
+    art::art<int*> m;
     mt19937_64 rng1(0);
     for (int i = 0; i < 1000000; ++i) {
       auto k = to_string(rng1());

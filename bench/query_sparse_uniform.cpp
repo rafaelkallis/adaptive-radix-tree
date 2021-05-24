@@ -24,7 +24,7 @@ using std::unordered_map;
 PICOBENCH_SUITE("query sparse uniform");
 
 static void art_q_s_u(state &s) {
-  art::art<int> m;
+  art::art<int*> m;
   hash<uint32_t> h;
   int v = 1;
   int *v_ptr = &v;

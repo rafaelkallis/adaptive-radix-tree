@@ -23,14 +23,14 @@ TEST_SUITE("node 4") {
   TEST_CASE("monte carlo insert") {
     /* set up */
     array<uint8_t, 256> partial_keys;
-    array<node<void> *, 256> children;
+    array<node<void*> *, 256> children;
 
     for (int i = 0; i < 256; i += 1) {
       /* populate partial_keys with all values in the partial_keys_t domain */
       partial_keys[i] = i;
 
       /* populate child nodes */
-      children[i] = new leaf_node<void>(nullptr);
+      children[i] = new leaf_node<void*>(nullptr);
     }
 
     /* rng */
@@ -39,7 +39,7 @@ TEST_SUITE("node 4") {
 
     for (int experiment = 0; experiment < 10000; experiment += 1) {
       /* test subject */
-      node_4<void> node;
+      node_4<void*> node;
 
       /* shuffle in order to make a seemingly random insertion order */
       shuffle(partial_keys.begin(), partial_keys.end(), g);
@@ -69,15 +69,15 @@ TEST_SUITE("node 4") {
   }
 
   TEST_CASE("delete child") {
-    leaf_node<void> n0(nullptr);
-    leaf_node<void> n1(nullptr);
-    leaf_node<void> n2(nullptr);
-    leaf_node<void> n3(nullptr);
-    leaf_node<void> n4(nullptr);
-    leaf_node<void> n5(nullptr);
-    leaf_node<void> n6(nullptr);
+    leaf_node<void*> n0(nullptr);
+    leaf_node<void*> n1(nullptr);
+    leaf_node<void*> n2(nullptr);
+    leaf_node<void*> n3(nullptr);
+    leaf_node<void*> n4(nullptr);
+    leaf_node<void*> n5(nullptr);
+    leaf_node<void*> n6(nullptr);
 
-    node_4<void> subject;
+    node_4<void*> subject;
 
     subject.set_child(1, &n1);
     subject.set_child(2, &n2);

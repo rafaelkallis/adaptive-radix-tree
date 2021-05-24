@@ -15,14 +15,13 @@ compression reduces the tree height and horizontal compression decreases a nodeâ
 using namespace art;
 
 int main() {
-  art<int> m;
+  art<std::shared_ptr<MyResource>> m;
 
-  int v = 2;
-  // set k to v
-  m.set("k", &v);
+  // set k
+  m.set("k", std::make_shared(new MyResource()));
 
-  // get value of k
-  int * v_ptr = m.get("k");
+  // get k
+  std::shared_ptr<MyResource> ptr = m.get("k");
 
   // delete k
   m.del("k");
@@ -99,6 +98,9 @@ query sparse zipf:
             hashmap_q_s_z | 1600000 |   413.103 |     258 |  1.005 |  3873125.6
 ===============================================================================
 ```
+
+You can replicate using `make release && make bench`
+
 
 ## References
 
