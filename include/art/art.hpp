@@ -25,7 +25,7 @@ public:
    * Finds the value associated with the given key.
    *
    * @param key - The key to find.
-   * @return the value associated with the key or a nullptr.
+   * @return the value associated with the key or a default constructed value.
    */
   T get(const char *key) const;
 
