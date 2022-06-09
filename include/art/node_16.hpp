@@ -112,6 +112,7 @@ template <class T> inner_node<T> *node_16<T>::grow() {
   auto new_node = new node_48<T>();
   new_node->prefix_ = this->prefix_;
   new_node->prefix_len_ = this->prefix_len_;
+  new_node->n_children_ = this->n_children_;
   std::copy(this->children_, this->children_ + this->n_children_, new_node->children_);
   for (int i = 0; i < n_children_; ++i) {
     new_node->indexes_[(uint8_t) this->keys_[i]] = i;
