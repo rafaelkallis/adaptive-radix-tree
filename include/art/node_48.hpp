@@ -127,27 +127,29 @@ template <class T> bool node_48<T>::is_underfull() const {
 template <class T> const char node_48<T>::EMPTY = 48;
 
 template <class T> char node_48<T>::next_partial_key(char partial_key) const {
+  char original_partial_key = partial_key;
   while (true) {
     if (indexes_[128 + partial_key] != node_48<T>::EMPTY) {
       return partial_key;
     }
-    if (partial_key == 127) {
+    ++partial_key;
+    if (partial_key == original_partial_key) {
       throw std::out_of_range("provided partial key does not have a successor");
     }
-    ++partial_key;
   }
 }
 
 template <class T> char node_48<T>::prev_partial_key(char partial_key) const {
+  char original_partial_key = partial_key;
   while (true) {
     if (indexes_[128 + partial_key] != node_48<T>::EMPTY) {
       return partial_key;
     }
-    if (partial_key == -128) {
+    --partial_key;
+    if (partial_key == original_partial_key) {
       throw std::out_of_range(
           "provided partial key does not have a predecessor");
     }
-    --partial_key;
   }
 }
 
