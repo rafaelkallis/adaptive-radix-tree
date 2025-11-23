@@ -123,7 +123,7 @@ T art<T>::set(const char *key, T value) {
   if (root_ == nullptr) {
     root_ = new leaf_node<T>(value);
     root_->prefix_ = new char[key_len];
-    std::copy(key, key + key_len + 1, root_->prefix_);
+    std::copy(key, key + key_len, root_->prefix_);
     root_->prefix_len_ = key_len;
     return T{};
   }
@@ -197,7 +197,7 @@ T art<T>::set(const char *key, T value) {
       (**cur).prefix_len_ = old_prefix_len - prefix_match_len - 1;
       std::copy(old_prefix + prefix_match_len + 1, old_prefix + old_prefix_len,
                 (**cur).prefix_);
-      delete old_prefix;
+      delete[] old_prefix;
 
       auto new_node = new leaf_node<T>(value);
       new_node->prefix_ = new char[key_len - depth - prefix_match_len - 1];

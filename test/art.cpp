@@ -67,6 +67,26 @@ TEST_SUITE("art") {
       REQUIRE_EQ(&dummy_value_2, trie.get(key2));
     }
 
+    SUBCASE("insert prefix key after longer keys") {
+      // This test case reproduces the issue from GitHub issue
+      // Insert longer keys first, then insert their common prefix
+      int val1 = 1, val2 = 2, val3 = 3, val4 = 10;
+      trie.set("aaa", &val1);
+      trie.set("aab", &val2);
+      trie.set("aa", &val3);
+      
+      REQUIRE_EQ(&val1, trie.get("aaa"));
+      REQUIRE_EQ(&val2, trie.get("aab"));
+      REQUIRE_EQ(&val3, trie.get("aa"));
+      
+      // Setting the same key again should replace the value
+      auto old_val = trie.set("aa", &val4);
+      REQUIRE_EQ(&val3, old_val);
+      REQUIRE_EQ(&val4, trie.get("aa"));
+      REQUIRE_EQ(&val1, trie.get("aaa"));
+      REQUIRE_EQ(&val2, trie.get("aab"));
+    }
+
     SUBCASE("monte carlo") {
       const int n = 1000;
       string keys[n];
