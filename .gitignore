@@ -8,3 +8,4 @@ cachegrind.*
 callgrind.*
 cmake-build-debug
 .idea
+*.log

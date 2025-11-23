@@ -24,10 +24,10 @@ public:
 
 
   using iterator_category = std::bidirectional_iterator_tag;
-  using value_type = const char;
+  using value_type = char;
   using difference_type = int;
-  using pointer = value_type *;
-  using reference = value_type &;
+  using pointer = const value_type *;
+  using reference = char;
 
   reference operator*() const;
   pointer operator->() const;
