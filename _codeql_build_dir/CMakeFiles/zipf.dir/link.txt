@@ -1,0 +1,2 @@
+/usr/bin/ar qc libzipf.a CMakeFiles/zipf.dir/third_party/zipf/zipf.cpp.o
+/usr/bin/ranlib libzipf.a
