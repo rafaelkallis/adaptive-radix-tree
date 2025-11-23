@@ -44,6 +44,9 @@ make test
 
 # run benchmarks
 make bench
+
+# run memory benchmarks
+make benchmark-mem
 ```
 
 ## Benchmark results 
@@ -100,6 +103,36 @@ query sparse zipf:
 ```
 
 You can replicate using `make release && make bench`
+
+## Memory Benchmarks
+
+Memory benchmarks measure the data structure overhead using [valgrind massif](https://valgrind.org/docs/manual/ms-manual.html). The benchmarks test two scenarios:
+1. Uniformly distributed keys
+2. Zipfian distributed keys
+
+Both scenarios fill the tree with `nullptr` values to only measure data structure overhead.
+
+You can run memory benchmarks using `make benchmark-mem`. The command will:
+- Fill the tree with 100,000 keys using uniform distribution
+- Profile memory usage with valgrind massif
+- Display the massif report
+- Repeat the same for zipfian distribution
+
+To manually run with different parameters:
+```bash
+# Build the memory benchmark executable
+make release
+
+# Run with valgrind massif (uniform distribution, 100k keys)
+valgrind --tool=massif --massif-out-file=massif.out ./build/bench-mem 100000 uniform < /dev/null
+
+# View the massif report
+ms_print massif.out
+
+# Run with zipfian distribution
+valgrind --tool=massif --massif-out-file=massif.out ./build/bench-mem 100000 zipf < /dev/null
+ms_print massif.out
+```
 
 
 ## References
