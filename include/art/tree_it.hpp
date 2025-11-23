@@ -311,6 +311,9 @@ void tree_it<T>::seek_leaf() {
   /* traverse up until a node on the right is found or stack gets empty */
   for (; get_step().child_it_ == get_step().child_it_end_; ++get_step()) {
     traversal_stack_.pop_back();
+    if (traversal_stack_.empty()) {
+      return;
+    }
     if (get_step().child_node_ == root_) { // root guard
       traversal_stack_.pop_back();
       assert(traversal_stack_.empty());

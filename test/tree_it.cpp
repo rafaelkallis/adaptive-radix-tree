@@ -22,6 +22,45 @@ using std::string;
 using std::to_string;
 
 TEST_SUITE("tree_it") {
+  TEST_CASE("single element iteration") {
+    SUBCASE("iterate over single element") {
+      int value = 42;
+      art::art<int*> m;
+      
+      m.set("key1", &value);
+      
+      auto it = m.begin();
+      auto it_end = m.end();
+      
+      // First element should be accessible
+      REQUIRE(it != it_end);
+      REQUIRE_EQ(&value, *it);
+      REQUIRE_EQ("key1", it.key());
+      
+      // Increment past the only element
+      ++it;
+      
+      // Should now be at end
+      REQUIRE(it == it_end);
+    }
+
+    SUBCASE("iterate over single element with for loop") {
+      int value = 1;
+      art::art<int*> m;
+      
+      m.set("key1", &value);
+      
+      int count = 0;
+      for(auto itor = m.begin(); itor != m.end(); ++itor) {
+        REQUIRE_EQ("key1", itor.key());
+        REQUIRE_EQ(&value, *itor);
+        ++count;
+      }
+      
+      REQUIRE_EQ(1, count);
+    }
+  }
+
   TEST_CASE("full lexicographic traversal") {
     SUBCASE("controlled test") {
       int int0 = 0;
