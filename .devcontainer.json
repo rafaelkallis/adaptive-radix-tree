@@ -1,0 +1,11 @@
+{
+  "name": "adaptive-radix-tree",
+  "image": "mcr.microsoft.com/devcontainers/cpp:ubuntu-22.04",
+  "customizations": {
+    "vscode": {
+      "extensions": [],
+      "settings": {}
+    }
+  },
+  "postCreateCommand": "make"
+}
