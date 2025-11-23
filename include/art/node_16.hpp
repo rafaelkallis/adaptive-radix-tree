@@ -73,7 +73,7 @@ template <class T> node<T> **node_16<T>::find_child(char partial_key) {
 template <class T>
 void node_16<T>::set_child(char partial_key, node<T> *child) {
   /* determine index for child */
-  int child_i;
+  int child_i = 0;
   for (int i = this->n_children_ - 1;; --i) {
     if (i >= 0 && partial_key < this->keys_[i]) {
       /* move existing sibling to the right */
