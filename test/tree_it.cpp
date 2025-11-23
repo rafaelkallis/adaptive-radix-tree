@@ -229,4 +229,20 @@ TEST_SUITE("tree_it") {
       }
     }
   }
+
+  TEST_CASE("single element iteration") {
+    SUBCASE("iterate over single key-value pair") {
+      int int1 = 1;
+      art::art<int*> table;
+      table.set("key1", &int1);
+      
+      int count = 0;
+      for(auto itor = table.begin(); itor != table.end(); ++itor) {
+        REQUIRE_EQ("key1", itor.key());
+        REQUIRE_EQ(&int1, *itor);
+        ++count;
+      }
+      REQUIRE_EQ(1, count);
+    }
+  }
 }
