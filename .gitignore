@@ -9,3 +9,4 @@ callgrind.*
 cmake-build-debug
 .idea
 *.log
+_codeql_build_dir/
