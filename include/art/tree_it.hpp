@@ -110,9 +110,11 @@ typename tree_it<T>::step &tree_it<T>::step::operator++() {
   child_node_ = child_it_ != child_it_end_ 
     ? child_it_.get_child_node()
     : nullptr;
-  key_[depth_ - 1] = child_it_ != child_it_end_
-    ? child_it_.get_partial_key()
-    : '\0';
+  if (depth_ > 0) {
+    key_[depth_ - 1] = child_it_ != child_it_end_
+      ? child_it_.get_partial_key()
+      : '\0';
+  }
   return *this;
 }
 
