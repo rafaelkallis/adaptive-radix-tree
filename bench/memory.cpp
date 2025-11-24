@@ -8,15 +8,11 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
-#include <map>
 #include <string>
-#include <unordered_map>
 
 using std::string;
 using std::to_string;
 using std::hash;
-using std::map;
-using std::unordered_map;
 
 // Number of elements to insert for memory benchmarks
 const uint32_t NUM_ELEMENTS = 1000000;
