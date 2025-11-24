@@ -44,6 +44,9 @@ make test
 
 # run benchmarks
 make bench
+
+# run memory benchmarks (requires valgrind)
+make bench-mem
 ```
 
 ## Benchmark results 
@@ -100,6 +103,31 @@ query sparse zipf:
 ```
 
 You can replicate using `make release && make bench`
+
+## Memory Benchmark
+
+The `make bench-mem` command runs memory profiling using [Valgrind Massif](https://valgrind.org/docs/manual/ms-manual.html) to measure the memory footprint of the ART data structure. The benchmark tests two scenarios:
+
+1. **Uniform distribution**: Keys are uniformly distributed
+2. **Zipfian distribution**: Keys follow a Zipfian distribution (realistic workload with hot keys)
+
+Both benchmarks insert 1,000,000 elements with `nullptr` values to measure only the data structure overhead.
+
+Example usage:
+```bash
+# Build and run memory benchmarks
+make release && make bench-mem
+```
+
+The command will output a summary of memory usage for both distributions and save detailed reports to:
+- `build/massif.out.uniform` - Full report for uniform distribution
+- `build/massif.out.zipf` - Full report for Zipfian distribution
+
+To view the full reports:
+```bash
+ms_print build/massif.out.uniform
+ms_print build/massif.out.zipf
+```
 
 
 ## References
