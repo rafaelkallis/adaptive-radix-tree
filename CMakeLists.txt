@@ -74,3 +74,9 @@ add_executable(bench
   "${PROJECT_SOURCE_DIR}/bench/query_sparse_zipf.cpp"
   )
 target_link_libraries(bench art picobench zipf)
+
+# bench-mem executable (for memory profiling with valgrind)
+add_executable(bench-mem
+  "${PROJECT_SOURCE_DIR}/bench/memory.cpp"
+  )
+target_link_libraries(bench-mem art zipf)
