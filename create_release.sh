@@ -28,13 +28,17 @@ fi
 echo "Pushing tag 6.0..."
 git push origin 6.0
 
+# Detect repository from git remote
+REPO=$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')
+echo "Repository: $REPO"
+
 # Create the release
 echo "Creating GitHub release..."
 gh release create 6.0 \
     --title "6.0 - stable" \
     --notes-file RELEASE_NOTES.md \
-    --repo rafaelkallis/adaptive-radix-tree
+    --repo "$REPO"
 
 echo ""
 echo "✅ Release 6.0 created successfully!"
-echo "View it at: https://github.com/rafaelkallis/adaptive-radix-tree/releases/tag/6.0"
+echo "View it at: https://github.com/$REPO/releases/tag/6.0"
