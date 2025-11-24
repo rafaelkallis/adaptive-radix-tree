@@ -94,6 +94,22 @@ TEST_SUITE("art") {
         }
       }
     }
+
+    SUBCASE("C-string semantics: string literals with explicit trailing nulls") {
+      /* Note: In C++, "aa\0" creates a 4-byte string literal: ['a', 'a', '\0', '\0']
+       * However, when passed as const char*, strlen() returns 2 (stops at first null).
+       * Therefore, both "aa" and "aa\0" result in the same key length (strlen + 1 = 3),
+       * making them identical keys from the ART's perspective.
+       * This is a fundamental limitation of C-string semantics, not a bug.
+       */
+      trie.set("aa", &dummy_value_1);
+      REQUIRE_EQ(&dummy_value_1, trie.get("aa"));
+      
+      /* Setting "aa\0" replaces "aa" because they're the same C-string */
+      int* prev = trie.set("aa\0", &dummy_value_2);
+      REQUIRE_EQ(&dummy_value_1, prev);  /* Returns previous value */
+      REQUIRE_EQ(&dummy_value_2, trie.get("aa"));  /* "aa" now has new value */
+    }
   }
 
   TEST_CASE("delete value") {
