@@ -236,4 +236,89 @@ TEST_SUITE("node 16") {
       REQUIRE_THROWS_AS(n.prev_partial_key(0), std::out_of_range);
     }
   }
+
+  TEST_CASE("grow to node_48 preserves offset (PR #20)") {
+    // This test reproduces the bug reported in PR #20:
+    // When node_16 grows to node_48, the indexes_ array must use 128 offset
+
+    SUBCASE("next_partial_key after grow") {
+      leaf_node<void*>* dummy_children[17];
+      for (int i = 0; i < 17; ++i) {
+        dummy_children[i] = new leaf_node<void*>(nullptr);
+      }
+      node_16<void*>* n16 = new node_16<void*>();
+      char test_keys[17];
+      for (int i = 0; i < 17; ++i) {
+        test_keys[i] = 'a' + i; // a, b, c, ..., q
+      }
+      for (int i = 0; i < 16; ++i) {
+        n16->set_child(test_keys[i], dummy_children[i]);
+      }
+      REQUIRE(n16->is_full());
+      auto* n48 = static_cast<node_48<void*>*>(n16->grow());
+      REQUIRE(n48 != nullptr);
+      for (int i = 0; i < 16; ++i) {
+        auto** child_ptr = n48->find_child(test_keys[i]);
+        REQUIRE(child_ptr != nullptr);
+        REQUIRE(*child_ptr == dummy_children[i]);
+      }
+      n48->set_child(test_keys[16], dummy_children[16]);
+      for (int i = 0; i < 17; ++i) {
+        auto** child_ptr = n48->find_child(test_keys[i]);
+        REQUIRE(child_ptr != nullptr);
+        REQUIRE(*child_ptr == dummy_children[i]);
+      }
+      // Starting from first key 'a', we should find all keys in order
+      char current = n48->next_partial_key('a');
+      REQUIRE_EQ('a', current);
+      for (int i = 1; i < 17; ++i) {
+        current = n48->next_partial_key(current + 1);
+        REQUIRE_EQ(test_keys[i], current);
+      }
+      delete n48;
+      for (int i = 0; i < 17; ++i) {
+        delete dummy_children[i];
+      }
+    }
+
+    SUBCASE("prev_partial_key after grow") {
+      leaf_node<void*>* dummy_children[17];
+      for (int i = 0; i < 17; ++i) {
+        dummy_children[i] = new leaf_node<void*>(nullptr);
+      }
+      node_16<void*>* n16 = new node_16<void*>();
+      char test_keys[17];
+      for (int i = 0; i < 17; ++i) {
+        test_keys[i] = 'a' + i; // a, b, c, ..., q
+      }
+      for (int i = 0; i < 16; ++i) {
+        n16->set_child(test_keys[i], dummy_children[i]);
+      }
+      REQUIRE(n16->is_full());
+      auto* n48 = static_cast<node_48<void*>*>(n16->grow());
+      REQUIRE(n48 != nullptr);
+      for (int i = 0; i < 16; ++i) {
+        auto** child_ptr = n48->find_child(test_keys[i]);
+        REQUIRE(child_ptr != nullptr);
+        REQUIRE(*child_ptr == dummy_children[i]);
+      }
+      n48->set_child(test_keys[16], dummy_children[16]);
+      for (int i = 0; i < 17; ++i) {
+        auto** child_ptr = n48->find_child(test_keys[i]);
+        REQUIRE(child_ptr != nullptr);
+        REQUIRE(*child_ptr == dummy_children[i]);
+      }
+      // Starting from last key 'q', we should find all keys in reverse order
+      char current = n48->prev_partial_key('q');
+      REQUIRE_EQ('q', current);
+      for (int i = 15; i >= 0; --i) {
+        current = n48->prev_partial_key(current - 1);
+        REQUIRE_EQ(test_keys[i], current);
+      }
+      delete n48;
+      for (int i = 0; i < 17; ++i) {
+        delete dummy_children[i];
+      }
+    }
+  }
 }
